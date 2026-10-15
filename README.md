@@ -114,11 +114,11 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
 | Page mounting/resizing, Save/Cancel, repeated dispose/remount, localization/theme refresh | **PASS** (reported GUI test) |
-| Multiline/password/checkbox/multichoice/date/time/datetime/slider controls and validation | **B4J build verified; GUI test pending** |
+| Multiline/password/checkbox/multichoice/date/time/datetime/slider controls and validation | **PASS** (reported GUI test) |
 | Modal dialog sizing at 600 DIP | **PASS** (reported GUI test) |
 | Values survive application reboot | **Not supported by Milestone 1**; persistence is deferred |
 
-The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestone 1, 2, and date/slider results were reported from demo runs. Time/datetime GUI behavior remains to be exercised. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
+The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestone 1, 2, and Milestone 3 GUI results above were reported from demo runs. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
 
 ## Deferred beyond current Milestone 3 scope
 

@@ -38,7 +38,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Add ISO `date` values using B4J DatePicker and numeric `slider` controls to both presentations.
 - [x] Verify date and slider editing and theme styling in both presentations (reported passing).
 - [x] Add 24-hour `time` and timezone-free ISO `datetime` strings to both presentations.
-- [ ] Verify time/datetime editing and invalid-value errors in both presentations.
+- [x] Verify time/datetime editing and invalid-value errors in both presentations (reported passing).
 - [x] Document current defaults and required/string-length validation.
 - [x] Add required/minimum/maximum string-length checks to model and controller.
 - [ ] Continue with label and action.

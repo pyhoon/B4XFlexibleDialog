@@ -29,7 +29,7 @@ The B4J `PrefsPage` mounts in a caller-provided `AnchorPane`, keeps caller navig
 
 ## M3 — Additional preference types and validation — in progress
 
-The B4J model/controller and both renderers now include multiline, password, checkbox, multichoice, date, time, datetime, and slider alongside text, number, switch, and choice. Dates use ISO `yyyy-MM-dd` strings; time/datetime use timezone-free 24-hour strings; sliders use numeric min/max values. Required/minLength/maxLength string validation and defensive multichoice list values are implemented. Date/slider controls and light/dark scrollbar styling have been reported verified. Time/datetime GUI acceptance remains pending. Continue with label and action, with documented value/default/options/validation behavior. Add reset operations and applicable built-in constraints without introducing a general expression engine.
+The B4J model/controller and both renderers now include multiline, password, checkbox, multichoice, date, time, datetime, and slider alongside text, number, switch, and choice. Dates use ISO `yyyy-MM-dd` strings; time/datetime use timezone-free 24-hour strings; sliders use numeric min/max values. Required/minLength/maxLength string validation and defensive multichoice list values are implemented. The controls are build-verified, and date, time/datetime, slider, and scrollbar GUI checks were reported passing. Continue with label and action, with documented value/default/options/validation behavior. Add reset operations and applicable built-in constraints without introducing a general expression engine.
 
 ## M4 — Persistence and migrations
 
