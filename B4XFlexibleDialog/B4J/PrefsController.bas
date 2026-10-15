@@ -10,8 +10,8 @@ Sub Class_Globals
 	Private Committed As Map
 	Private Draft As Map
 	Private HasDraft As Boolean
-	Private CommitTarget As Object
-	Private CommitEvent As String
+	Private Store As PrefsStore
+	Private StoreEnabled As Boolean
 	Public LastError As String
 End Sub
 
@@ -31,6 +31,7 @@ Public Sub SetValue(Id As String, Value As Object) As Boolean
 	If LastError <> "" Then Return False
 	Committed.Put(Id, CopyValue(Value))
 	If HasDraft Then Draft.Put(Id, CopyValue(Value))
+	PersistIfConfigured
 	Return True
 End Sub
 
@@ -56,6 +57,7 @@ Public Sub ResetToDefaults
 		If Pref.Get("type") <> "label" And Pref.Get("type") <> "action" Then Committed.Put(Id, CopyValue(Pref.Get("defaultValue")))
 	Next
 	If HasDraft Then Draft = CopyMap(Committed)
+	PersistIfConfigured
 End Sub
 
 Public Sub ResetPreference(Id As String)
@@ -64,6 +66,7 @@ Public Sub ResetPreference(Id As String)
 	If Pref.Get("type") = "label" Or Pref.Get("type") = "action" Then Return
 	Committed.Put(Id, CopyValue(Pref.Get("defaultValue")))
 	If HasDraft Then Draft.Put(Id, CopyValue(Pref.Get("defaultValue")))
+	PersistIfConfigured
 End Sub
 
 Public Sub ResetDraftToDefaults
@@ -105,15 +108,23 @@ Public Sub ValidateDraft As String
 	Return ""
 End Sub
 
-Public Sub SetCommitListener(Target As Object, EventName As String)
-	CommitTarget = Target
-	CommitEvent = EventName
-End Sub
-
 Public Sub CommitDraft
 	Committed = CopyMap(Draft)
 	HasDraft = False
-	If CommitTarget <> Null Then CallSub(CommitTarget, CommitEvent)
+	PersistIfConfigured
+End Sub
+
+Public Sub SetStore(S As PrefsStore)
+	Store = S
+	StoreEnabled = True
+End Sub
+
+Public Sub GetStore As PrefsStore
+	Return Store
+End Sub
+
+Private Sub PersistIfConfigured
+	If StoreEnabled Then Store.Save(Committed)
 End Sub
 
 ' Applies stored values for known value preferences. Unknown keys and invalid values are skipped.
