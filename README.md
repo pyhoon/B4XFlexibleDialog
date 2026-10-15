@@ -136,8 +136,8 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Programmatic `ResetToDefaults` / `ResetPreference` restore defaults | **PASS** (reported demo run) |
 | Dialog/page Reset button loads defaults into the draft | **PASS** (reported GUI test) |
 | Label/action rendering, localization, and `_Action` callback | **PASS** (reported GUI test) |
-| Store merge, unknown-key preservation, JSON round-trip, and `ApplyValues` | **Included; run in demo on startup** |
-| Values restored after application restart | **Implemented; verify by editing, saving, and relaunching** |
+| Store merge, unknown-key preservation, JSON round-trip, and `ApplyValues` | **PASS** (reported demo run) |
+| Values restored after application restart | **PASS** (reported: `Restored 12 value(s)` after relaunch) |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
 | Page mounting/resizing, Save/Cancel, repeated dispose/remount, localization/theme refresh | **PASS** (reported GUI test) |

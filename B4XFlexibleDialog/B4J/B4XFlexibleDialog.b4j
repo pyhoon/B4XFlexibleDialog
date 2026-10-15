@@ -18,8 +18,8 @@ Module3=PrefsDialog
 Module4=PrefsLocalization
 Module5=PrefsModel
 Module6=PrefsPage
-Module7=PrefsTheme
-Module8=PrefsStore
+Module7=PrefsStore
+Module8=PrefsTheme
 NumberOfFiles=4
 NumberOfLibraries=3
 NumberOfModules=8
@@ -196,6 +196,10 @@ Private Sub Prefs_DialogClosed(WasSaved As Boolean)
 End Sub
 
 Private Sub Prefs_Action(PreferenceId As String)
+    Select PreferenceId
+        Case "clear_cache"
+            ' delete temp files, clear caches, etc.
+    End Select
 	Log("Action preference activated: " & PreferenceId)
 End Sub
 
