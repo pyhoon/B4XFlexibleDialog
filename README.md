@@ -89,14 +89,15 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | B4JBuilder 10.70 build, warnings enabled | **PASS** |
 | JSON syntax for schema, demo definition, and both locale files | **PASS** |
 | Demo jar contains `Files/settings.json`, `Files/en.json`, and `Files/ms.json` | **PASS** |
-| Core runtime assertions (valid/malformed JSON, duplicate IDs, unknown type, defaults, all four typed values, bounds, snapshot, draft cancel/commit) | **10 earlier checks PASS** (reported); **4 added checks pending next demo run** |
-| All four controls render and edit | **NOT RUN (GUI)** |
-| Cancel/close leaves committed defaults unchanged | **PASS** (reported `Saved=false` log; observed twice) |
-| Save/rejection and numeric error display | **NOT RUN (GUI)** |
-| In-dialog language/theme switching and value preservation | **NOT RUN (GUI)** |
-| Reopen after Save | **NOT RUN (GUI)** |
+| Core runtime assertions (valid/malformed JSON, duplicate IDs, unknown type, defaults, all four typed values, bounds, snapshot, draft cancel/commit) | **PASS** (reported demo run) |
+| All four controls render and edit | **PASS** (reported GUI test) |
+| Save commits; Cancel and window close discard edits | **PASS** (reported GUI test) |
+| Invalid numbers (out-of-range and non-numeric text) block Save | **PASS** (reported GUI test) |
+| In-dialog language/theme switching preserves values | **PASS** (reported GUI test) |
+| Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
+| Values survive application reboot | **Not supported by Milestone 1**; persistence is deferred |
 
-The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. The first ten core assertion results and Cancel/close result above were provided from a demo run. The added checks for switch/choice values and language/theme value preservation will log on the next run. Remaining visual/edit/Save interactions still need GUI checks.
+The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Core and interactive GUI results above were reported from demo runs. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is outside Milestone 1.
 
 ## Deferred to Milestone 2+
 
