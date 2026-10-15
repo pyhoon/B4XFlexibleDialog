@@ -85,8 +85,8 @@ Public Sub Show As Boolean
 	DialogScroll.FitToWidth = True
 	DialogScroll.InnerNode = ContentPane
 	DialogScroll.Style = "-fx-background-color: transparent; -fx-background: transparent;"
-	DialogForm.RootPane.AddNode(DialogScroll, 0, 0, -1, Height - 140)
-	DialogForm.RootPane.SetAnchors(DialogScroll, 0, 0, 0, 140)
+	DialogForm.RootPane.AddNode(DialogScroll, 0, 0, -1, Height - 92)
+	DialogForm.RootPane.SetAnchors(DialogScroll, 0, 0, 0, 92)
 	Dim SectionList As List = Model.GetSections
 	For Each Section As Map In SectionList
 		Dim SectionTitle As Label
@@ -106,24 +106,24 @@ Public Sub Show As Boolean
 	ContentPane.PrefHeight = RowTop + 20
 	StatusLabel.Initialize("")
 	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
-	DialogForm.RootPane.AddNode(StatusLabel, 24, Height - 105, ContentWidth - 30, 24)
+	DialogForm.RootPane.AddNode(StatusLabel, 34, Height - 90, ContentWidth - 30, 24)
 	LanguageButton.Initialize("dlg")
 	LanguageButton.Text = Localization.Text("ui.language")
 	LanguageButton.TextColor = fx.Colors.From32Bit(Theme.AccentColor)
-	DialogForm.RootPane.AddNode(LanguageButton, 24, Height - 68, 110, 34)
+	DialogForm.RootPane.AddNode(LanguageButton, 30, Height - 60, 110, 34)
 	ThemeButton.Initialize("dlg")
 	ThemeButton.Text = Localization.Text("ui.theme")
 	ThemeButton.TextColor = fx.Colors.From32Bit(Theme.AccentColor)
-	DialogForm.RootPane.AddNode(ThemeButton, 140, Height - 68, 100, 34)
+	DialogForm.RootPane.AddNode(ThemeButton, 146, Height - 60, 100, 34)
 	ResetButton.Initialize("dlg")
 	ResetButton.Text = Localization.Text("ui.reset")
-	DialogForm.RootPane.AddNode(ResetButton, 380, Height - 68, 90, 34)
+	DialogForm.RootPane.AddNode(ResetButton, 390, Height - 60, 90, 34)
 	CancelButton.Initialize("dlg")
 	CancelButton.Text = Localization.Text("ui.cancel")
-	DialogForm.RootPane.AddNode(CancelButton, 490, Height - 68, 90, 34)
+	DialogForm.RootPane.AddNode(CancelButton, 500, Height - 60, 90, 34)
 	SaveButton.Initialize("dlg")
 	SaveButton.Text = Localization.Text("ui.save")
-	DialogForm.RootPane.AddNode(SaveButton, 600, Height - 68, 110, 34)
+	DialogForm.RootPane.AddNode(SaveButton, 610, Height - 60, 110, 34)
 	RefreshButtons
 	DialogForm.ShowAndWait
 	If Saved = False Then Controller.CancelDraft

@@ -31,6 +31,8 @@ Sub Class_Globals
 	Private CancelButton As Button
 	Private ResetButton As Button
 	Private RowTop As Int
+	Private ContentWidth As Int
+	Private InputLeft As Int
 	Private IsDisposed As Boolean
 End Sub
 
@@ -60,7 +62,9 @@ Private Sub BuildPage
 	RowTop = 18
 	Content.Initialize("page")
 	Content.StyleClasses.Add("prefs-surface")
-	Content.PrefWidth = Max(650, Container.Width - 24)
+	Content.PrefWidth = Max(740, Container.Width - 24)
+	ContentWidth = Content.PrefWidth
+	InputLeft = 380
 	Scroll.Initialize("page")
 	Scroll.StyleClasses.Add("prefs-surface")
 	Scroll.FitToWidth = True
@@ -71,7 +75,7 @@ Private Sub BuildPage
 	PageTitle.Initialize("")
 	PageTitle.Text = Localization.Text(Model.GetTitleKey)
 	PageTitle.TextColor = fx.Colors.From32Bit(Theme.TextColor)
-	Content.AddNode(PageTitle, 24, RowTop, 600, 34)
+	Content.AddNode(PageTitle, 24, RowTop, ContentWidth - 48, 34)
 	RowTop = RowTop + 44
 	Dim Sections As List = Model.GetSections
 	For Each Section As Map In Sections
@@ -79,7 +83,7 @@ Private Sub BuildPage
 		SectionTitle.Initialize("")
 		SectionTitle.Text = Localization.Text(Section.Get("titleKey"))
 		SectionTitle.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
-		Content.AddNode(SectionTitle, 24, RowTop, 600, 28)
+		Content.AddNode(SectionTitle, 24, RowTop, ContentWidth - 48, 28)
 		SectionLabels.Put(Section.Get("id"), SectionTitle)
 		RowTop = RowTop + Theme.SectionSpacing + 10
 		Dim Preferences As List = Section.Get("preferences")
@@ -90,15 +94,15 @@ Private Sub BuildPage
 	Next
 	StatusLabel.Initialize("")
 	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
-	Content.AddNode(StatusLabel, 24, RowTop, 600, 26)
-	RowTop = RowTop + 38
-	SaveButton.Initialize("pageSave")
-	Content.AddNode(SaveButton, 24, RowTop, 110, 36)
-	CancelButton.Initialize("pageCancel")
-	Content.AddNode(CancelButton, 144, RowTop, 110, 36)
+	Content.AddNode(StatusLabel, 34, RowTop, ContentWidth - 30, 26)
+	RowTop = RowTop + 34
 	ResetButton.Initialize("pageReset")
-	Content.AddNode(ResetButton, 264, RowTop, 110, 36)
-	RowTop = RowTop + 56
+	Content.AddNode(ResetButton, InputLeft + 10, RowTop, 90, 36)
+	CancelButton.Initialize("pageCancel")
+	Content.AddNode(CancelButton, InputLeft + 120, RowTop, 90, 36)
+	SaveButton.Initialize("pageSave")
+	Content.AddNode(SaveButton, InputLeft + 230, RowTop, 110, 36)
+	RowTop = RowTop + 52
 	Content.PrefHeight = RowTop
 	RefreshTheme
 	RefreshLocalization
@@ -113,21 +117,21 @@ Private Sub AddPreference(Pref As Map)
 		Dim InfoKey As String = Pref.Get("titleKey")
 		If Pref.ContainsKey("descriptionKey") Then InfoKey = Pref.Get("descriptionKey")
 		InfoLabel.Text = Localization.Text(InfoKey)
-		Content.AddNode(InfoLabel, 34, RowTop + 4, 600, 30)
+		Content.AddNode(InfoLabel, 34, RowTop + 4, ContentWidth - 60, 30)
 		TitleLabels.Put(Id, InfoLabel)
 	Else If TypeName = "action" Then
 		Dim ActionButton As Button
 		ActionButton.Initialize("pageAction")
 		ActionButton.Tag = Id
 		ActionButton.Text = Localization.Text(Pref.Get("titleKey"))
-		Content.AddNode(ActionButton, 290, RowTop, 220, 36)
+		Content.AddNode(ActionButton, InputLeft, RowTop, 260, 36)
 		ActionButtons.Put(Id, ActionButton)
 	Else If TypeName = "switch" Or TypeName = "checkbox" Then
 		Dim Check As CheckBox
 		Check.Initialize("page")
 		Check.Tag = Id
 		Check.Checked = Controller.GetValue(Id)
-		Content.AddNode(Check, 34, RowTop, 600, 36)
+		Content.AddNode(Check, 34, RowTop, ContentWidth - 80, 36)
 		Controls.Put(Id, Check)
 		TitleLabels.Put(Id, Check)
 	Else
@@ -146,7 +150,7 @@ Private Sub AddPreference(Pref As Map)
 			Input.Text = "" & Controller.GetValue(Id)
 			If TypeName = "time" Then Input.PromptText = Localization.Text("format.time")
 			If TypeName = "datetime" Then Input.PromptText = Localization.Text("format.datetime")
-			Content.AddNode(Input, 290, RowTop, 320, 36)
+			Content.AddNode(Input, InputLeft, RowTop, ContentWidth - 40 - InputLeft, 36)
 			Controls.Put(Id, Input)
 		Else If TypeName = "multiline" Then
 			Dim MultilineInput As TextArea
@@ -154,7 +158,7 @@ Private Sub AddPreference(Pref As Map)
 			MultilineInput.Tag = Id
 			MultilineInput.Text = "" & Controller.GetValue(Id)
 			MultilineInput.WrapText = True
-			Content.AddNode(MultilineInput, 290, RowTop, 320, 76)
+			Content.AddNode(MultilineInput, InputLeft, RowTop, ContentWidth - 40 - InputLeft, 76)
 			Controls.Put(Id, MultilineInput)
 			RowTop = RowTop + 50
 		Else If TypeName = "multichoice" Then
@@ -177,7 +181,7 @@ Private Sub AddPreference(Pref As Map)
 				Next
 			Next
 			Multi.SetSelectedIndices(SelectedIndices)
-			Content.AddNode(Multi, 290, RowTop, 320, 90)
+			Content.AddNode(Multi, InputLeft, RowTop, ContentWidth - 40 - InputLeft, 90)
 			Controls.Put(Id, Multi)
 			RowTop = RowTop + 56
 		Else If TypeName = "date" Then
@@ -185,7 +189,7 @@ Private Sub AddPreference(Pref As Map)
 			DateInput.Initialize("")
 			DateInput.DateFormat = "yyyy-MM-dd"
 			DateInput.DateTicks = IsoToTicks(Controller.GetValue(Id))
-			Content.AddNode(DateInput, 290, RowTop, 220, 36)
+			Content.AddNode(DateInput, InputLeft, RowTop, 260, 36)
 			Controls.Put(Id, DateInput)
 		Else If TypeName = "slider" Then
 			Dim ValueSlider As Slider
@@ -198,11 +202,11 @@ Private Sub AddPreference(Pref As Map)
 			If SliderOptions.ContainsKey("max") Then ValueSlider.MaxValue = SliderOptions.Get("max") Else ValueSlider.MaxValue = 100
 			Dim SliderValueLabel As Label
 			SliderValueLabel.Initialize("")
-			Content.AddNode(SliderValueLabel, 540, RowTop + 4, 70, 28)
+			Content.AddNode(SliderValueLabel, InputLeft + 390, RowTop + 4, 70, 28)
 			SliderLabels.Put(Id, SliderValueLabel)
 			ValueSlider.Value = Controller.GetValue(Id)
 			SliderValueLabel.Text = "" & ValueSlider.Value
-			Content.AddNode(ValueSlider, 290, RowTop, 240, 36)
+			Content.AddNode(ValueSlider, InputLeft, RowTop, 380, 36)
 			Controls.Put(Id, ValueSlider)
 		Else If TypeName = "choice" Then
 			Dim Choice As ComboBox
@@ -219,27 +223,27 @@ Private Sub AddPreference(Pref As Map)
 				If ItemValue = CurrentValue Then SelectedIndex = I
 			Next
 			Choice.SelectedIndex = SelectedIndex
-			Content.AddNode(Choice, 290, RowTop, 320, 36)
+			Content.AddNode(Choice, InputLeft, RowTop, ContentWidth - 40 - InputLeft, 36)
 			Controls.Put(Id, Choice)
 		Else If TypeName = "file" Or TypeName = "directory" Then
 			Dim PathField As TextField
 			PathField.Initialize("page")
 			PathField.Tag = Id
 			PathField.Text = "" & Controller.GetValue(Id)
-			Content.AddNode(PathField, 290, RowTop, 172, 36)
+			Content.AddNode(PathField, InputLeft, RowTop, ContentWidth - 40 - InputLeft - 184, 36)
 			Controls.Put(Id, PathField)
 			Dim BrowseButton As Button
 			BrowseButton.Initialize("pageBrowse")
 			BrowseButton.Tag = Id
 			BrowseButton.Text = Localization.Text("ui.browse")
-			Content.AddNode(BrowseButton, 470, RowTop, 84, 36)
+			Content.AddNode(BrowseButton, ContentWidth - 40 - 176, RowTop, 84, 36)
 			BrowseButtons.Put(Id, BrowseButton)
 			If HasAllowClear(Pref) Then
 				Dim ClearButton As Button
 				ClearButton.Initialize("pageClear")
 				ClearButton.Tag = Id
 				ClearButton.Text = Localization.Text("ui.clear")
-				Content.AddNode(ClearButton, 562, RowTop, 84, 36)
+				Content.AddNode(ClearButton, ContentWidth - 40 - 84, RowTop, 84, 36)
 				ClearButtons.Put(Id, ClearButton)
 			End If
 		End If
