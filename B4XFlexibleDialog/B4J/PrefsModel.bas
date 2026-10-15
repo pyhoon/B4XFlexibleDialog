@@ -91,8 +91,11 @@ Private Sub ValidatePreference(Pref As Map) As Boolean
 				Dim EmptyChoices As List
 				EmptyChoices.Initialize
 				Pref.Put("defaultValue", EmptyChoices)
+			Case "label", "action"
+				' Display-only and action preferences do not have stored values.
 		End Select
 	End If
+	If TypeName = "label" Or TypeName = "action" Then Return True
 	Dim Value As Object = Pref.Get("defaultValue")
 	Select TypeName
 		Case "text", "multiline", "password"
@@ -312,7 +315,7 @@ End Sub
 Private Sub IsSupportedType(Value As Object) As Boolean
 	If IsStringObject(Value) = False Then Return False
 	Dim T As String = Value
-	Return T = "text" Or T = "multiline" Or T = "password" Or T = "number" Or T = "switch" Or T = "checkbox" Or T = "choice" Or T = "multichoice" Or T = "date" Or T = "slider" Or T = "time" Or T = "datetime"
+	Return T = "text" Or T = "multiline" Or T = "password" Or T = "number" Or T = "switch" Or T = "checkbox" Or T = "choice" Or T = "multichoice" Or T = "date" Or T = "slider" Or T = "time" Or T = "datetime" Or T = "label" Or T = "action"
 End Sub
 
 Private Sub IsStringObject(Value As Object) As Boolean

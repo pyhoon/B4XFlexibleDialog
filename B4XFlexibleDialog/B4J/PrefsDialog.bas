@@ -22,6 +22,7 @@ Sub Class_Globals
 	Private TitleLabels As Map
 	Private SectionLabels As Map
 	Private SliderLabels As Map
+	Private ActionButtons As Map
 	Private StatusLabel As Label
 	Private SaveButton As Button
 	Private CancelButton As Button
@@ -48,6 +49,7 @@ Public Sub Show As Boolean
 	TitleLabels.Initialize
 	SectionLabels.Initialize
 	SliderLabels.Initialize
+	ActionButtons.Initialize
 	Saved = False
 	RowTop = 18
 	Dim PreferenceCount As Int = Model.GetPreferenceIds.Size
@@ -117,7 +119,24 @@ End Sub
 Private Sub AddPreference(Pref As Map)
 	Dim Id As String = Pref.Get("id")
 	Dim TypeName As String = Pref.Get("type")
-	If TypeName = "switch" Or TypeName = "checkbox" Then
+	If TypeName = "label" Then
+		Dim InfoLabel As Label
+		InfoLabel.Initialize("")
+		Dim InfoKey As String = Pref.Get("titleKey")
+		If Pref.ContainsKey("descriptionKey") Then InfoKey = Pref.Get("descriptionKey")
+		InfoLabel.Text = Localization.Text(InfoKey)
+		InfoLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
+		ContentPane.AddNode(InfoLabel, 34, RowTop + 4, 560, 30)
+		TitleLabels.Put(Id, InfoLabel)
+	Else If TypeName = "action" Then
+		Dim ActionButton As Button
+		ActionButton.Initialize("prefsAction")
+		ActionButton.Tag = Id
+		ActionButton.Text = Localization.Text(Pref.Get("titleKey"))
+		ActionButton.Style = "-fx-background-color: " & ColorCss(Theme.AccentColor) & "; -fx-text-fill: " & ColorCss(Theme.PrimaryButtonTextColor) & ";"
+		ContentPane.AddNode(ActionButton, 290, RowTop, 220, 34)
+		ActionButtons.Put(Id, ActionButton)
+	Else If TypeName = "switch" Or TypeName = "checkbox" Then
 		Dim Check As CheckBox
 		Check.Initialize("dlg")
 		Check.Text = Localization.Text(Pref.Get("titleKey"))
@@ -329,6 +348,14 @@ Private Sub Language_Click
 			If Pref.Get("type") = "switch" Or Pref.Get("type") = "checkbox" Then
 				Dim Check As CheckBox = Controls.Get(Id)
 				Check.Text = Localization.Text(Pref.Get("titleKey"))
+			Else If Pref.Get("type") = "label" Then
+				Dim InfoLabel As Label = TitleLabels.Get(Id)
+				Dim InfoKey As String = Pref.Get("titleKey")
+				If Pref.ContainsKey("descriptionKey") Then InfoKey = Pref.Get("descriptionKey")
+				InfoLabel.Text = Localization.Text(InfoKey)
+			Else If Pref.Get("type") = "action" Then
+				Dim ActionButton As Button = ActionButtons.Get(Id)
+				ActionButton.Text = Localization.Text(Pref.Get("titleKey"))
 			Else
 				Dim Title As Label = TitleLabels.Get(Id)
 				Title.Text = Localization.Text(Pref.Get("titleKey"))
@@ -401,7 +428,17 @@ Private Sub Theme_Click
 			SliderValueLabel.TextColor = fx.Colors.From32Bit(Theme.TextColor)
 		End If
 	Next
+	For Each Id As String In ActionButtons.Keys
+		Dim ActionButton As Button = ActionButtons.Get(Id)
+		ActionButton.Style = "-fx-background-color: " & ColorCss(Theme.AccentColor) & "; -fx-text-fill: " & ColorCss(Theme.PrimaryButtonTextColor) & ";"
+	Next
 	RefreshButtons
+End Sub
+
+Private Sub prefsAction_Click
+	Dim ActionButton As Button = Sender
+	Dim PreferenceId As String = ActionButton.Tag
+	CallSub2(Callback, EventPrefix & "_Action", PreferenceId)
 End Sub
 
 Private Sub dlg_ValueChange(Value As Double)

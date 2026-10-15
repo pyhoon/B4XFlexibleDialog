@@ -175,6 +175,10 @@ Private Sub Prefs_DialogClosed(WasSaved As Boolean)
 	Log("Dialog closed. Saved=" & WasSaved & " Current values=" & Prefs.GetValues)
 End Sub
 
+Private Sub Prefs_Action(PreferenceId As String)
+	Log("Action preference activated: " & PreferenceId)
+End Sub
+
 Private Sub RunCoreChecks(Definition As String)
 	Dim TestModel As PrefsModel
 	TestModel.Initialize
@@ -223,6 +227,10 @@ Private Sub RunCoreChecks(Definition As String)
 	Assert("invalid time rejected", Values.SetValue("reminder_time", "24:00") = False)
 	Assert("ISO datetime accepted", Values.SetValue("meeting_at", "2026-08-24T17:30"))
 	Assert("invalid datetime rejected", Values.SetValue("meeting_at", "2026-02-30T17:30") = False)
+	Assert("action preference stores no value", Values.SetValue("clear_cache", "x") = False)
+	Assert("label preference stores no value", Values.SetValue("account_note", "x") = False)
+	Dim StoredValues As Map = Values.GetValues
+	Assert("value map excludes label/action", StoredValues.ContainsKey("clear_cache") = False And StoredValues.ContainsKey("account_note") = False)
 	Dim ValueSnapshot As Map = Values.GetValues
 	Dim SnapshotNotifications As List = ValueSnapshot.Get("notifications")
 	SnapshotNotifications.Clear

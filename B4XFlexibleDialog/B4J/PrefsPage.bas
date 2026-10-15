@@ -21,6 +21,7 @@ Sub Class_Globals
 	Private TitleLabels As Map
 	Private SectionLabels As Map
 	Private SliderLabels As Map
+	Private ActionButtons As Map
 	Private PageTitle As Label
 	Private StatusLabel As Label
 	Private SaveButton As Button
@@ -48,6 +49,7 @@ Private Sub BuildPage
 	TitleLabels.Initialize
 	SectionLabels.Initialize
 	SliderLabels.Initialize
+	ActionButtons.Initialize
 	RowTop = 18
 	Content.Initialize("page")
 	Content.StyleClasses.Add("prefs-surface")
@@ -96,7 +98,22 @@ End Sub
 Private Sub AddPreference(Pref As Map)
 	Dim Id As String = Pref.Get("id")
 	Dim TypeName As String = Pref.Get("type")
-	If TypeName = "switch" Or TypeName = "checkbox" Then
+	If TypeName = "label" Then
+		Dim InfoLabel As Label
+		InfoLabel.Initialize("")
+		Dim InfoKey As String = Pref.Get("titleKey")
+		If Pref.ContainsKey("descriptionKey") Then InfoKey = Pref.Get("descriptionKey")
+		InfoLabel.Text = Localization.Text(InfoKey)
+		Content.AddNode(InfoLabel, 34, RowTop + 4, 600, 30)
+		TitleLabels.Put(Id, InfoLabel)
+	Else If TypeName = "action" Then
+		Dim ActionButton As Button
+		ActionButton.Initialize("pageAction")
+		ActionButton.Tag = Id
+		ActionButton.Text = Localization.Text(Pref.Get("titleKey"))
+		Content.AddNode(ActionButton, 290, RowTop, 220, 36)
+		ActionButtons.Put(Id, ActionButton)
+	Else If TypeName = "switch" Or TypeName = "checkbox" Then
 		Dim Check As CheckBox
 		Check.Initialize("page")
 		Check.Tag = Id
@@ -280,6 +297,14 @@ Public Sub RefreshLocalization
 			If Pref.Get("type") = "switch" Or Pref.Get("type") = "checkbox" Then
 				Dim Check As CheckBox = Controls.Get(Id)
 				Check.Text = Localization.Text(Pref.Get("titleKey"))
+			Else If Pref.Get("type") = "label" Then
+				Dim InfoLabel As Label = TitleLabels.Get(Id)
+				Dim InfoKey As String = Pref.Get("titleKey")
+				If Pref.ContainsKey("descriptionKey") Then InfoKey = Pref.Get("descriptionKey")
+				InfoLabel.Text = Localization.Text(InfoKey)
+			Else If Pref.Get("type") = "action" Then
+				Dim ActionButton As Button = ActionButtons.Get(Id)
+				ActionButton.Text = Localization.Text(Pref.Get("titleKey"))
 			Else
 				Dim Title As Label = TitleLabels.Get(Id)
 				Title.Text = Localization.Text(Pref.Get("titleKey"))
@@ -354,6 +379,10 @@ Public Sub RefreshTheme
 			SliderValueLabel.TextColor = fx.Colors.From32Bit(Theme.TextColor)
 		End If
 	Next
+	For Each Id As String In ActionButtons.Keys
+		Dim ActionButton As Button = ActionButtons.Get(Id)
+		ActionButton.Style = "-fx-background-color: " & ColorCss(Theme.AccentColor) & "; -fx-text-fill: " & ColorCss(Theme.PrimaryButtonTextColor) & ";"
+	Next
 	ApplyButtonStyles
 End Sub
 
@@ -398,6 +427,12 @@ End Sub
 
 Private Sub pageCancel_Click
 	Cancel_Click
+End Sub
+
+Private Sub pageAction_Click
+	Dim ActionButton As Button = Sender
+	Dim PreferenceId As String = ActionButton.Tag
+	CallSub2(Callback, EventPrefix & "_Action", PreferenceId)
 End Sub
 
 Private Sub page_Click

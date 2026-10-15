@@ -20,7 +20,7 @@ Public Sub Initialize(Definition As PrefsModel)
 	HasDraft = False
 	For Each Id As String In Model.GetPreferenceIds
 		Dim Pref As Map = Model.GetPreference(Id)
-		Committed.Put(Id, Pref.Get("defaultValue"))
+		If Pref.Get("type") <> "label" And Pref.Get("type") <> "action" Then Committed.Put(Id, CopyValue(Pref.Get("defaultValue")))
 	Next
 End Sub
 
@@ -62,9 +62,12 @@ End Sub
 Public Sub ValidateDraft As String
 	If HasDraft = False Then BeginDraft
 	For Each Id As String In Model.GetPreferenceIds
-		If Draft.ContainsKey(Id) = False Then Return "Missing draft value for " & Id
-		Dim ErrorText As String = ValidateValue(Id, Draft.Get(Id))
-		If ErrorText <> "" Then Return ErrorText
+		Dim Pref As Map = Model.GetPreference(Id)
+		If Pref.Get("type") <> "label" And Pref.Get("type") <> "action" Then
+			If Draft.ContainsKey(Id) = False Then Return "Missing draft value for " & Id
+			Dim ErrorText As String = ValidateValue(Id, Draft.Get(Id))
+			If ErrorText <> "" Then Return ErrorText
+		End If
 	Next
 	Return ""
 End Sub
@@ -84,6 +87,8 @@ Public Sub ValidateValue(Id As String, Value As Object) As String
 	If Pref.IsInitialized = False Then Return "Unknown preference id: " & Id
 	Dim TypeName As String = Pref.Get("type")
 	Select TypeName
+		Case "label", "action"
+			Return "Preference " & Id & " does not store a value."
 		Case "text", "multiline", "password"
 			If IsStringObject(Value) = False Then Return "Preference " & Id & " must be text."
 			Dim TextValue As String = Value

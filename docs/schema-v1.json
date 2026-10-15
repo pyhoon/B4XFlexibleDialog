@@ -29,8 +29,9 @@
       "required": ["id", "type", "titleKey"],
       "properties": {
         "id": {"$ref": "#/$defs/id"},
-        "type": {"enum": ["text", "multiline", "password", "number", "switch", "checkbox", "choice", "multichoice", "date", "slider", "time", "datetime"]},
+        "type": {"enum": ["text", "multiline", "password", "number", "switch", "checkbox", "choice", "multichoice", "date", "slider", "time", "datetime", "label", "action"]},
         "titleKey": {"type": "string", "minLength": 1},
+        "descriptionKey": {"type": "string"},
         "defaultValue": {},
         "options": {"type": "object"},
         "required": {"type": "boolean"},
