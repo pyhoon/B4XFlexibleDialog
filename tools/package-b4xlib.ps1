@@ -19,7 +19,7 @@
 param(
     [string]$SourceDir,
     [string]$OutputDir,
-    [string]$Version = '0.2.0',
+    [string]$Version = '0.2',
     [string]$LibraryName = 'B4XFlexibleDialog'
 )
 
@@ -60,7 +60,7 @@ try {
     if (-not (Test-Path -LiteralPath $css)) { throw "Missing asset: $css" }
     Copy-Item -LiteralPath $css -Destination (Join-Path $stage 'Files') -Force
 
-    $manifest = "Version=$Version`r`nB4J.DependsOn=jCore, jFX, Json`r`n"
+    $manifest = "Version=$Version`r`nB4J.DependsOn=jFX, Json`r`n"
     Set-Content -LiteralPath (Join-Path $stage 'manifest.txt') -Value $manifest -NoNewline -Encoding Ascii
 
     if (-not (Test-Path -LiteralPath $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir | Out-Null }
