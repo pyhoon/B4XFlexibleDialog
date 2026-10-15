@@ -50,12 +50,16 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Add draft-reset Reset buttons to the dialog and page with localized status.
 - [x] Verify dialog/page Reset behavior and localized validation messages (reported passing).
 
-## M4 — Persistence and migrations
+## M4 — Persistence and migrations — IN PROGRESS
 
-- [ ] Define a pluggable persistence adapter independent of controller state.
-- [ ] Implement map and JSON storage adapters with clear save/error semantics.
-- [ ] Verify values restore after process restart.
-- [ ] Preserve unknown stored keys and define schema migration policy separately from library versioning.
+- [x] Define a persistence adapter (`PrefsStore`) independent of controller state.
+- [x] Implement map-backed storage with JSON import/export and save error handling.
+- [x] Persist committed values after Save/commit, programmatic `SetValue`, and reset when a store is set.
+- [x] Preserve unknown stored keys on save and skip unknown/invalid keys on load.
+- [x] Expose `ExportValues` / `ImportValues` for JSON round-tripping.
+- [x] Demonstrate file-backed restore across restart in the B4J demo.
+- [ ] Verify values restore after process restart (edit, save, relaunch, confirm).
+- [ ] Document migration policy and confirm the demo store path is app-owned.
 
 ## M5 — File and directory preferences
 

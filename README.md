@@ -32,6 +32,7 @@ The modal dialog is capped at 600 DIP and scrolls its preference body when neede
 - `PrefsPage.bas`: B4J embedded page renderer; adds/removes only its own scroll pane in the supplied `AnchorPane`.
 - `PrefsLocalization.bas`: language dictionaries and missing-key fallback.
 - `PrefsTheme.bas`: minimal light/dark colors and layout spacing.
+- `PrefsStore.bas`: persistence adapter (map-backed with JSON import/export); preserves unknown stored keys.
 - `B4XFlexibleDialog.bas`: facade and callback forwarding.
 
 ## Definition JSON v1
@@ -74,13 +75,27 @@ Dim Value As Object = Prefs.GetValue("username")
 Dim Values As Map = Prefs.GetValues ' Copy/snapshot
 Prefs.ResetToDefaults ' Restores every value preference to its default
 Prefs.ResetPreference("username") ' Restores one value preference to its default
+
+' Persistence
+Dim Store As PrefsStore
+Store.Initialize
+Prefs.SetStore(Store) ' Writes committed values to the store after every commit/set/reset
+Dim Applied As Int = Prefs.LoadStoredValues ' Restores stored values for known value preferences
+Dim Json As String = Prefs.ExportValues ' Save committed values into the store and return a JSON snapshot
+Dim Imported As Int = Prefs.ImportValues(Json) ' Parse JSON into the store, then apply matching values
 Prefs.Show ' Synchronous modal form, owned by MainForm
 Prefs.CreatePage(MainForm.RootPane) ' Anchors a page in this caller-owned container
 Prefs.RefreshPage ' Rebuilds visible values from committed state
 Prefs.DisposePage ' Removes only the library-owned page node
 ```
 
-`SetValue` validates IDs, types, choice membership, string constraints, and number bounds; failed sets do not modify values. `GetValues` returns a copied map and clones list-valued multichoice values. `ResetToDefaults` and `ResetPreference` operate on committed values for value preferences and are excluded from change events (no change event exists in this milestone). `Show` creates draft values from the committed map. Save reads all controls, validates the complete draft, calls `BeforeSave`, commits only if accepted, then calls `AfterSave`. Cancel and the window close button discard the draft. The dialog and page Reset buttons load each value preference's default into the current draft and refresh the visible controls; Save then commits them, or Cancel discards. Save and Cancel are mutually exclusive outcomes. Reopening after Save shows the committed in-memory values.
+`SetValue` validates IDs, types, choice membership, string constraints, and number bounds; failed sets do not modify values. `GetValues` returns a copied map and clones list-valued multichoice values. `ResetToDefaults` and `ResetPreference` operate on committed values for value preferences and are excluded from change events (no change event exists in this milestone).
+
+## Persistence (Milestone 4)
+
+`PrefsStore` is a map-backed adapter independent of the controller. `Prefs.SetStore(Store)` enables persistence: after a successful Save/commit, a programmatic `SetValue`, or a reset, the facade writes the committed value map into the store. The store merges those values into its stored map, so **unknown stored keys are preserved** rather than deleted. `LoadStoredValues` applies only known value preferences; unknown keys and invalid values are skipped, leaving defaults in place. `ExportValues`/`ImportValues` provide JSON round-tripping for backup or transfer.
+
+The library does not choose or own the storage location. The demo writes `Store.ToJson` to `File.DirApp\prefs-store.json` after each save and loads it at startup to restore values across restarts. Stored-value migration is intentionally application-defined and kept separate from the library version; the store exposes `SetSchemaVersion`/`GetSchemaVersion` for an application to track its own schema, and preserves unknown keys so migrations can read legacy data. `Show` creates draft values from the committed map. Save reads all controls, validates the complete draft, calls `BeforeSave`, commits only if accepted, then calls `AfterSave`. Cancel and the window close button discard the draft. The dialog and page Reset buttons load each value preference's default into the current draft and refresh the visible controls; Save then commits them, or Cancel discards. Save and Cancel are mutually exclusive outcomes. Reopening after Save shows the committed in-memory values.
 
 `CreatePage` accepts a B4J `AnchorPane` and mounts a scrollable page without clearing or owning the caller's other nodes/navigation. Page Save commits and leaves the page mounted; page Cancel discards current edits and reloads committed values. Programmatic `SetValue`, language changes, and theme changes refresh the visible page. `RefreshPage` discards uncommitted page edits and reloads committed values. Opening the modal dialog while a page is mounted also resets the page draft to committed values; after the dialog closes, the page refreshes from the resulting committed state. Save before switching presentations if edits should be kept.
 
@@ -121,15 +136,17 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Programmatic `ResetToDefaults` / `ResetPreference` restore defaults | **PASS** (reported demo run) |
 | Dialog/page Reset button loads defaults into the draft | **PASS** (reported GUI test) |
 | Label/action rendering, localization, and `_Action` callback | **PASS** (reported GUI test) |
+| Store merge, unknown-key preservation, JSON round-trip, and `ApplyValues` | **Included; run in demo on startup** |
+| Values restored after application restart | **Implemented; verify by editing, saving, and relaunching** |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
 | Page mounting/resizing, Save/Cancel, repeated dispose/remount, localization/theme refresh | **PASS** (reported GUI test) |
 | Multiline/password/checkbox/multichoice/date/time/datetime/slider controls and validation | **PASS** (reported GUI test) |
 | Modal dialog sizing at 600 DIP | **PASS** (reported GUI test) |
-| Values survive application reboot | **Not supported yet**; persistence is deferred to Milestone 4 |
+| Values survive application reboot | **Supported via `PrefsStore`** (see Persistence) |
 
 The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestones 1–3 GUI results above were reported from demo runs. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
 
-## Deferred beyond current Milestone 3 scope
+## Deferred beyond current scope
 
-Persistence and migrations (M4), file/directory preferences and providers (M5), B4A/B4i support (M6), custom renderers (`custom`) and adaptive presentation (M7), import/export, immediate-save mode, conditional display, advanced validators, advanced styling, automated GUI testing, and distributable `.b4xlib` packaging.
+File/directory preferences and providers (M5), B4A/B4i support (M6), custom renderers (`custom`) and adaptive presentation (M7), immediate-save mode, conditional display, advanced validators, advanced styling, automated GUI testing, and distributable `.b4xlib` packaging.

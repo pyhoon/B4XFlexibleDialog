@@ -19,9 +19,10 @@ Module4=PrefsLocalization
 Module5=PrefsModel
 Module6=PrefsPage
 Module7=PrefsTheme
+Module8=PrefsStore
 NumberOfFiles=4
 NumberOfLibraries=3
-NumberOfModules=7
+NumberOfModules=8
 Version=10.7
 @EndOfDesignText@
 #Region Project Attributes
@@ -42,6 +43,8 @@ Sub Process_Globals
 	Private MainStatus As Label
 	Private PageHost As AnchorPane
 	Private PageShown As Boolean
+	Private Store As PrefsStore
+	Private StoreFileName As String = "prefs-store.json"
 End Sub
 
 Sub AppStart (Form1 As Form, Args() As String)
@@ -58,7 +61,18 @@ Sub AppStart (Form1 As Form, Args() As String)
 		fx.Msgbox(MainForm, Prefs.LastError, "Definition error")
 		Return
 	End If
+	Store.Initialize
+	Prefs.SetStore(Store)
+	If File.Exists(File.DirApp, StoreFileName) Then
+		If Store.FromJson(File.ReadString(File.DirApp, StoreFileName)) Then
+			Dim Restored As Int = Prefs.LoadStoredValues
+			Log("Restored " & Restored & " value(s) from " & File.Combine(File.DirApp, StoreFileName))
+		Else
+			LogError("Stored settings file could not be parsed: " & StoreFileName)
+		End If
+	End If
 	RunCoreChecks(Definition)
+	RunStoreChecks(Definition)
 	RunFacadeChecks
 	PageHost.Initialize("host")
 	MainForm.RootPane.AddNode(PageHost, 280, 15, 780, 690)
@@ -169,6 +183,12 @@ End Sub
 
 Private Sub Prefs_AfterSave(Values As Map)
 	Log("Saved values: " & Values)
+	SaveStoreFile
+End Sub
+
+Private Sub SaveStoreFile
+	If File.Exists(File.DirApp, StoreFileName) Then File.Delete(File.DirApp, StoreFileName)
+	File.WriteString(File.DirApp, StoreFileName, Store.ToJson)
 End Sub
 
 Private Sub Prefs_DialogClosed(WasSaved As Boolean)
@@ -260,6 +280,32 @@ Private Sub RunCoreChecks(Definition As String)
 	Values.ResetToDefaults
 	Dim ResetName As String = Values.GetValue("username")
 	Assert("ResetToDefaults restores all defaults", ResetName = "Guest")
+End Sub
+
+Private Sub RunStoreChecks(Definition As String)
+	Dim S As PrefsStore
+	S.Initialize
+	S.SetValue("legacy_key", "keep me")
+	Dim Committed As Map
+	Committed.Initialize
+	Committed.Put("username", "StoredUser")
+	Committed.Put("items_per_page", 50)
+	S.Save(Committed)
+	Assert("store merges known values", S.GetValue("username") = "StoredUser")
+	Assert("store preserves unknown keys", S.ContainsKey("legacy_key") And S.GetValue("legacy_key") = "keep me")
+	Dim Json As String = S.ToJson
+	Dim S2 As PrefsStore
+	S2.Initialize
+	Assert("store round-trips through JSON", S2.FromJson(Json))
+	Assert("store JSON preserves unknown keys", S2.GetValue("legacy_key") = "keep me")
+	Dim StoreModel As PrefsModel
+	StoreModel.Initialize
+	StoreModel.LoadFromJson(Definition)
+	Dim StoreController As PrefsController
+	StoreController.Initialize(StoreModel)
+	Dim Applied As Int = StoreController.ApplyValues(S2.Load)
+	Assert("ApplyValues applies known stored keys only", Applied = 2 And StoreController.GetValue("username") = "StoredUser")
+	Assert("ApplyValues keeps defaults for missing keys", StoreController.GetValue("dark_mode") = False)
 End Sub
 
 Private Sub RunFacadeChecks

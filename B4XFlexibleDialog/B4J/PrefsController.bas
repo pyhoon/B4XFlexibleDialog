@@ -10,6 +10,8 @@ Sub Class_Globals
 	Private Committed As Map
 	Private Draft As Map
 	Private HasDraft As Boolean
+	Private CommitTarget As Object
+	Private CommitEvent As String
 	Public LastError As String
 End Sub
 
@@ -103,9 +105,33 @@ Public Sub ValidateDraft As String
 	Return ""
 End Sub
 
+Public Sub SetCommitListener(Target As Object, EventName As String)
+	CommitTarget = Target
+	CommitEvent = EventName
+End Sub
+
 Public Sub CommitDraft
 	Committed = CopyMap(Draft)
 	HasDraft = False
+	If CommitTarget <> Null Then CallSub(CommitTarget, CommitEvent)
+End Sub
+
+' Applies stored values for known value preferences. Unknown keys and invalid values are skipped.
+' Returns the number of applied values.
+Public Sub ApplyValues(NewValues As Map) As Int
+	Dim Applied As Int = 0
+	For Each Key As String In NewValues.Keys
+		Dim Pref As Map = Model.GetPreference(Key)
+		If Pref.IsInitialized = False Then Continue
+		If Pref.Get("type") = "label" Or Pref.Get("type") = "action" Then Continue
+		Dim Candidate As Object = NewValues.Get(Key)
+		If ValidateValue(Key, Candidate) = "" Then
+			Committed.Put(Key, CopyValue(Candidate))
+			Applied = Applied + 1
+		End If
+	Next
+	If HasDraft Then Draft = CopyMap(Committed)
+	Return Applied
 End Sub
 
 Public Sub CancelDraft

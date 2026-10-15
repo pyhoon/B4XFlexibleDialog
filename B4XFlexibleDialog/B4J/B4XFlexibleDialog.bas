@@ -16,6 +16,8 @@ Sub Class_Globals
 	Private ActivePage As PrefsPage
 	Private PageActive As Boolean
 	Private PageStylesheetAdded As Boolean
+	Private Store As PrefsStore
+	Private StoreEnabled As Boolean
 	Private Ready As Boolean
 	Public LastError As String
 End Sub
@@ -26,8 +28,10 @@ Public Sub Initialize(EventTarget As Object, EventName As String, Owner As Form)
 	OwnerForm = Owner
 	Model.Initialize
 	Controller.Initialize(Model)
+	Controller.SetCommitListener(Me, "fs_Committed")
 	Localization.Initialize
 	CurrentTheme.Initialize(False)
+	StoreEnabled = False
 	Ready = False
 	LastError = ""
 End Sub
@@ -43,9 +47,62 @@ Public Sub LoadDefinition(DefinitionJson As String) As Boolean
 	End If
 	Model = NewModel
 	Controller.Initialize(Model)
+	Controller.SetCommitListener(Me, "fs_Committed")
 	Ready = True
 	LastError = ""
 	Return True
+End Sub
+
+Public Sub SetStore(S As PrefsStore)
+	Store = S
+	StoreEnabled = True
+End Sub
+
+Public Sub GetStore As PrefsStore
+	Return Store
+End Sub
+
+' Loads stored values into committed state for known value preferences. Returns applied count.
+Public Sub LoadStoredValues As Int
+	If CheckReady = False Then Return 0
+	If StoreEnabled = False Then Return 0
+	Dim Applied As Int = Controller.ApplyValues(Store.Load)
+	If PageActive Then ActivePage.RefreshValues
+	Return Applied
+End Sub
+
+' Persists the current committed values into the store, preserving unknown stored keys.
+Public Sub SaveStoredValues
+	If StoreEnabled = False Then Return
+	Store.Save(Controller.GetValues)
+End Sub
+
+' Imports values from a JSON object string into the store, then applies them. Returns applied count.
+Public Sub ImportValues(JsonText As String) As Int
+	If CheckReady = False Then Return 0
+	If StoreEnabled = False Then Return 0
+	If Store.FromJson(JsonText) = False Then
+		LastError = "Invalid JSON passed to ImportValues."
+		Return 0
+	End If
+	Dim Applied As Int = Controller.ApplyValues(Store.Load)
+	If PageActive Then ActivePage.RefreshValues
+	Return Applied
+End Sub
+
+' Saves committed values into the store and returns a JSON snapshot.
+Public Sub ExportValues As String
+	If StoreEnabled = False Then Return ""
+	Store.Save(Controller.GetValues)
+	Return Store.ToJson
+End Sub
+
+Private Sub fs_Committed
+	PersistIfConfigured
+End Sub
+
+Private Sub PersistIfConfigured
+	If StoreEnabled Then Store.Save(Controller.GetValues)
 End Sub
 
 Public Sub SetDictionary(Language As String, Values As Map)
@@ -89,6 +146,7 @@ Public Sub SetValue(Id As String, Value As Object) As Boolean
 		Return False
 	End If
 	If PageActive Then ActivePage.RefreshValue(Id, Value)
+	PersistIfConfigured
 	LastError = ""
 	Return True
 End Sub
@@ -111,12 +169,14 @@ Public Sub ResetToDefaults
 	If CheckReady = False Then Return
 	Controller.ResetToDefaults
 	If PageActive Then ActivePage.RefreshValues
+	PersistIfConfigured
 End Sub
 
 Public Sub ResetPreference(Id As String)
 	If CheckReady = False Then Return
 	Controller.ResetPreference(Id)
 	If PageActive Then ActivePage.RefreshValue(Id, Controller.GetValue(Id))
+	PersistIfConfigured
 End Sub
 
 Public Sub Show
