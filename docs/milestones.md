@@ -23,9 +23,9 @@ Implemented and manually exercised in the B4J demo:
 
 This milestone has in-memory state only. Values surviving dialog close/reopen is supported; restoration after application restart is intentionally not supported yet.
 
-## M2 — B4J full-page renderer — next
+## M2 — B4J full-page renderer — in progress
 
-Render the existing model/controller inside a caller-provided B4J container. The caller retains navigation ownership. Verify that dialog and page use the same committed values and explicit save semantics; refresh controls for value, language, and theme changes; document sizing, scrolling, mounting, and disposal behavior.
+The B4J `PrefsPage` mounts in a caller-provided `AnchorPane`, keeps caller navigation and unrelated children intact, and shares the model/controller with the modal dialog. It supports the same four controls and explicit Save/Cancel semantics; the demo has a mount/remove page action. Programmatic values and language/theme changes refresh the mounted view. Build verification is complete; interactive page sizing, scrolling, repeated mount/dispose, and editing tests remain.
 
 ## M3 — Additional preference types and validation
 

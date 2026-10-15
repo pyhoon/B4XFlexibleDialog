@@ -1,27 +1,27 @@
 /* Theme lookups are set on the dialog root pane by PrefsDialog.ApplyTheme. */
-.check-box {
+.prefs-surface .check-box {
     -fx-text-fill: -prefs-input-text;
     -fx-accent: -prefs-accent;
     -fx-focus-color: -prefs-accent;
 }
 
-.check-box .box {
+.prefs-surface .check-box .box {
     -fx-background-color: -prefs-input-bg;
     -fx-border-color: -prefs-input-border;
     -fx-border-radius: 3px;
     -fx-background-radius: 3px;
 }
 
-.check-box:selected > .box {
+.prefs-surface .check-box:selected > .box {
     -fx-background-color: -prefs-accent;
     -fx-border-color: -prefs-accent;
 }
 
-.check-box:selected > .box > .mark {
+.prefs-surface .check-box:selected > .box > .mark {
     -fx-background-color: -prefs-checkmark-text;
 }
 
-.combo-box-base {
+.prefs-surface .combo-box-base {
     -fx-background-color: -prefs-input-bg;
     -fx-border-color: -prefs-input-border;
     -fx-border-radius: 4px;
@@ -30,23 +30,23 @@
     -fx-mark-color: -prefs-input-text;
 }
 
-.combo-box .list-cell {
+.prefs-surface .combo-box .list-cell {
     -fx-background-color: -prefs-input-bg;
     -fx-text-fill: -prefs-input-text;
 }
 
-.combo-box-popup .list-view {
+.prefs-surface .combo-box-popup .list-view {
     -fx-background-color: -prefs-input-bg;
     -fx-border-color: -prefs-input-border;
 }
 
-.combo-box-popup .list-cell {
+.prefs-surface .combo-box-popup .list-cell {
     -fx-background-color: -prefs-input-bg;
     -fx-text-fill: -prefs-input-text;
 }
 
-.combo-box-popup .list-cell:hover,
-.combo-box-popup .list-cell:selected {
+.prefs-surface .combo-box-popup .list-cell:hover,
+.prefs-surface .combo-box-popup .list-cell:selected {
     -fx-background-color: -prefs-accent;
     -fx-text-fill: -prefs-checkmark-text;
 }

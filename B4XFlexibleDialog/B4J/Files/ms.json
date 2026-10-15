@@ -11,6 +11,8 @@
   "ui.cancel": "Batal",
   "ui.language": "Bahasa",
   "ui.theme": "Tema",
+  "ui.saved": "Perubahan disimpan",
+  "ui.cancelled": "Suntingan dibatalkan",
   "validation.number": "Masukkan nombor yang sah",
   "validation.choice": "Pilih satu pilihan"
 }

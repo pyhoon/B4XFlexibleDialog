@@ -13,6 +13,9 @@ Sub Class_Globals
 	Private Controller As PrefsController
 	Private Localization As PrefsLocalization
 	Private CurrentTheme As PrefsTheme
+	Private ActivePage As PrefsPage
+	Private PageActive As Boolean
+	Private PageStylesheetAdded As Boolean
 	Private Ready As Boolean
 	Public LastError As String
 End Sub
@@ -30,6 +33,7 @@ Public Sub Initialize(EventTarget As Object, EventName As String, Owner As Form)
 End Sub
 
 Public Sub LoadDefinition(DefinitionJson As String) As Boolean
+	If PageActive Then DisposePage
 	Dim NewModel As PrefsModel
 	NewModel.Initialize
 	If NewModel.LoadFromJson(DefinitionJson) = False Then
@@ -50,6 +54,7 @@ End Sub
 
 Public Sub SetLanguage(Language As String)
 	Localization.SetLanguage(Language)
+	If PageActive Then ActivePage.RefreshLocalization
 End Sub
 
 Public Sub GetLanguage As String
@@ -58,6 +63,7 @@ End Sub
 
 Public Sub SetTheme(Value As PrefsTheme)
 	CurrentTheme = Value
+	If PageActive Then ActivePage.RefreshTheme
 End Sub
 
 Public Sub CreateLightTheme As PrefsTheme
@@ -82,6 +88,7 @@ Public Sub SetValue(Id As String, Value As Object) As Boolean
 		LastError = Controller.LastError
 		Return False
 	End If
+	If PageActive Then ActivePage.RefreshValue(Id, Value)
 	LastError = ""
 	Return True
 End Sub
@@ -105,10 +112,38 @@ Public Sub Show
 		LogError(LastError)
 		Return
 	End If
+	If PageActive Then ActivePage.RefreshValues
 	Dim Dialog As PrefsDialog
 	Dialog.Initialize(OwnerForm, Controller, Model, Localization, CurrentTheme, Callback, EventPrefix)
 	Dim WasSaved As Boolean = Dialog.Show
+	If PageActive Then ActivePage.RefreshValues
 	CallSub2(Callback, EventPrefix & "_DialogClosed", WasSaved)
+End Sub
+
+Public Sub CreatePage(Container As AnchorPane)
+	If CheckReady = False Then
+		LogError(LastError)
+		Return
+	End If
+	If PageActive Then DisposePage
+	If PageStylesheetAdded = False Then
+		Dim CssUri As String = File.GetUri(File.DirAssets, "prefs.css")
+		If OwnerForm.Stylesheets.IndexOf(CssUri) = -1 Then OwnerForm.Stylesheets.Add(CssUri)
+		PageStylesheetAdded = True
+	End If
+	ActivePage.Initialize(Container, Controller, Model, Localization, CurrentTheme, Callback, EventPrefix)
+	PageActive = True
+End Sub
+
+Public Sub RefreshPage
+	If PageActive Then ActivePage.RefreshValues
+End Sub
+
+Public Sub DisposePage
+	If PageActive Then
+		ActivePage.Dispose
+		PageActive = False
+	End If
 End Sub
 
 Private Sub CheckReady As Boolean

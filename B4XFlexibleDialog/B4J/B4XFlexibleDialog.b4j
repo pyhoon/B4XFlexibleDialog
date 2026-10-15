@@ -17,15 +17,16 @@ Module2=PrefsController
 Module3=PrefsDialog
 Module4=PrefsLocalization
 Module5=PrefsModel
-Module6=PrefsTheme
+Module6=PrefsPage
+Module7=PrefsTheme
 NumberOfFiles=4
 NumberOfLibraries=3
-NumberOfModules=6
+NumberOfModules=7
 Version=10.7
 @EndOfDesignText@
 #Region Project Attributes
-	#MainFormWidth: 500
-	#MainFormHeight: 300
+	#MainFormWidth: 1100
+	#MainFormHeight: 760
 #End Region
 
 Sub Process_Globals
@@ -37,7 +38,10 @@ Sub Process_Globals
 	Private MainOpenButton As Button
 	Private MainLanguageButton As Button
 	Private MainThemeButton As Button
+	Private MainPageButton As Button
 	Private MainStatus As Label
+	Private PageHost As AnchorPane
+	Private PageShown As Boolean
 End Sub
 
 Sub AppStart (Form1 As Form, Args() As String)
@@ -56,15 +60,21 @@ Sub AppStart (Form1 As Form, Args() As String)
 	End If
 	RunCoreChecks(Definition)
 	RunFacadeChecks
+	PageHost.Initialize("host")
+	MainForm.RootPane.AddNode(PageHost, 280, 15, 780, 690)
+	MainForm.RootPane.SetAnchors(PageHost, 280, 15, 20, 20)
+	PageHost.Visible = False
 	MainOpenButton.Initialize("mainOpen")
 	MainOpenButton.Text = "Open preferences"
-	MainForm.RootPane.AddNode(MainOpenButton, 30, 30, 210, 42)
+	MainForm.RootPane.AddNode(MainOpenButton, 30, 30, 220, 42)
 	MainLanguageButton.Initialize("mainLanguage")
-	MainForm.RootPane.AddNode(MainLanguageButton, 30, 90, 210, 42)
+	MainForm.RootPane.AddNode(MainLanguageButton, 30, 90, 220, 42)
 	MainThemeButton.Initialize("mainTheme")
-	MainForm.RootPane.AddNode(MainThemeButton, 30, 150, 210, 42)
+	MainForm.RootPane.AddNode(MainThemeButton, 30, 150, 220, 42)
+	MainPageButton.Initialize("mainPage")
+	MainForm.RootPane.AddNode(MainPageButton, 30, 210, 220, 42)
 	MainStatus.Initialize("")
-	MainForm.RootPane.AddNode(MainStatus, 30, 215, 400, 32)
+	MainForm.RootPane.AddNode(MainStatus, 30, 280, 230, 90)
 	UpdateDemoAppearance
 	MainForm.Show
 End Sub
@@ -101,6 +111,19 @@ Private Sub mainTheme_Click
 	UpdateDemoAppearance
 End Sub
 
+Private Sub mainPage_Click
+	If PageShown Then
+		Prefs.DisposePage
+		PageHost.Visible = False
+		PageShown = False
+	Else
+		Prefs.CreatePage(PageHost)
+		PageHost.Visible = True
+		PageShown = True
+	End If
+	UpdateDemoAppearance
+End Sub
+
 Private Sub UpdateDemoAppearance
 	If Prefs.GetLanguage = "ms" Then
 		MainLanguageButton.Text = "Bahasa: Melayu (tukar ke English)"
@@ -109,26 +132,35 @@ Private Sub UpdateDemoAppearance
 		MainLanguageButton.Text = "Language: English (switch to Malay)"
 		MainStatus.Text = "Language: English"
 	End If
+	If PageShown Then
+		MainPageButton.Text = "Close settings page"
+	Else
+		MainPageButton.Text = "Open settings page"
+	End If
 	If Prefs.IsDarkTheme Then
 		MainThemeButton.Text = "Theme: Dark"
 		MainForm.RootPane.Style = "-fx-background-color: #303030;"
 		MainStatus.TextColor = fx.Colors.From32Bit(-986896)
 		MainLanguageButton.TextColor = fx.Colors.From32Bit(-986896)
 		MainThemeButton.TextColor = fx.Colors.From32Bit(-986896)
+		MainPageButton.TextColor = fx.Colors.From32Bit(-986896)
 		MainOpenButton.Style = "-fx-background-color: #8ab4f8; -fx-text-fill: #202124; -fx-font-weight: bold; -fx-background-radius: 4;"
 		MainLanguageButton.Style = "-fx-background-color: #484848; -fx-text-fill: #f0f0f0; -fx-background-radius: 4;"
 		MainThemeButton.Style = "-fx-background-color: #484848; -fx-text-fill: #f0f0f0; -fx-background-radius: 4;"
+		MainPageButton.Style = "-fx-background-color: #484848; -fx-text-fill: #f0f0f0; -fx-background-radius: 4;"
 	Else
 		MainThemeButton.Text = "Theme: Light"
 		MainForm.RootPane.Style = "-fx-background-color: #ffffff;"
 		MainStatus.TextColor = fx.Colors.From32Bit(-14540254)
 		MainLanguageButton.TextColor = fx.Colors.From32Bit(-14540254)
 		MainThemeButton.TextColor = fx.Colors.From32Bit(-14540254)
+		MainPageButton.TextColor = fx.Colors.From32Bit(-14540254)
 		MainOpenButton.Style = "-fx-background-color: #1d4ed8; -fx-text-fill: #ffffff; -fx-font-weight: bold; -fx-background-radius: 4;"
 		MainLanguageButton.Style = "-fx-background-color: #e5e7eb; -fx-text-fill: #1f2937; -fx-background-radius: 4;"
 		MainThemeButton.Style = "-fx-background-color: #e5e7eb; -fx-text-fill: #1f2937; -fx-background-radius: 4;"
+		MainPageButton.Style = "-fx-background-color: #e5e7eb; -fx-text-fill: #1f2937; -fx-background-radius: 4;"
 	End If
-	MainStatus.Text = MainStatus.Text & " | Dialog theme: " & MainThemeButton.Text.SubString(7)
+	MainStatus.Text = MainStatus.Text & CRLF & "Dialog/page: " & MainThemeButton.Text.SubString(7) & CRLF & "Username: " & Prefs.GetValue("username")
 End Sub
 
 Private Sub Prefs_BeforeSave(Values As Map) As Boolean

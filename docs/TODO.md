@@ -21,14 +21,15 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Verify control editing, Save/Cancel, invalid numeric input/bounds, language/theme switching, and value restoration after dialog reopen (reported from interactive demo tests).
 - [x] Confirm values intentionally reset after application restart; persistence is not part of this milestone.
 
-## M2 — B4J full-page renderer — NEXT
+## M2 — B4J full-page renderer — IN PROGRESS
 
-- [ ] Render the same definition/controller into a caller-provided B4J container.
-- [ ] Do not take ownership of caller navigation or container lifecycle beyond documented mount/refresh/dispose calls.
-- [ ] Reuse controller values and explicit Save/Cancel semantics between dialog and page.
-- [ ] Refresh page controls after programmatic value, language, and theme changes.
-- [ ] Add a demo route/container that switches dialog/page presentation without reloading values.
+- [x] Render the same definition/controller into a caller-provided B4J `AnchorPane`.
+- [x] Leave caller navigation and unrelated container nodes under caller ownership; expose mount/refresh/dispose calls.
+- [x] Reuse controller values and explicit Save/Cancel semantics between dialog and page.
+- [x] Refresh page controls after programmatic value, language, and theme changes.
+- [x] Add a demo host panel that switches dialog/page without reloading committed values.
 - [ ] Verify sizing, scrolling, cleanup, repeated mounting, and caller-owned layout behavior.
+- [ ] Run interactive page acceptance tests for Save, Cancel, programmatic updates, localization, and theme refresh.
 
 ## M3 — Additional preference types and validation
 

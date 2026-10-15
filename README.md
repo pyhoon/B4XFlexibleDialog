@@ -1,6 +1,6 @@
 # B4XFlexibleDialog
 
-Milestone 1 is a B4J-only JSON-driven modal preferences dialog. Preference definitions and values live in JavaFX-independent model/controller classes; the dialog renders controls and edits a separate draft. This milestone supports `text`, `number`, `switch`, and `choice` only.
+Milestone 1 provides a B4J JSON-driven modal preferences dialog; Milestone 2 adds an embedded B4J page using the same model/controller. Preference definitions and values live in JavaFX-independent classes. Both presentations currently support `text`, `number`, `switch`, and `choice` only.
 
 ## Demo and build
 
@@ -13,7 +13,7 @@ Open `B4XFlexibleDialog/B4J/B4XFlexibleDialog.b4j` in B4J 10.7 or build from Pow
   -ShowWarnings=True
 ```
 
-The sample project compiles to `B4XFlexibleDialog/B4J/Objects/B4XFlexibleDialog.jar`. On launch it loads `Files/settings.json`, reads `Files/en.json` and `Files/ms.json`, runs core model/controller assertions to the log, and presents buttons to open the dialog, switch the language, and switch the theme. The selected language/theme is shown on the main form; the theme changes the main form preview as well as the dialog. The dialog applies its theme to the JavaFX root pane and controls, with explicit input surfaces, borders, readable foregrounds, and contrasting primary/secondary buttons. `Files/prefs.css` styles checkbox marks and the choice dropdown/popup using theme colors provided by the dialog.
+The sample project compiles to `B4XFlexibleDialog/B4J/Objects/B4XFlexibleDialog.jar`. On launch it loads `Files/settings.json`, reads `Files/en.json` and `Files/ms.json`, runs core model/controller assertions to the log, and presents buttons to open the dialog, switch language/theme, and mount/remove a settings page in a caller-owned host panel. Dialog and page share committed values. The selected language/theme is shown on the main form; theme changes affect the main form and current presentation. `Files/prefs.css` styles checkbox marks and choice dropdown/popup using theme colors.
 
 ### Verified dependencies
 
@@ -27,6 +27,7 @@ The sample project compiles to `B4XFlexibleDialog/B4J/Objects/B4XFlexibleDialog.
 - `PrefsModel.bas`: JSON parsing and validation; preference metadata only.
 - `PrefsController.bas`: defaults, typed values, draft state, validation, commit/cancel, snapshots; no UI types.
 - `PrefsDialog.bas`: B4J JavaFX form and control rendering.
+- `PrefsPage.bas`: B4J embedded page renderer; adds/removes only its own scroll pane in the supplied `AnchorPane`.
 - `PrefsLocalization.bas`: language dictionaries and missing-key fallback.
 - `PrefsTheme.bas`: minimal light/dark colors and layout spacing.
 - `B4XFlexibleDialog.bas`: facade and callback forwarding.
@@ -60,9 +61,14 @@ Prefs.SetValue("username", "Aeric") ' Boolean result; LastError on failure
 Dim Value As Object = Prefs.GetValue("username")
 Dim Values As Map = Prefs.GetValues ' Copy/snapshot
 Prefs.Show ' Synchronous modal form, owned by MainForm
+Prefs.CreatePage(MainForm.RootPane) ' Anchors a page in this caller-owned container
+Prefs.RefreshPage ' Rebuilds visible values from committed state
+Prefs.DisposePage ' Removes only the library-owned page node
 ```
 
 `SetValue` validates IDs, types, choices, and number bounds; failed sets do not modify values. `GetValues` returns a shallow copy (values in this milestone are immutable scalar values). `Show` creates draft values from the committed map. Save reads all controls, validates the complete draft, calls `BeforeSave`, commits only if accepted, then calls `AfterSave`. Cancel and the window close button discard the draft. Save and Cancel are mutually exclusive outcomes. Reopening after Save shows the committed in-memory values.
+
+`CreatePage` accepts a B4J `AnchorPane` and mounts a scrollable page without clearing or owning the caller's other nodes/navigation. Page Save commits and leaves the page mounted; page Cancel discards current edits and reloads committed values. Programmatic `SetValue`, language changes, and theme changes refresh the visible page. `RefreshPage` discards uncommitted page edits and reloads committed values. Opening the modal dialog while a page is mounted also resets the page draft to committed values; after the dialog closes, the page refreshes from the resulting committed state. Save before switching presentations if edits should be kept.
 
 Implement all three callback subs on the object passed to `Initialize` (the demo uses event prefix `Prefs`):
 
@@ -95,10 +101,12 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Invalid numbers (out-of-range and non-numeric text) block Save | **PASS** (reported GUI test) |
 | In-dialog language/theme switching preserves values | **PASS** (reported GUI test) |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
+| B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
+| Page mounting/resizing, Save/Cancel, and repeated dispose/remount | **NOT YET GUI-VERIFIED** |
 | Values survive application reboot | **Not supported by Milestone 1**; persistence is deferred |
 
-The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Core and interactive GUI results above were reported from demo runs. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is outside Milestone 1.
+The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestone 1 GUI results above were reported from demo runs. Milestone 2 page source compiles, but interactive page behavior remains to be exercised. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
 
 ## Deferred to Milestone 2+
 
-Full-page renderer, B4A/B4i support, adaptive presentation, more preference types, persistence and migrations, import/export, immediate-save mode, file providers, custom renderers, conditional display, advanced validators, advanced styling, automated GUI testing, and distributable `.b4xlib` packaging.
+B4A/B4i support, adaptive presentation, more preference types, persistence and migrations, import/export, immediate-save mode, file providers, custom renderers, conditional display, advanced validators, advanced styling, automated GUI testing, and distributable `.b4xlib` packaging.

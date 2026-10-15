@@ -28,6 +28,7 @@ Public Sub SetValue(Id As String, Value As Object) As Boolean
 	LastError = ValidateValue(Id, Value)
 	If LastError <> "" Then Return False
 	Committed.Put(Id, Value)
+	If HasDraft Then Draft.Put(Id, Value)
 	Return True
 End Sub
 

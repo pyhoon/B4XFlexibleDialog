@@ -54,6 +54,7 @@ Public Sub Show As Boolean
 	DialogForm.SetOwner(OwnerForm)
 	DialogForm.Resizable = True
 	DialogForm.Stylesheets.Add(File.GetUri(File.DirAssets, "prefs.css"))
+	DialogForm.RootPane.StyleClasses.Add("prefs-surface")
 	ApplyTheme
 	Dim SectionList As List = Model.GetSections
 	For Each Section As Map In SectionList
