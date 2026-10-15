@@ -116,3 +116,39 @@
     -fx-background-color: -prefs-accent;
     -fx-text-fill: -prefs-checkmark-text;
 }
+
+.prefs-surface .scroll-bar:vertical,
+.prefs-surface .scroll-bar:horizontal {
+    -fx-background-color: -prefs-input-bg;
+    -fx-background-radius: 0;
+    -fx-padding: 2px;
+}
+
+.prefs-surface .scroll-bar .track {
+    -fx-background-color: -prefs-input-bg;
+    -fx-background-radius: 3px;
+}
+
+.prefs-surface .scroll-bar .thumb {
+    -fx-background-color: -prefs-input-border;
+    -fx-background-radius: 5px;
+}
+
+.prefs-surface .scroll-bar .thumb:hover {
+    -fx-background-color: -prefs-accent;
+}
+
+.prefs-surface .scroll-bar .increment-button,
+.prefs-surface .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 3px;
+}
+
+.prefs-surface .scroll-bar .increment-arrow,
+.prefs-surface .scroll-bar .decrement-arrow {
+    -fx-background-color: -prefs-input-text;
+}
+
+.prefs-surface .corner {
+    -fx-background-color: -prefs-input-bg;
+}

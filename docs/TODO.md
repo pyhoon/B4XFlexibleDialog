@@ -37,11 +37,14 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Add `multichoice` with string-list values and defensive copies.
 - [x] Add ISO `date` values using B4J DatePicker and numeric `slider` controls to both presentations.
 - [x] Verify date and slider editing and theme styling in both presentations (reported passing).
+- [x] Add 24-hour `time` and timezone-free ISO `datetime` strings to both presentations.
+- [ ] Verify time/datetime editing and invalid-value errors in both presentations.
 - [x] Document current defaults and required/string-length validation.
 - [x] Add required/minimum/maximum string-length checks to model and controller.
-- [ ] Continue with time/datetime, label, and action.
+- [ ] Continue with label and action.
 - [x] Validate that multichoice defaults and assigned values are unique selections from declared options.
 - [x] Run GUI tests for multiline, password, checkbox, and multichoice controls (reported passing).
+- [x] Verify scrollbar contrast in light/dark themes for dialog and page (reported passing).
 - [ ] Add Reset and localized validation feedback.
 
 ## M4 — Persistence and migrations

@@ -1,6 +1,6 @@
 # B4XFlexibleDialog
 
-Milestone 1 provides a B4J JSON-driven modal preferences dialog; Milestone 2 adds an embedded B4J page using the same model/controller. Milestone 3 is adding preference types and validation incrementally. Definitions and values remain independent of JavaFX controls. Current source supports `text`, `multiline`, `password`, `number`, `switch`, `checkbox`, `choice`, `multichoice`, `date`, and `slider` in both B4J presentations.
+Milestone 1 provides a B4J JSON-driven modal preferences dialog; Milestone 2 adds an embedded B4J page using the same model/controller. Milestone 3 is adding preference types and validation incrementally. Definitions and values remain independent of JavaFX controls. Current source supports `text`, `multiline`, `password`, `number`, `switch`, `checkbox`, `choice`, `multichoice`, `date`, `time`, `datetime`, and `slider` in both B4J presentations.
 
 ## Demo and build
 
@@ -13,7 +13,7 @@ Open `B4XFlexibleDialog/B4J/B4XFlexibleDialog.b4j` in B4J 10.7 or build from Pow
   -ShowWarnings=True
 ```
 
-The sample project compiles to `B4XFlexibleDialog/B4J/Objects/B4XFlexibleDialog.jar`. On launch it loads `Files/settings.json`, reads `Files/en.json` and `Files/ms.json`, runs core model/controller assertions to the log, and presents buttons to open the dialog, switch language/theme, and mount/remove a settings page in a caller-owned host panel. Dialog and page share committed values. The selected language/theme is shown on the main form; theme changes affect the main form and current presentation. `Files/prefs.css` styles checkbox marks, choice/multichoice lists, the slider track/thumb, and date-picker surfaces using theme colors.
+The sample project compiles to `B4XFlexibleDialog/B4J/Objects/B4XFlexibleDialog.jar`. On launch it loads `Files/settings.json`, reads `Files/en.json` and `Files/ms.json`, runs core model/controller assertions to the log, and presents buttons to open the dialog, switch language/theme, and mount/remove a settings page in a caller-owned host panel. Dialog and page share committed values. The selected language/theme is shown on the main form; theme changes affect the main form and current presentation. `Files/prefs.css` styles checkbox marks, choice/multichoice lists, slider track/thumbs, date-picker surfaces, and scrollbars using theme colors.
 
 The modal dialog is capped at 600 DIP and scrolls its preference body when needed; Save/Cancel and status remain fixed at the bottom.
 
@@ -51,9 +51,11 @@ Supported preference contracts:
 | `choice` | String matching an item `value`; default required | `options.items` is a non-empty array of `{ "value": string, "titleKey": string }`; duplicate item values are rejected. |
 | `multichoice` | List of strings matching item `value`s; omitted default becomes an empty list | Same `options.items` format as `choice`; selection is through a multi-select ListView (use platform selection gestures such as Ctrl-click on desktop). |
 | `date` | ISO date string `yyyy-MM-dd`; omitted default becomes `""` | Uses B4J DatePicker. Empty is allowed unless `required: true`; calendar-invalid dates are rejected. |
+| `time` | String `HH:mm` (24-hour); omitted default becomes `""` | Valid range is 00:00–23:59. |
+| `datetime` | String `yyyy-MM-dd'T'HH:mm`; omitted default becomes `""` | ISO date plus 24-hour time; no timezone is implied. |
 | `slider` | Numeric; omitted default becomes `options.min` or `0` | Optional numeric `options.min` / `options.max`; defaults to 0–100 if omitted. |
 
-`defaultValue` is optional for text, multiline, password, number, switch, checkbox, multichoice, date, and slider (defaults above), and required for choice. String preferences support optional root fields `required`, `minLength`, and `maxLength`; empty required strings and values outside length bounds fail validation. Date values use ISO `yyyy-MM-dd` strings and are converted to/from B4J DatePicker ticks only at the UI boundary. Multichoice values are copied when read/written to keep snapshots independent. Unknown schema versions, duplicate IDs, unsupported types, type mismatches, invalid choice defaults, malformed JSON, and invalid bounds are rejected with `LastError`.
+`defaultValue` is optional for text, multiline, password, number, switch, checkbox, multichoice, date, time, datetime, and slider (defaults above), and required for choice. String preferences support optional root fields `required`, `minLength`, and `maxLength`; empty required strings and values outside length bounds fail validation. Date values use ISO `yyyy-MM-dd` strings and are converted to/from B4J DatePicker ticks only at the UI boundary. Time/datetime are timezone-free wall-clock values. Multichoice values are copied when read/written to keep snapshots independent. Unknown schema versions, duplicate IDs, unsupported types, type mismatches, invalid choice defaults, malformed JSON, and invalid bounds are rejected with `LastError`.
 
 ## Public B4J API
 
@@ -103,19 +105,20 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | B4JBuilder 10.70 build, warnings enabled | **PASS** |
 | JSON syntax for schema, demo definition, and both locale files | **PASS** |
 | Demo jar contains `Files/settings.json`, `Files/en.json`, and `Files/ms.json` | **PASS** |
-| Core runtime assertions (model validation, supported values, string/number/date/selection constraints, scalar and list snapshots, draft cancel/commit) | **Included; date/slider assertions pending next demo startup** |
+| Core runtime assertions (model validation, supported values, string/number/date/time/selection constraints, scalar and list snapshots, draft cancel/commit) | **Included; run in demo on startup** |
 | All implemented controls render and edit | **PASS** (reported GUI test) |
 | Save commits; Cancel and window close discard edits | **PASS** (reported GUI test) |
 | Invalid numbers (out-of-range and non-numeric text) block Save | **PASS** (reported GUI test) |
 | In-dialog language/theme switching preserves values | **PASS** (reported GUI test) |
+| Dark/light scrollbar contrast in dialog and page | **PASS** (reported GUI test) |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
 | Page mounting/resizing, Save/Cancel, repeated dispose/remount, localization/theme refresh | **PASS** (reported GUI test) |
-| Multiline/password/checkbox/multichoice/date/slider controls and validation | **PASS** (reported GUI test) |
+| Multiline/password/checkbox/multichoice/date/time/datetime/slider controls and validation | **B4J build verified; GUI test pending** |
 | Modal dialog sizing at 600 DIP | **PASS** (reported GUI test) |
 | Values survive application reboot | **Not supported by Milestone 1**; persistence is deferred |
 
-The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestone 1 and 2 results and the date/slider GUI checks above were reported from demo runs. The demo includes additional date/slider runtime assertions that will execute on the next startup. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
+The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestone 1, 2, and date/slider results were reported from demo runs. Time/datetime GUI behavior remains to be exercised. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
 
 ## Deferred beyond current Milestone 3 scope
 

@@ -153,6 +153,22 @@ Public Sub ValidateValue(Id As String, Value As Object) As String
 				If RequiredDate And DateValue.Length = 0 Then Return "Preference " & Id & " is required."
 			End If
 			If DateValue <> "" And IsIsoDate(DateValue) = False Then Return "Preference " & Id & " must be a valid ISO yyyy-MM-dd date."
+		Case "time"
+			If IsStringObject(Value) = False Then Return "Preference " & Id & " must be a 24-hour HH:mm string."
+			Dim TimeValue As String = Value
+			If Pref.ContainsKey("required") Then
+				Dim RequiredTime As Boolean = Pref.Get("required")
+				If RequiredTime And TimeValue.Length = 0 Then Return "Preference " & Id & " is required."
+			End If
+			If TimeValue <> "" And IsValidTime(TimeValue) = False Then Return "Preference " & Id & " must be valid 24-hour HH:mm."
+		Case "datetime"
+			If IsStringObject(Value) = False Then Return "Preference " & Id & " must be an ISO yyyy-MM-dd'T'HH:mm string."
+			Dim DateTimeValue As String = Value
+			If Pref.ContainsKey("required") Then
+				Dim RequiredDateTime As Boolean = Pref.Get("required")
+				If RequiredDateTime And DateTimeValue.Length = 0 Then Return "Preference " & Id & " is required."
+			End If
+			If DateTimeValue <> "" And IsValidDateTime(DateTimeValue) = False Then Return "Preference " & Id & " must be valid yyyy-MM-dd'T'HH:mm."
 	End Select
 	Return ""
 End Sub
@@ -214,4 +230,29 @@ Private Sub IsIsoDate(Value As String) As Boolean
 		DateTime.DateFormat = PreviousFormat
 		Return False
 	End Try
+End Sub
+
+Private Sub IsValidTime(Value As String) As Boolean
+	If Value.Length <> 5 Or Value.SubString2(2, 3) <> ":" Then Return False
+	Dim HoursText As String = Value.SubString2(0, 2)
+	Dim MinutesText As String = Value.SubString2(3, 5)
+	If IsAsciiDigits(HoursText) = False Or IsAsciiDigits(MinutesText) = False Then Return False
+	Dim Hours As Int = HoursText
+	Dim Minutes As Int = MinutesText
+	Return Hours >= 0 And Hours <= 23 And Minutes >= 0 And Minutes <= 59
+End Sub
+
+Private Sub IsValidDateTime(Value As String) As Boolean
+	If Value.Length <> 16 Or Value.SubString2(10, 11) <> "T" Then Return False
+	If IsIsoDate(Value.SubString2(0, 10)) = False Then Return False
+	Return IsValidTime(Value.SubString2(11, 16))
+End Sub
+
+Private Sub IsAsciiDigits(Value As String) As Boolean
+	If Value.Length = 0 Then Return False
+	For I = 0 To Value.Length - 1
+		Dim Code As Int = Asc(Value.SubString2(I, I + 1))
+		If Code < 48 Or Code > 57 Then Return False
+	Next
+	Return True
 End Sub

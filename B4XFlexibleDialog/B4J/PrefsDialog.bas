@@ -134,7 +134,7 @@ Private Sub AddPreference(Pref As Map)
 		Title.TextColor = fx.Colors.From32Bit(Theme.TextColor)
 		ContentPane.AddNode(Title, 34, RowTop + 4, 240, 28)
 		TitleLabels.Put(Id, Title)
-		If TypeName = "text" Or TypeName = "number" Or TypeName = "password" Then
+		If TypeName = "text" Or TypeName = "number" Or TypeName = "password" Or TypeName = "time" Or TypeName = "datetime" Then
 			Dim Input As TextField
 			If TypeName = "password" Then
 				Input.InitializePassword("dlg")
@@ -142,6 +142,8 @@ Private Sub AddPreference(Pref As Map)
 				Input.Initialize("dlg")
 			End If
 			Input.Text = "" & Controller.GetValue(Id)
+			If TypeName = "time" Then Input.PromptText = Localization.Text("format.time")
+			If TypeName = "datetime" Then Input.PromptText = Localization.Text("format.datetime")
 			Input.Style = InputCss
 			ContentPane.AddNode(Input, 290, RowTop, 300, 34)
 			Controls.Put(Id, Input)
@@ -241,7 +243,7 @@ Private Sub Save_Click
 		Dim TypeName As String = ControlTypes.Get(Id)
 		Dim Value As Object
 		Select TypeName
-			Case "text", "password", "number"
+			Case "text", "password", "number", "time", "datetime"
 				Dim Input As TextField = Controls.Get(Id)
 				If TypeName = "number" Then
 					If IsNumber(Input.Text) = False Then
@@ -377,7 +379,7 @@ Private Sub Theme_Click
 	Next
 	For Each Id As String In Controls.Keys
 		Dim TypeName As String = ControlTypes.Get(Id)
-		If TypeName = "text" Or TypeName = "number" Or TypeName = "password" Then
+		If TypeName = "text" Or TypeName = "number" Or TypeName = "password" Or TypeName = "time" Or TypeName = "datetime" Then
 			Dim Input As TextField = Controls.Get(Id)
 			Input.Style = InputCss
 		Else If TypeName = "multiline" Then

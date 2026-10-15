@@ -53,6 +53,7 @@ Private Sub BuildPage
 	Content.StyleClasses.Add("prefs-surface")
 	Content.PrefWidth = Max(650, Container.Width - 24)
 	Scroll.Initialize("page")
+	Scroll.StyleClasses.Add("prefs-surface")
 	Scroll.FitToWidth = True
 	Scroll.InnerNode = Content
 	Scroll.Style = "-fx-background-color: transparent; -fx-background: transparent;"
@@ -108,7 +109,7 @@ Private Sub AddPreference(Pref As Map)
 		Title.Initialize("")
 		Content.AddNode(Title, 34, RowTop + 4, 240, 30)
 		TitleLabels.Put(Id, Title)
-		If TypeName = "text" Or TypeName = "number" Or TypeName = "password" Then
+		If TypeName = "text" Or TypeName = "number" Or TypeName = "password" Or TypeName = "time" Or TypeName = "datetime" Then
 			Dim Input As TextField
 			If TypeName = "password" Then
 				Input.InitializePassword("page")
@@ -117,6 +118,8 @@ Private Sub AddPreference(Pref As Map)
 			End If
 			Input.Tag = Id
 			Input.Text = "" & Controller.GetValue(Id)
+			If TypeName = "time" Then Input.PromptText = Localization.Text("format.time")
+			If TypeName = "datetime" Then Input.PromptText = Localization.Text("format.datetime")
 			Content.AddNode(Input, 290, RowTop, 320, 36)
 			Controls.Put(Id, Input)
 		Else If TypeName = "multiline" Then
@@ -216,7 +219,7 @@ End Sub
 Private Sub UpdateControl(Id As String, Value As Object)
 	Dim TypeName As String = ControlTypes.Get(Id)
 	Select TypeName
-		Case "text", "number", "password"
+		Case "text", "number", "password", "time", "datetime"
 			Dim Input As TextField = Controls.Get(Id)
 			Input.Text = "" & Value
 		Case "multiline"
@@ -329,7 +332,7 @@ Public Sub RefreshTheme
 		SectionTitle.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
 	Next
 	For Each Id As String In Controls.Keys
-		If ControlTypes.Get(Id) = "text" Or ControlTypes.Get(Id) = "number" Or ControlTypes.Get(Id) = "password" Then
+		If ControlTypes.Get(Id) = "text" Or ControlTypes.Get(Id) = "number" Or ControlTypes.Get(Id) = "password" Or ControlTypes.Get(Id) = "time" Or ControlTypes.Get(Id) = "datetime" Then
 			Dim Input As TextField = Controls.Get(Id)
 			Input.Style = InputCss
 		Else If ControlTypes.Get(Id) = "multiline" Then
@@ -361,7 +364,7 @@ End Sub
 
 Private Sub ApplyTheme
 	Content.Style = "-fx-background-color: " & ColorCss(Theme.BackgroundColor) & "; -prefs-input-bg: " & ColorCss(Theme.InputBackgroundColor) & "; -prefs-input-text: " & ColorCss(Theme.TextColor) & "; -prefs-input-border: " & ColorCss(Theme.InputBorderColor) & "; -prefs-accent: " & ColorCss(Theme.AccentColor) & "; -prefs-checkmark-text: " & ColorCss(Theme.PrimaryButtonTextColor) & ";"
-	Scroll.Style = "-fx-background-color: " & ColorCss(Theme.BackgroundColor) & "; -fx-background: " & ColorCss(Theme.BackgroundColor) & ";"
+	Scroll.Style = "-fx-background-color: " & ColorCss(Theme.BackgroundColor) & "; -fx-background: " & ColorCss(Theme.BackgroundColor) & "; -prefs-input-bg: " & ColorCss(Theme.InputBackgroundColor) & "; -prefs-input-text: " & ColorCss(Theme.TextColor) & "; -prefs-input-border: " & ColorCss(Theme.InputBorderColor) & "; -prefs-accent: " & ColorCss(Theme.AccentColor) & "; -prefs-checkmark-text: " & ColorCss(Theme.PrimaryButtonTextColor) & ";"
 	PageTitle.TextColor = fx.Colors.From32Bit(Theme.TextColor)
 	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
 	ApplyButtonStyles
@@ -414,7 +417,7 @@ Private Sub Save_Click
 		Dim TypeName As String = ControlTypes.Get(Id)
 		Dim Value As Object
 		Select TypeName
-			Case "text", "password", "number"
+			Case "text", "password", "number", "time", "datetime"
 				Dim Input As TextField = Controls.Get(Id)
 				If TypeName = "number" Then
 					If IsNumber(Input.Text) = False Then

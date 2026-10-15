@@ -219,6 +219,10 @@ Private Sub RunCoreChecks(Definition As String)
 	Assert("ISO date value accepted", Values.SetValue("start_date", "2026-08-24"))
 	Assert("invalid date value rejected", Values.SetValue("start_date", "2026-02-30") = False)
 	Assert("slider value accepted", Values.SetValue("font_scale", 1.2))
+	Assert("24-hour time accepted", Values.SetValue("reminder_time", "23:45"))
+	Assert("invalid time rejected", Values.SetValue("reminder_time", "24:00") = False)
+	Assert("ISO datetime accepted", Values.SetValue("meeting_at", "2026-08-24T17:30"))
+	Assert("invalid datetime rejected", Values.SetValue("meeting_at", "2026-02-30T17:30") = False)
 	Dim ValueSnapshot As Map = Values.GetValues
 	Dim SnapshotNotifications As List = ValueSnapshot.Get("notifications")
 	SnapshotNotifications.Clear
