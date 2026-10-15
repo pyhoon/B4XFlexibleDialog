@@ -89,14 +89,14 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | B4JBuilder 10.70 build, warnings enabled | **PASS** |
 | JSON syntax for schema, demo definition, and both locale files | **PASS** |
 | Demo jar contains `Files/settings.json`, `Files/en.json`, and `Files/ms.json` | **PASS** |
-| Core runtime assertions (valid/malformed JSON, duplicate IDs, unknown type, defaults, typed set/get, bounds, snapshot, draft cancel/commit) | **PASS** (reported demo log) |
+| Core runtime assertions (valid/malformed JSON, duplicate IDs, unknown type, defaults, all four typed values, bounds, snapshot, draft cancel/commit) | **10 earlier checks PASS** (reported); **4 added checks pending next demo run** |
 | All four controls render and edit | **NOT RUN (GUI)** |
 | Cancel/close leaves committed defaults unchanged | **PASS** (reported `Saved=false` log; observed twice) |
 | Save/rejection and numeric error display | **NOT RUN (GUI)** |
 | In-dialog language/theme switching and value preservation | **NOT RUN (GUI)** |
 | Reopen after Save | **NOT RUN (GUI)** |
 
-The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. The core assertion results and Cancel/close result above were provided from a demo run. The remaining visual/edit/Save interactions still need their GUI checks. The demo emits a log line for each core assertion when it starts.
+The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. The first ten core assertion results and Cancel/close result above were provided from a demo run. The added checks for switch/choice values and language/theme value preservation will log on the next run. Remaining visual/edit/Save interactions still need GUI checks.
 
 ## Deferred to Milestone 2+
 

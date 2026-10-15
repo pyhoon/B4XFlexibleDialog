@@ -55,6 +55,7 @@ Sub AppStart (Form1 As Form, Args() As String)
 		Return
 	End If
 	RunCoreChecks(Definition)
+	RunFacadeChecks
 	MainOpenButton.Initialize("mainOpen")
 	MainOpenButton.Text = "Open preferences"
 	MainForm.RootPane.AddNode(MainOpenButton, 30, 30, 210, 42)
@@ -161,6 +162,8 @@ Private Sub RunCoreChecks(Definition As String)
 	Dim SetSucceeded As Boolean = Values.SetValue("username", "Test")
 	Dim ChangedName As String = Values.GetValue("username")
 	Assert("typed programmatic set/get", SetSucceeded And ChangedName = "Test")
+	Assert("switch value type", Values.SetValue("dark_mode", True) And Values.GetValue("dark_mode") = True)
+	Assert("choice value type", Values.SetValue("display_mode", "comfortable") And Values.GetValue("display_mode") = "comfortable")
 	Assert("number bounds enforced", Values.SetValue("items_per_page", 999) = False)
 	Values.BeginDraft
 	Values.SetDraftValue("username", "Discard me")
@@ -176,6 +179,18 @@ Private Sub RunCoreChecks(Definition As String)
 	Snapshot.Put("username", "Mutated snapshot")
 	CurrentName = Values.GetValue("username")
 	Assert("GetValues returns snapshot", CurrentName = "Committed")
+End Sub
+
+Private Sub RunFacadeChecks
+	Dim OriginalName As String = Prefs.GetValue("username")
+	Prefs.SetLanguage("ms")
+	Dim LanguagePreservedValue As String = Prefs.GetValue("username")
+	Assert("runtime language change preserves values", LanguagePreservedValue = OriginalName)
+	Prefs.SetLanguage("en")
+	Prefs.SetTheme(Prefs.CreateDarkTheme)
+	Dim ThemePreservedValue As String = Prefs.GetValue("username")
+	Assert("runtime theme change preserves values", Prefs.IsDarkTheme And ThemePreservedValue = OriginalName)
+	Prefs.SetTheme(Prefs.CreateLightTheme)
 End Sub
 
 Private Sub Assert(TestName As String, Passed As Boolean)
