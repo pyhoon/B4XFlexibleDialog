@@ -86,8 +86,7 @@ Private Sub BuiltInSelectFile(Options As Map) As PrefsFileResult
 		Return Result
 	End If
 	Dim SelectedName As String = File.GetName(Selected)
-	Dim SelectedParent As String = ParentOf(Selected)
-	Result.SetSelected(Selected, File.GetUri(SelectedParent, SelectedName), SelectedName, MimeFromExtension(Selected), "path")
+	Result.SetSelected(Selected, File.GetUri(File.GetFileParent(Selected), SelectedName), SelectedName, MimeFromExtension(Selected), "path")
 	Return Result
 End Sub
 
@@ -118,7 +117,7 @@ Public Sub CopyToAppStorage(SourcePath As String, TargetFileName As String) As S
 		If File.Exists(DirectoryName, "") = False Then File.MakeDir(File.DirApp, "prefs-files")
 		Dim TargetName As String = TargetFileName
 		If TargetName = "" Then TargetName = File.GetName(SourcePath)
-		File.Copy(ParentOf(SourcePath), File.GetName(SourcePath), DirectoryName, TargetName)
+		File.Copy(File.GetFileParent(SourcePath), File.GetName(SourcePath), DirectoryName, TargetName)
 		Return File.Combine(DirectoryName, TargetName)
 	Catch
 		LastError = LastException.Message
@@ -146,11 +145,4 @@ End Sub
 Private Sub IsListObject(Value As Object) As Boolean
 	If Value Is List Then Return True
 	Return False
-End Sub
-
-Private Sub ParentOf(FullPath As String) As String
-	Dim SeparatorIndex As Int = FullPath.LastIndexOf("\")
-	If SeparatorIndex = -1 Then SeparatorIndex = FullPath.LastIndexOf("/")
-	If SeparatorIndex = -1 Then Return FullPath
-	Return FullPath.SubString2(0, SeparatorIndex)
 End Sub
