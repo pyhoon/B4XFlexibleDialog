@@ -144,7 +144,8 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Label/action rendering, localization, and `_Action` callback | **PASS** (reported GUI test) |
 | Store merge, unknown-key preservation, JSON round-trip, and `ApplyValues` | **PASS** (reported demo run) |
 | `file`/`directory` validation (empty optional, allowed/disallowed extension, directory path) | **Included; run in demo on startup** |
-| File/directory Browse, Clear, and cancel-preserves-value in dialog and page | **B4J build verified; GUI test pending** |
+| File/directory Browse/Clear and extension filtering in dialog and page | **PASS** (reported GUI test) |
+| Copy-to-app-storage | Implemented; not exercised (disabled in demo definition) |
 | Values restored after application restart | **PASS** (reported: `Restored 12 value(s)` after relaunch) |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
