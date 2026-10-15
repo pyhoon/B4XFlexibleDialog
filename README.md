@@ -1,6 +1,6 @@
 # B4XFlexibleDialog
 
-Milestone 1 provides a B4J JSON-driven modal preferences dialog; Milestone 2 adds an embedded B4J page using the same model/controller. Preference definitions and values live in JavaFX-independent classes. Both presentations currently support `text`, `number`, `switch`, and `choice` only.
+Milestone 1 provides a B4J JSON-driven modal preferences dialog; Milestone 2 adds an embedded B4J page using the same model/controller. Milestone 3 is adding preference types and validation incrementally. Definitions and values remain independent of JavaFX controls. Current source supports `text`, `multiline`, `password`, `number`, `switch`, `checkbox`, `choice`, and `multichoice` in both B4J presentations.
 
 ## Demo and build
 
@@ -41,11 +41,15 @@ Supported preference contracts:
 | Type | Value/default | Options and behavior |
 | --- | --- | --- |
 | `text` | String; omitted default becomes `""` | No extra options. |
+| `multiline` | String; omitted default becomes `""` | Wrapped multi-line editor. |
+| `password` | String; omitted default becomes `""` | Masked B4J password field; values are still in-memory plaintext. |
 | `number` | Numeric; omitted default becomes `0` | Optional numeric `options.min` and `options.max`; bounds must be ordered and contain the default and saved value. |
 | `switch` | Boolean; omitted default becomes `false` | No extra options. |
+| `checkbox` | Boolean; omitted default becomes `false` | B4J checkbox control; visually the same native control as `switch` for now. |
 | `choice` | String matching an item `value`; default required | `options.items` is a non-empty array of `{ "value": string, "titleKey": string }`; duplicate item values are rejected. |
+| `multichoice` | List of strings matching item `value`s; omitted default becomes an empty list | Same `options.items` format as `choice`; selection is through a multi-select ListView (use platform selection gestures such as Ctrl-click on desktop). |
 
-`defaultValue` is optional for text, number and switch (defaults above), required for choice. Unknown schema versions, duplicate IDs, unsupported types, type mismatches, invalid choice defaults, malformed JSON and invalid number bounds are rejected with `LastError`. The loader ignores unrelated extra fields at present; the JSON Schema is the stricter authoring contract. Schema-breaking changes require a new version.
+`defaultValue` is optional for text, multiline, password, number, switch, checkbox, and multichoice (defaults above), and required for choice. String preferences support optional root fields `required`, `minLength`, and `maxLength`; empty required strings and values outside length bounds fail validation. Multichoice values are copied when read/written to keep snapshots independent. Unknown schema versions, duplicate IDs, unsupported types, type mismatches, invalid choice defaults, malformed JSON, and invalid bounds are rejected with `LastError`.
 
 ## Public B4J API
 
@@ -66,7 +70,7 @@ Prefs.RefreshPage ' Rebuilds visible values from committed state
 Prefs.DisposePage ' Removes only the library-owned page node
 ```
 
-`SetValue` validates IDs, types, choices, and number bounds; failed sets do not modify values. `GetValues` returns a shallow copy (values in this milestone are immutable scalar values). `Show` creates draft values from the committed map. Save reads all controls, validates the complete draft, calls `BeforeSave`, commits only if accepted, then calls `AfterSave`. Cancel and the window close button discard the draft. Save and Cancel are mutually exclusive outcomes. Reopening after Save shows the committed in-memory values.
+`SetValue` validates IDs, types, choice membership, string constraints, and number bounds; failed sets do not modify values. `GetValues` returns a copied map and clones list-valued multichoice values. `Show` creates draft values from the committed map. Save reads all controls, validates the complete draft, calls `BeforeSave`, commits only if accepted, then calls `AfterSave`. Cancel and the window close button discard the draft. Save and Cancel are mutually exclusive outcomes. Reopening after Save shows the committed in-memory values.
 
 `CreatePage` accepts a B4J `AnchorPane` and mounts a scrollable page without clearing or owning the caller's other nodes/navigation. Page Save commits and leaves the page mounted; page Cancel discards current edits and reloads committed values. Programmatic `SetValue`, language changes, and theme changes refresh the visible page. `RefreshPage` discards uncommitted page edits and reloads committed values. Opening the modal dialog while a page is mounted also resets the page draft to committed values; after the dialog closes, the page refreshes from the resulting committed state. Save before switching presentations if edits should be kept.
 
@@ -95,18 +99,20 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | B4JBuilder 10.70 build, warnings enabled | **PASS** |
 | JSON syntax for schema, demo definition, and both locale files | **PASS** |
 | Demo jar contains `Files/settings.json`, `Files/en.json`, and `Files/ms.json` | **PASS** |
-| Core runtime assertions (valid/malformed JSON, duplicate IDs, unknown type, defaults, all four typed values, bounds, snapshot, draft cancel/commit) | **PASS** (reported demo run) |
-| All four controls render and edit | **PASS** (reported GUI test) |
+| Core runtime assertions (model validation, supported values, string/number/selection constraints, scalar and list snapshots, draft cancel/commit) | **PASS** (reported demo run) |
+| All implemented controls render and edit | **PASS** (reported GUI test) |
 | Save commits; Cancel and window close discard edits | **PASS** (reported GUI test) |
 | Invalid numbers (out-of-range and non-numeric text) block Save | **PASS** (reported GUI test) |
 | In-dialog language/theme switching preserves values | **PASS** (reported GUI test) |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
 | Page mounting/resizing, Save/Cancel, repeated dispose/remount, localization/theme refresh | **PASS** (reported GUI test) |
+| Multiline/password/checkbox/multichoice controls and string/selection validation | **PASS** (reported GUI test) |
+| Modal dialog sizing at 600 DIP | **PASS** (reported GUI test) |
 | Values survive application reboot | **Not supported by Milestone 1**; persistence is deferred |
 
-The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestone 1 and Milestone 2 GUI results above were reported from demo runs. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
+The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestone 1, Milestone 2, and the current Milestone 3 GUI results were reported from demo runs. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
 
-## Deferred to Milestone 2+
+## Deferred beyond current Milestone 3 scope
 
 B4A/B4i support, adaptive presentation, more preference types, persistence and migrations, import/export, immediate-save mode, file providers, custom renderers, conditional display, advanced validators, advanced styling, automated GUI testing, and distributable `.b4xlib` packaging.

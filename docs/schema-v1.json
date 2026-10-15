@@ -29,21 +29,34 @@
       "required": ["id", "type", "titleKey"],
       "properties": {
         "id": {"$ref": "#/$defs/id"},
-        "type": {"enum": ["text", "number", "switch", "choice"]},
+        "type": {"enum": ["text", "multiline", "password", "number", "switch", "checkbox", "choice", "multichoice"]},
         "titleKey": {"type": "string", "minLength": 1},
         "defaultValue": {},
-        "options": {"type": "object"}
+        "options": {"type": "object"},
+        "required": {"type": "boolean"},
+        "minLength": {"type": "integer", "minimum": 0},
+        "maxLength": {"type": "integer", "minimum": 0}
       },
       "allOf": [
-        {"if": {"properties": {"type": {"const": "text"}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "string"}}}},
+        {"if": {"properties": {"type": {"enum": ["text", "multiline", "password"]}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "string"}}}},
         {"if": {"properties": {"type": {"const": "number"}}, "required": ["type"]}, "then": {"properties": {
           "defaultValue": {"type": "number"},
           "options": {"type": "object", "additionalProperties": false, "properties": {"min": {"type": "number"}, "max": {"type": "number"}}}
         }}},
-        {"if": {"properties": {"type": {"const": "switch"}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "boolean"}}}},
+        {"if": {"properties": {"type": {"enum": ["switch", "checkbox"]}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "boolean"}}}},
         {"if": {"properties": {"type": {"const": "choice"}}, "required": ["type"]}, "then": {
           "required": ["defaultValue", "options"],
           "properties": {"defaultValue": {"type": "string"}, "options": {
+            "type": "object", "additionalProperties": false, "required": ["items"],
+            "properties": {"items": {"type": "array", "minItems": 1, "items": {
+              "type": "object", "additionalProperties": false, "required": ["value", "titleKey"],
+              "properties": {"value": {"type": "string"}, "titleKey": {"type": "string", "minLength": 1}}
+            }}}
+          }}
+        }}
+        ,{"if": {"properties": {"type": {"const": "multichoice"}}, "required": ["type"]}, "then": {
+          "required": ["options"],
+          "properties": {"defaultValue": {"type": "array", "items": {"type": "string"}}, "options": {
             "type": "object", "additionalProperties": false, "required": ["items"],
             "properties": {"items": {"type": "array", "minItems": 1, "items": {
               "type": "object", "additionalProperties": false, "required": ["value", "titleKey"],

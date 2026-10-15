@@ -48,7 +48,14 @@ Public Sub Show As Boolean
 	RowTop = 18
 	Dim PreferenceCount As Int = Model.GetPreferenceIds.Size
 	Dim SectionCount As Int = Model.GetSections.Size
-	Dim Height As Int = Min(900, Max(380, 220 + PreferenceCount * 56 + SectionCount * 36))
+	Dim MultilineCount As Int = 0
+	Dim MultichoiceCount As Int = 0
+	For Each Id As String In Model.GetPreferenceIds
+		Dim Preference As Map = Model.GetPreference(Id)
+		If Preference.Get("type") = "multiline" Then MultilineCount = MultilineCount + 1
+		If Preference.Get("type") = "multichoice" Then MultichoiceCount = MultichoiceCount + 1
+	Next
+	Dim Height As Int = Min(600, Max(380, 220 + PreferenceCount * 56 + SectionCount * 36 + MultilineCount * 52 + MultichoiceCount * 62))
 	DialogForm.Initialize("dlg", 650, Height)
 	DialogForm.Title = Localization.Text(Model.GetTitleKey)
 	DialogForm.SetOwner(OwnerForm)
@@ -97,7 +104,7 @@ End Sub
 Private Sub AddPreference(Pref As Map)
 	Dim Id As String = Pref.Get("id")
 	Dim TypeName As String = Pref.Get("type")
-	If TypeName = "switch" Then
+	If TypeName = "switch" Or TypeName = "checkbox" Then
 		Dim Check As CheckBox
 		Check.Initialize("dlg")
 		Check.Text = Localization.Text(Pref.Get("titleKey"))
@@ -114,13 +121,49 @@ Private Sub AddPreference(Pref As Map)
 		Title.TextColor = fx.Colors.From32Bit(Theme.TextColor)
 		DialogForm.RootPane.AddNode(Title, 34, RowTop + 4, 240, 28)
 		TitleLabels.Put(Id, Title)
-		If TypeName = "text" Or TypeName = "number" Then
+		If TypeName = "text" Or TypeName = "number" Or TypeName = "password" Then
 			Dim Input As TextField
-			Input.Initialize("dlg")
+			If TypeName = "password" Then
+				Input.InitializePassword("dlg")
+			Else
+				Input.Initialize("dlg")
+			End If
 			Input.Text = "" & Controller.GetValue(Id)
 			Input.Style = InputCss
 			DialogForm.RootPane.AddNode(Input, 290, RowTop, 300, 34)
 			Controls.Put(Id, Input)
+		Else If TypeName = "multiline" Then
+			Dim MultilineInput As TextArea
+			MultilineInput.Initialize("dlg")
+			MultilineInput.Text = "" & Controller.GetValue(Id)
+			MultilineInput.WrapText = True
+			MultilineInput.Style = InputCss
+			DialogForm.RootPane.AddNode(MultilineInput, 290, RowTop, 300, 76)
+			Controls.Put(Id, MultilineInput)
+			RowTop = RowTop + 42
+		Else If TypeName = "multichoice" Then
+			Dim Multi As ListView
+			Multi.Initialize("")
+			Multi.MultipleSelection = True
+			Multi.Style = InputCss
+			Dim PrefOptions As Map = Pref.Get("options")
+			Dim MultiItems As List = PrefOptions.Get("items")
+			Dim SelectedIndices As List
+			SelectedIndices.Initialize
+			Dim SelectedValues As List = Controller.GetValue(Id)
+			For I = 0 To MultiItems.Size - 1
+				Dim Item As Map = MultiItems.Get(I)
+				Multi.Items.Add(Localization.Text(Item.Get("titleKey")))
+				Dim ItemValue As String = Item.Get("value")
+				For Each SelectedValueObject As Object In SelectedValues
+					Dim SelectedValue As String = SelectedValueObject
+					If SelectedValue = ItemValue Then SelectedIndices.Add(I)
+				Next
+			Next
+			Multi.SetSelectedIndices(SelectedIndices)
+			DialogForm.RootPane.AddNode(Multi, 290, RowTop, 300, 90)
+			Controls.Put(Id, Multi)
+			RowTop = RowTop + 56
 		Else If TypeName = "choice" Then
 			Dim Choice As ComboBox
 			Choice.Initialize("dlg")
@@ -158,7 +201,7 @@ Private Sub Save_Click
 		Dim TypeName As String = ControlTypes.Get(Id)
 		Dim Value As Object
 		Select TypeName
-			Case "text", "number"
+			Case "text", "password", "number"
 				Dim Input As TextField = Controls.Get(Id)
 				If TypeName = "number" Then
 					If IsNumber(Input.Text) = False Then
@@ -171,9 +214,25 @@ Private Sub Save_Click
 				Else
 					Value = Input.Text
 				End If
-			Case "switch"
+			Case "multiline"
+				Dim MultilineInput As TextArea = Controls.Get(Id)
+				Value = MultilineInput.Text
+			Case "switch", "checkbox"
 				Dim Check As CheckBox = Controls.Get(Id)
 				Value = Check.Checked
+			Case "multichoice"
+				Dim Multi As ListView = Controls.Get(Id)
+				Dim SelectedIndices As List = Multi.GetSelectedIndices
+				Dim MultiPref As Map = Model.GetPreference(Id)
+				Dim MultiOptions As Map = MultiPref.Get("options")
+				Dim MultiItems As List = MultiOptions.Get("items")
+				Dim SelectedValues As List
+				SelectedValues.Initialize
+				For Each SelectedIndex As Int In SelectedIndices
+					Dim SelectedItem As Map = MultiItems.Get(SelectedIndex)
+					SelectedValues.Add(SelectedItem.Get("value"))
+				Next
+				Value = SelectedValues
 			Case "choice"
 				Dim Choice As ComboBox = Controls.Get(Id)
 				If Choice.SelectedIndex < 0 Then
@@ -219,7 +278,7 @@ Private Sub Language_Click
 		Dim Preferences As List = Section.Get("preferences")
 		For Each Pref As Map In Preferences
 			Dim Id As String = Pref.Get("id")
-			If Pref.Get("type") = "switch" Then
+			If Pref.Get("type") = "switch" Or Pref.Get("type") = "checkbox" Then
 				Dim Check As CheckBox = Controls.Get(Id)
 				Check.Text = Localization.Text(Pref.Get("titleKey"))
 			Else
@@ -236,6 +295,16 @@ Private Sub Language_Click
 					Choice.Items.Add(Localization.Text(Item.Get("titleKey")))
 				Next
 				Choice.SelectedIndex = SelectedIndex
+			Else If Pref.Get("type") = "multichoice" Then
+				Dim Multi As ListView = Controls.Get(Id)
+				Dim SelectedIndices As List = Multi.GetSelectedIndices
+				Multi.Items.Clear
+				Dim PrefOptions As Map = Pref.Get("options")
+				Dim MultiItems As List = PrefOptions.Get("items")
+				For Each Item As Map In MultiItems
+					Multi.Items.Add(Localization.Text(Item.Get("titleKey")))
+				Next
+				Multi.SetSelectedIndices(SelectedIndices)
 			End If
 		Next
 	Next
@@ -262,12 +331,18 @@ Private Sub Theme_Click
 	Next
 	For Each Id As String In Controls.Keys
 		Dim TypeName As String = ControlTypes.Get(Id)
-		If TypeName = "text" Or TypeName = "number" Then
+		If TypeName = "text" Or TypeName = "number" Or TypeName = "password" Then
 			Dim Input As TextField = Controls.Get(Id)
 			Input.Style = InputCss
+		Else If TypeName = "multiline" Then
+			Dim MultilineInput As TextArea = Controls.Get(Id)
+			MultilineInput.Style = InputCss
 		Else If TypeName = "choice" Then
 			Dim Choice As ComboBox = Controls.Get(Id)
 			Choice.Style = InputCss
+		Else If TypeName = "multichoice" Then
+			Dim Multi As ListView = Controls.Get(Id)
+			Multi.Style = InputCss
 		End If
 	Next
 	RefreshButtons

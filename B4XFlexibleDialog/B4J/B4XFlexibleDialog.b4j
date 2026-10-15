@@ -186,6 +186,10 @@ Private Sub RunCoreChecks(Definition As String)
 	Assert("duplicate IDs rejected", BadModel.LoadFromJson("{""schemaVersion"":1,""id"":""x"",""sections"":[{""id"":""s"",""preferences"":[{""id"":""dup"",""type"":""text"",""titleKey"":""a""},{""id"":""dup"",""type"":""text"",""titleKey"":""b""}]}]}") = False)
 	BadModel.Initialize
 	Assert("unknown type rejected", BadModel.LoadFromJson("{""schemaVersion"":1,""id"":""x"",""sections"":[{""id"":""s"",""preferences"":[{""id"":""x"",""type"":""widget"",""titleKey"":""a""}]}]}") = False)
+	BadModel.Initialize
+	Assert("required empty default rejected", BadModel.LoadFromJson("{""schemaVersion"":1,""id"":""x"",""sections"":[{""id"":""s"",""preferences"":[{""id"":""name"",""type"":""text"",""titleKey"":""name"",""defaultValue"":"""",""required"":true}]}]}") = False)
+	BadModel.Initialize
+	Assert("fractional minLength rejected", BadModel.LoadFromJson("{""schemaVersion"":1,""id"":""x"",""sections"":[{""id"":""s"",""preferences"":[{""id"":""name"",""type"":""text"",""titleKey"":""name"",""defaultValue"":""abc"",""minLength"":1.5}]}]}") = False)
 	Dim Values As PrefsController
 	Values.Initialize(TestModel)
 	Dim DefaultName As String = Values.GetValue("username")
@@ -194,6 +198,29 @@ Private Sub RunCoreChecks(Definition As String)
 	Dim SetSucceeded As Boolean = Values.SetValue("username", "Test")
 	Dim ChangedName As String = Values.GetValue("username")
 	Assert("typed programmatic set/get", SetSucceeded And ChangedName = "Test")
+	Assert("required text validation", Values.SetValue("username", "") = False)
+	Assert("minimum text length validation", Values.SetValue("username", "Al") = False)
+	Assert("password string value", Values.SetValue("api_key", "secret") And Values.GetValue("api_key") = "secret")
+	Assert("multiline string value", Values.SetValue("about", "B4X settings") And Values.GetValue("about") = "B4X settings")
+	Assert("checkbox Boolean value", Values.SetValue("show_tips", False) And Values.GetValue("show_tips") = False)
+	Dim NotificationValues As List
+	NotificationValues.Initialize
+	NotificationValues.Add("email")
+	NotificationValues.Add("push")
+	Assert("multichoice accepts multiple selected values", Values.SetValue("notifications", NotificationValues))
+	Dim InvalidNotificationValues As List
+	InvalidNotificationValues.Initialize
+	InvalidNotificationValues.Add("invalid")
+	Assert("multichoice rejects unknown values", Values.SetValue("notifications", InvalidNotificationValues) = False)
+	Dim ReturnedNotificationValues As List = Values.GetValue("notifications")
+	ReturnedNotificationValues.Add("unknown")
+	Dim StoredNotificationValues As List = Values.GetValue("notifications")
+	Assert("multichoice values are returned defensively", StoredNotificationValues.Size = 2)
+	Dim ValueSnapshot As Map = Values.GetValues
+	Dim SnapshotNotifications As List = ValueSnapshot.Get("notifications")
+	SnapshotNotifications.Clear
+	StoredNotificationValues = Values.GetValue("notifications")
+	Assert("GetValues clones multichoice lists", StoredNotificationValues.Size = 2)
 	Assert("switch value type", Values.SetValue("dark_mode", True) And Values.GetValue("dark_mode") = True)
 	Assert("choice value type", Values.SetValue("display_mode", "comfortable") And Values.GetValue("display_mode") = "comfortable")
 	Assert("number bounds enforced", Values.SetValue("items_per_page", 999) = False)

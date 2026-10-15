@@ -27,9 +27,9 @@ This milestone has in-memory state only. Values surviving dialog close/reopen is
 
 The B4J `PrefsPage` mounts in a caller-provided `AnchorPane`, keeps caller navigation and unrelated children intact, and shares the model/controller with the modal dialog. It supports the same four controls and explicit Save/Cancel semantics; the demo has a mount/remove page action. Programmatic values and language/theme changes refresh the mounted view. It compiled with B4JBuilder 10.70 and interactive page sizing, scrolling, save/cancel, theme/language refresh, and repeated mount/dispose checks were reported passing.
 
-## M3 — Additional preference types and validation
+## M3 — Additional preference types and validation — in progress
 
-Add control types incrementally, each with documented value/default/options/validation behavior. Add reset operations and applicable built-in constraints without introducing a general expression engine.
+The B4J model/controller and both renderers now include multiline, password, checkbox, and multichoice alongside text, number, switch, and choice. Required/minLength/maxLength string validation and defensive multichoice list values are implemented. These additions are build-verified and their GUI checks were reported passing, including the 600-DIP modal height. Continue with date/time/datetime, slider, label, and action, with documented value/default/options/validation behavior. Add reset operations and applicable built-in constraints without introducing a general expression engine.
 
 ## M4 — Persistence and migrations
 

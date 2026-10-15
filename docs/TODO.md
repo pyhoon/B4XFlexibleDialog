@@ -31,11 +31,15 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Verify sizing, scrolling, cleanup, repeated mounting, and caller-owned layout behavior (reported from interactive demo tests).
 - [x] Run interactive page acceptance tests for Save, Cancel, programmatic updates, localization, and theme refresh (reported passing).
 
-## M3 — Additional preference types and validation
+## M3 — Additional preference types and validation — IN PROGRESS
 
-- [ ] Add controls incrementally: multiline, password, checkbox, multichoice, date/time/datetime, slider, label, and action.
-- [ ] Document per-type defaults, option contracts, validation, and platform limitations.
-- [ ] Add required/length/allowed-value validation where applicable.
+- [x] Add initial `multiline`, `password`, and `checkbox` controls to both B4J presentations.
+- [x] Add `multichoice` with string-list values and defensive copies.
+- [x] Document current defaults and required/string-length validation.
+- [x] Add required/minimum/maximum string-length checks to model and controller.
+- [ ] Continue with date/time/datetime, slider, label, and action.
+- [x] Validate that multichoice defaults and assigned values are unique selections from declared options.
+- [x] Run GUI tests for multiline, password, checkbox, and multichoice controls (reported passing).
 - [ ] Add Reset and localized validation feedback.
 
 ## M4 — Persistence and migrations

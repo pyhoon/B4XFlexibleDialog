@@ -50,3 +50,20 @@
     -fx-background-color: -prefs-accent;
     -fx-text-fill: -prefs-checkmark-text;
 }
+
+.prefs-surface .list-view {
+    -fx-background-color: -prefs-input-bg;
+    -fx-control-inner-background: -prefs-input-bg;
+    -fx-border-color: -prefs-input-border;
+}
+
+.prefs-surface .list-cell {
+    -fx-background-color: -prefs-input-bg;
+    -fx-text-fill: -prefs-input-text;
+}
+
+.prefs-surface .list-cell:filled:selected,
+.prefs-surface .list-cell:filled:selected:focused {
+    -fx-background-color: -prefs-accent;
+    -fx-text-fill: -prefs-checkmark-text;
+}

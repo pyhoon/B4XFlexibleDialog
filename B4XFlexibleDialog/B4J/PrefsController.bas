@@ -27,13 +27,13 @@ End Sub
 Public Sub SetValue(Id As String, Value As Object) As Boolean
 	LastError = ValidateValue(Id, Value)
 	If LastError <> "" Then Return False
-	Committed.Put(Id, Value)
-	If HasDraft Then Draft.Put(Id, Value)
+	Committed.Put(Id, CopyValue(Value))
+	If HasDraft Then Draft.Put(Id, CopyValue(Value))
 	Return True
 End Sub
 
 Public Sub GetValue(Id As String) As Object
-	If Committed.ContainsKey(Id) Then Return Committed.Get(Id)
+	If Committed.ContainsKey(Id) Then Return CopyValue(Committed.Get(Id))
 	Return Null
 End Sub
 
@@ -50,7 +50,7 @@ Public Sub SetDraftValue(Id As String, Value As Object) As Boolean
 	If HasDraft = False Then BeginDraft
 	LastError = ValidateValue(Id, Value)
 	If LastError <> "" Then Return False
-	Draft.Put(Id, Value)
+	Draft.Put(Id, CopyValue(Value))
 	Return True
 End Sub
 
@@ -84,8 +84,21 @@ Public Sub ValidateValue(Id As String, Value As Object) As String
 	If Pref.IsInitialized = False Then Return "Unknown preference id: " & Id
 	Dim TypeName As String = Pref.Get("type")
 	Select TypeName
-		Case "text"
+		Case "text", "multiline", "password"
 			If IsStringObject(Value) = False Then Return "Preference " & Id & " must be text."
+			Dim TextValue As String = Value
+			If Pref.ContainsKey("required") Then
+				Dim RequiredValue As Boolean = Pref.Get("required")
+				If RequiredValue And TextValue.Length = 0 Then Return "Preference " & Id & " is required."
+			End If
+			If Pref.ContainsKey("minLength") Then
+				Dim MinimumLength As Int = Pref.Get("minLength")
+				If TextValue.Length < MinimumLength Then Return "Preference " & Id & " must contain at least " & MinimumLength & " characters."
+			End If
+			If Pref.ContainsKey("maxLength") Then
+				Dim MaximumLength As Int = Pref.Get("maxLength")
+				If TextValue.Length > MaximumLength Then Return "Preference " & Id & " must contain no more than " & MaximumLength & " characters."
+			End If
 		Case "number"
 			If IsNumberObject(Value) = False Then Return "Preference " & Id & " must be a number."
 			Dim Options As Map
@@ -100,7 +113,7 @@ Public Sub ValidateValue(Id As String, Value As Object) As String
 				Dim Maximum As Double = Options.Get("max")
 				If NumericValue > Maximum Then Return "Preference " & Id & " must be at most " & Maximum & "."
 			End If
-		Case "switch"
+		Case "switch", "checkbox"
 			If IsBooleanObject(Value) = False Then Return "Preference " & Id & " must be true or false."
 		Case "choice"
 			If IsStringObject(Value) = False Then Return "Preference " & Id & " must be a choice value."
@@ -113,6 +126,25 @@ Public Sub ValidateValue(Id As String, Value As Object) As String
 				If ChoiceValue = Candidate Then Found = True
 			Next
 			If Found = False Then Return "Preference " & Id & " has an invalid choice value."
+		Case "multichoice"
+			If IsListObject(Value) = False Then Return "Preference " & Id & " must be a list of choice values."
+			Dim MultiOptions As Map = Pref.Get("options")
+			Dim MultiItems As List = MultiOptions.Get("items")
+			Dim MultiValues As List = Value
+			Dim SelectedValues As Map
+			SelectedValues.Initialize
+			For Each ChoiceObject As Object In MultiValues
+				If IsStringObject(ChoiceObject) = False Then Return "Preference " & Id & " choices must be strings."
+				Dim Candidate As String = ChoiceObject
+				If SelectedValues.ContainsKey(Candidate) Then Return "Preference " & Id & " contains a duplicate choice value."
+				SelectedValues.Put(Candidate, True)
+				Dim FoundChoice As Boolean = False
+				For Each MultiItem As Map In MultiItems
+					Dim MultiValue As String = MultiItem.Get("value")
+					If MultiValue = Candidate Then FoundChoice = True
+				Next
+				If FoundChoice = False Then Return "Preference " & Id & " contains an unknown choice value."
+			Next
 	End Select
 	Return ""
 End Sub
@@ -121,9 +153,22 @@ Private Sub CopyMap(Source As Map) As Map
 	Dim Result As Map
 	Result.Initialize
 	For Each Key As String In Source.Keys
-		Result.Put(Key, Source.Get(Key))
+		Result.Put(Key, CopyValue(Source.Get(Key)))
 	Next
 	Return Result
+End Sub
+
+Private Sub CopyValue(Value As Object) As Object
+	If IsListObject(Value) Then
+		Dim SourceList As List = Value
+		Dim ResultList As List
+		ResultList.Initialize
+		For Each Item As Object In SourceList
+			ResultList.Add(Item)
+		Next
+		Return ResultList
+	End If
+	Return Value
 End Sub
 
 Private Sub IsStringObject(Value As Object) As Boolean
@@ -141,5 +186,10 @@ End Sub
 
 Private Sub IsBooleanObject(Value As Object) As Boolean
 	If Value Is Boolean Then Return True
+	Return False
+End Sub
+
+Private Sub IsListObject(Value As Object) As Boolean
+	If Value Is List Then Return True
 	Return False
 End Sub

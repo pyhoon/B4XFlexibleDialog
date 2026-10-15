@@ -57,7 +57,7 @@ Public Sub LoadFromJson(JsonText As String) As Boolean
 			If Pref.ContainsKey("id") = False Or IsValidId(Pref.Get("id")) = False Then Return Fail("Preference id is missing or invalid in section " & SectionId)
 			Dim PrefId As String = Pref.Get("id")
 			If NewPreferences.ContainsKey(PrefId) Then Return Fail("Duplicate preference id: " & PrefId)
-			If Pref.ContainsKey("type") = False Or IsSupportedType(Pref.Get("type")) = False Then Return Fail("Preference " & PrefId & ": unsupported type; supported types are text, number, switch, and choice.")
+			If Pref.ContainsKey("type") = False Or IsSupportedType(Pref.Get("type")) = False Then Return Fail("Preference " & PrefId & ": unsupported type; supported types are text, multiline, password, number, switch, checkbox, and choice.")
 			If Pref.ContainsKey("titleKey") = False Or ("" & Pref.Get("titleKey")).Trim.Length = 0 Then Return Fail("Preference " & PrefId & ": titleKey is required.")
 			If ValidatePreference(Pref) = False Then Return False
 			NewPreferences.Put(PrefId, Pref)
@@ -78,16 +78,21 @@ Private Sub ValidatePreference(Pref As Map) As Boolean
 	If Pref.ContainsKey("options") Then Options = Pref.Get("options")
 	If Pref.ContainsKey("defaultValue") = False Then
 		Select TypeName
-			Case "text": Pref.Put("defaultValue", "")
+			Case "text", "multiline", "password": Pref.Put("defaultValue", "")
 			Case "number": Pref.Put("defaultValue", 0)
-			Case "switch": Pref.Put("defaultValue", False)
+			Case "switch", "checkbox": Pref.Put("defaultValue", False)
 			Case "choice": Return Fail("Preference " & Id & ": defaultValue is required for choice.")
+			Case "multichoice"
+				Dim EmptyChoices As List
+				EmptyChoices.Initialize
+				Pref.Put("defaultValue", EmptyChoices)
 		End Select
 	End If
 	Dim Value As Object = Pref.Get("defaultValue")
 	Select TypeName
-		Case "text"
+		Case "text", "multiline", "password"
 			If IsStringObject(Value) = False Then Return Fail("Preference " & Id & ": defaultValue must be a string.")
+			If ValidateStringConstraints(Pref, Value) = False Then Return False
 		Case "number"
 			If IsNumberObject(Value) = False Then Return Fail("Preference " & Id & ": defaultValue must be a number.")
 			If Options.ContainsKey("min") And IsNumberObject(Options.Get("min")) = False Then Return Fail("Preference " & Id & ": options.min must be a number.")
@@ -105,29 +110,90 @@ Private Sub ValidatePreference(Pref As Map) As Boolean
 				Dim MaximumValue As Double = Options.Get("max")
 				If DefaultNumber > MaximumValue Then Return Fail("Preference " & Id & ": defaultValue is above options.max.")
 			End If
-		Case "switch"
+		Case "switch", "checkbox"
 			If IsBooleanObject(Value) = False Then Return Fail("Preference " & Id & ": defaultValue must be true or false.")
 		Case "choice"
 			If IsStringObject(Value) = False Then Return Fail("Preference " & Id & ": choice defaultValue must be a string.")
 			Dim ChoiceDefault As String = Value
-			If Options.ContainsKey("items") = False Or IsListObject(Options.Get("items")) = False Then Return Fail("Preference " & Id & ": choice options.items must be an array.")
-			Dim Items As List = Options.Get("items")
-			If Items.Size = 0 Then Return Fail("Preference " & Id & ": choice options.items cannot be empty.")
-			Dim FoundDefault As Boolean = False
-			Dim ItemValues As Map
-			ItemValues.Initialize
-			For Each ItemObject As Object In Items
-				If IsMapObject(ItemObject) = False Then Return Fail("Preference " & Id & ": each choice item must be an object.")
-				Dim Item As Map = ItemObject
-				If Item.ContainsKey("value") = False Or IsStringObject(Item.Get("value")) = False Then Return Fail("Preference " & Id & ": each choice item requires a string value.")
-				If Item.ContainsKey("titleKey") = False Or ("" & Item.Get("titleKey")).Trim.Length = 0 Then Return Fail("Preference " & Id & ": each choice item requires titleKey.")
-				Dim ItemValue As String = Item.Get("value")
-				If ItemValues.ContainsKey(ItemValue) Then Return Fail("Preference " & Id & ": duplicate choice value " & ItemValue)
-				ItemValues.Put(ItemValue, True)
-				If ItemValue = ChoiceDefault Then FoundDefault = True
-			Next
-			If FoundDefault = False Then Return Fail("Preference " & Id & ": defaultValue must match a choice item value.")
+			If ValidateChoiceItems(Pref, Options) = False Then Return False
+			Dim ChoiceValues As List
+			ChoiceValues.Initialize
+			ChoiceValues.Add(ChoiceDefault)
+			If ValidateChoiceValues(Pref, Options, ChoiceValues) = False Then Return False
+		Case "multichoice"
+			If IsListObject(Value) = False Then Return Fail("Preference " & Id & ": multichoice defaultValue must be an array of strings.")
+			If ValidateChoiceItems(Pref, Options) = False Then Return False
+			If ValidateChoiceValues(Pref, Options, Value) = False Then Return False
 	End Select
+	Return True
+End Sub
+
+Private Sub ValidateChoiceItems(Pref As Map, Options As Map) As Boolean
+	Dim Id As String = Pref.Get("id")
+	If Options.ContainsKey("items") = False Or IsListObject(Options.Get("items")) = False Then Return Fail("Preference " & Id & ": options.items must be an array.")
+	Dim Items As List = Options.Get("items")
+	If Items.Size = 0 Then Return Fail("Preference " & Id & ": options.items cannot be empty.")
+	Dim ItemValues As Map
+	ItemValues.Initialize
+	For Each ItemObject As Object In Items
+		If IsMapObject(ItemObject) = False Then Return Fail("Preference " & Id & ": each choice item must be an object.")
+		Dim Item As Map = ItemObject
+		If Item.ContainsKey("value") = False Or IsStringObject(Item.Get("value")) = False Then Return Fail("Preference " & Id & ": each choice item requires a string value.")
+		If Item.ContainsKey("titleKey") = False Or ("" & Item.Get("titleKey")).Trim.Length = 0 Then Return Fail("Preference " & Id & ": each choice item requires titleKey.")
+		Dim ItemValue As String = Item.Get("value")
+		If ItemValues.ContainsKey(ItemValue) Then Return Fail("Preference " & Id & ": duplicate choice value " & ItemValue)
+		ItemValues.Put(ItemValue, True)
+	Next
+	Return True
+End Sub
+
+Private Sub ValidateChoiceValues(Pref As Map, Options As Map, Values As List) As Boolean
+	Dim Id As String = Pref.Get("id")
+	Dim Items As List = Options.Get("items")
+	Dim Seen As Map
+	Seen.Initialize
+	For Each ValueObject As Object In Values
+		If IsStringObject(ValueObject) = False Then Return Fail("Preference " & Id & ": choice values must be strings.")
+		Dim Value As String = ValueObject
+		If Seen.ContainsKey(Value) Then Return Fail("Preference " & Id & ": duplicate selected value " & Value)
+		Seen.Put(Value, True)
+		Dim Found As Boolean = False
+		For Each ItemObject As Object In Items
+			Dim Item As Map = ItemObject
+			Dim ItemValue As String = Item.Get("value")
+			If Value = ItemValue Then Found = True
+		Next
+		If Found = False Then Return Fail("Preference " & Id & ": defaultValue contains unknown choice value " & Value)
+	Next
+	Return True
+End Sub
+
+Private Sub ValidateStringConstraints(Pref As Map, Value As String) As Boolean
+	Dim Id As String = Pref.Get("id")
+	If Pref.ContainsKey("required") And IsBooleanObject(Pref.Get("required")) = False Then Return Fail("Preference " & Id & ": required must be Boolean.")
+	If Pref.ContainsKey("required") Then
+		Dim RequiredValue As Boolean = Pref.Get("required")
+		If RequiredValue And Value.Length = 0 Then Return Fail("Preference " & Id & ": required defaultValue cannot be empty.")
+	End If
+	If Pref.ContainsKey("minLength") And IsNumberObject(Pref.Get("minLength")) = False Then Return Fail("Preference " & Id & ": minLength must be an integer.")
+	If Pref.ContainsKey("maxLength") And IsNumberObject(Pref.Get("maxLength")) = False Then Return Fail("Preference " & Id & ": maxLength must be an integer.")
+	Dim Minimum As Int = 0
+	Dim Maximum As Int = 2147483647
+	If Pref.ContainsKey("minLength") Then
+		Dim MinimumNumber As Double = Pref.Get("minLength")
+		Minimum = MinimumNumber
+		If Minimum <> MinimumNumber Then Return Fail("Preference " & Id & ": minLength must be an integer.")
+		If Minimum < 0 Then Return Fail("Preference " & Id & ": minLength cannot be negative.")
+	End If
+	If Pref.ContainsKey("maxLength") Then
+		Dim MaximumNumber As Double = Pref.Get("maxLength")
+		Maximum = MaximumNumber
+		If Maximum <> MaximumNumber Then Return Fail("Preference " & Id & ": maxLength must be an integer.")
+		If Maximum < 0 Then Return Fail("Preference " & Id & ": maxLength cannot be negative.")
+	End If
+	If Minimum > Maximum Then Return Fail("Preference " & Id & ": minLength cannot exceed maxLength.")
+	If Value.Length < Minimum Then Return Fail("Preference " & Id & ": defaultValue is shorter than minLength.")
+	If Value.Length > Maximum Then Return Fail("Preference " & Id & ": defaultValue exceeds maxLength.")
 	Return True
 End Sub
 
@@ -181,7 +247,7 @@ End Sub
 Private Sub IsSupportedType(Value As Object) As Boolean
 	If IsStringObject(Value) = False Then Return False
 	Dim T As String = Value
-	Return T = "text" Or T = "number" Or T = "switch" Or T = "choice"
+	Return T = "text" Or T = "multiline" Or T = "password" Or T = "number" Or T = "switch" Or T = "checkbox" Or T = "choice" Or T = "multichoice"
 End Sub
 
 Private Sub IsStringObject(Value As Object) As Boolean
