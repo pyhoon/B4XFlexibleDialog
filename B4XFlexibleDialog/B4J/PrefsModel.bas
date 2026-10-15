@@ -79,7 +79,7 @@ Private Sub ValidatePreference(Pref As Map) As Boolean
 	If Pref.ContainsKey("defaultValue") = False Then
 		Select TypeName
 			Case "text", "multiline", "password": Pref.Put("defaultValue", "")
-			Case "date", "time", "datetime": Pref.Put("defaultValue", "")
+			Case "date", "time", "datetime", "file", "directory": Pref.Put("defaultValue", "")
 			Case "number": Pref.Put("defaultValue", 0)
 			Case "slider"
 				Dim SliderDefault As Double = 0
@@ -116,6 +116,13 @@ Private Sub ValidatePreference(Pref As Map) As Boolean
 			Dim DateTimeValue As String = Value
 			If ValidateRequired(Pref, DateTimeValue) = False Then Return False
 			If DateTimeValue <> "" And IsValidDateTime(DateTimeValue) = False Then Return Fail("Preference " & Id & ": datetime defaultValue must be valid yyyy-MM-dd'T'HH:mm.")
+		Case "file", "directory"
+			If IsStringObject(Value) = False Then Return Fail("Preference " & Id & ": defaultValue must be a path or URI string.")
+			If ValidateRequired(Pref, Value) = False Then Return False
+			If ValidateFileOptions(Pref, Options) = False Then Return False
+			If Value <> "" And TypeName = "file" And HasExtensionList(Options) Then
+				If IsExtensionAllowed(Value, Options.Get("extensions")) = False Then Return Fail("Preference " & Id & ": defaultValue extension is not in options.extensions.")
+			End If
 		Case "number", "slider"
 			If IsNumberObject(Value) = False Then Return Fail("Preference " & Id & ": defaultValue must be a number.")
 			If Options.ContainsKey("min") And IsNumberObject(Options.Get("min")) = False Then Return Fail("Preference " & Id & ": options.min must be a number.")
@@ -240,6 +247,37 @@ Private Sub IsIsoDate(Value As String) As Boolean
 	End Try
 End Sub
 
+Private Sub ValidateFileOptions(Pref As Map, Options As Map) As Boolean
+	Dim Id As String = Pref.Get("id")
+	If Options.ContainsKey("extensions") Then
+		If IsListObject(Options.Get("extensions")) = False Then Return Fail("Preference " & Id & ": options.extensions must be an array of strings.")
+		Dim Extensions As List = Options.Get("extensions")
+		For Each ExtensionObject As Object In Extensions
+			If IsStringObject(ExtensionObject) = False Then Return Fail("Preference " & Id & ": options.extensions must contain only strings.")
+			If ExtensionObject = "" Then Return Fail("Preference " & Id & ": options.extensions cannot contain empty entries.")
+		Next
+	End If
+	If Options.ContainsKey("allowClear") And IsBooleanObject(Options.Get("allowClear")) = False Then Return Fail("Preference " & Id & ": options.allowClear must be Boolean.")
+	If Options.ContainsKey("copyToAppStorage") And IsBooleanObject(Options.Get("copyToAppStorage")) = False Then Return Fail("Preference " & Id & ": options.copyToAppStorage must be Boolean.")
+	If Options.ContainsKey("preview") And IsBooleanObject(Options.Get("preview")) = False Then Return Fail("Preference " & Id & ": options.preview must be Boolean.")
+	Return True
+End Sub
+
+Private Sub HasExtensionList(Options As Map) As Boolean
+	Return Options.ContainsKey("extensions") And IsListObject(Options.Get("extensions"))
+End Sub
+
+Private Sub IsExtensionAllowed(FilePath As String, Allowed As List) As Boolean
+	Dim DotIndex As Int = FilePath.LastIndexOf(".")
+	If DotIndex = -1 Then Return False
+	Dim Extension As String = FilePath.SubString(DotIndex + 1).ToLowerCase
+	For Each AllowedObject As Object In Allowed
+		Dim AllowedExtension As String = AllowedObject
+		If AllowedExtension.ToLowerCase = Extension Then Return True
+	Next
+	Return False
+End Sub
+
 Private Sub IsValidTime(Value As String) As Boolean
 	If Value.Length <> 5 Or Value.SubString2(2, 3) <> ":" Then Return False
 	Dim HoursText As String = Value.SubString2(0, 2)
@@ -315,7 +353,7 @@ End Sub
 Private Sub IsSupportedType(Value As Object) As Boolean
 	If IsStringObject(Value) = False Then Return False
 	Dim T As String = Value
-	Return T = "text" Or T = "multiline" Or T = "password" Or T = "number" Or T = "switch" Or T = "checkbox" Or T = "choice" Or T = "multichoice" Or T = "date" Or T = "slider" Or T = "time" Or T = "datetime" Or T = "label" Or T = "action"
+	Return T = "text" Or T = "multiline" Or T = "password" Or T = "number" Or T = "switch" Or T = "checkbox" Or T = "choice" Or T = "multichoice" Or T = "date" Or T = "slider" Or T = "time" Or T = "datetime" Or T = "file" Or T = "directory" Or T = "label" Or T = "action"
 End Sub
 
 Private Sub IsStringObject(Value As Object) As Boolean

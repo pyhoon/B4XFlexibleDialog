@@ -242,6 +242,21 @@ Public Sub ValidateValue(Id As String, Value As Object) As String
 				If RequiredDateTime And DateTimeValue.Length = 0 Then Return "Preference " & Id & " is required."
 			End If
 			If DateTimeValue <> "" And IsValidDateTime(DateTimeValue) = False Then Return "Preference " & Id & " must be valid yyyy-MM-dd'T'HH:mm."
+		Case "file", "directory"
+			If IsStringObject(Value) = False Then Return "Preference " & Id & " must be a path or URI string."
+			Dim FileValue As String = Value
+			If Pref.ContainsKey("required") Then
+				Dim RequiredFile As Boolean = Pref.Get("required")
+				If RequiredFile And FileValue.Length = 0 Then Return "Preference " & Id & " is required."
+			End If
+			If FileValue <> "" And TypeName = "file" Then
+				Dim FileOptions As Map
+				FileOptions.Initialize
+				If Pref.ContainsKey("options") Then FileOptions = Pref.Get("options")
+				If FileOptions.ContainsKey("extensions") And IsListObject(FileOptions.Get("extensions")) Then
+					If IsExtensionAllowed(FileValue, FileOptions.Get("extensions")) = False Then Return "Preference " & Id & " has a disallowed file extension."
+				End If
+			End If
 	End Select
 	Return ""
 End Sub
@@ -288,6 +303,17 @@ End Sub
 
 Private Sub IsListObject(Value As Object) As Boolean
 	If Value Is List Then Return True
+	Return False
+End Sub
+
+Private Sub IsExtensionAllowed(FilePath As String, Allowed As List) As Boolean
+	Dim DotIndex As Int = FilePath.LastIndexOf(".")
+	If DotIndex = -1 Then Return False
+	Dim Extension As String = FilePath.SubString(DotIndex + 1).ToLowerCase
+	For Each AllowedObject As Object In Allowed
+		Dim AllowedExtension As String = AllowedObject
+		If AllowedExtension.ToLowerCase = Extension Then Return True
+	Next
 	Return False
 End Sub
 

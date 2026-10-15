@@ -14,6 +14,7 @@ Sub Class_Globals
 	Private Model As PrefsModel
 	Private Localization As PrefsLocalization
 	Private Theme As PrefsTheme
+	Private FileProvider As PrefsFileProvider
 	Private Callback As Object
 	Private EventPrefix As String
 	Private Controls As Map
@@ -22,6 +23,8 @@ Sub Class_Globals
 	Private SectionLabels As Map
 	Private SliderLabels As Map
 	Private ActionButtons As Map
+	Private BrowseButtons As Map
+	Private ClearButtons As Map
 	Private PageTitle As Label
 	Private StatusLabel As Label
 	Private SaveButton As Button
@@ -31,12 +34,13 @@ Sub Class_Globals
 	Private IsDisposed As Boolean
 End Sub
 
-Public Sub Initialize(TargetContainer As AnchorPane, ValueController As PrefsController, Definition As PrefsModel, L10n As PrefsLocalization, UiTheme As PrefsTheme, Target As Object, TargetEvent As String)
+Public Sub Initialize(TargetContainer As AnchorPane, ValueController As PrefsController, Definition As PrefsModel, L10n As PrefsLocalization, UiTheme As PrefsTheme, Provider As PrefsFileProvider, Target As Object, TargetEvent As String)
 	Container = TargetContainer
 	Controller = ValueController
 	Model = Definition
 	Localization = L10n
 	Theme = UiTheme
+	FileProvider = Provider
 	Callback = Target
 	EventPrefix = TargetEvent
 	IsDisposed = False
@@ -51,6 +55,8 @@ Private Sub BuildPage
 	SectionLabels.Initialize
 	SliderLabels.Initialize
 	ActionButtons.Initialize
+	BrowseButtons.Initialize
+	ClearButtons.Initialize
 	RowTop = 18
 	Content.Initialize("page")
 	Content.StyleClasses.Add("prefs-surface")
@@ -215,10 +221,102 @@ Private Sub AddPreference(Pref As Map)
 			Choice.SelectedIndex = SelectedIndex
 			Content.AddNode(Choice, 290, RowTop, 320, 36)
 			Controls.Put(Id, Choice)
+		Else If TypeName = "file" Or TypeName = "directory" Then
+			Dim PathField As TextField
+			PathField.Initialize("page")
+			PathField.Tag = Id
+			PathField.Text = "" & Controller.GetValue(Id)
+			Content.AddNode(PathField, 290, RowTop, 200, 36)
+			Controls.Put(Id, PathField)
+			Dim BrowseButton As Button
+			BrowseButton.Initialize("pageBrowse")
+			BrowseButton.Tag = Id
+			BrowseButton.Text = Localization.Text("ui.browse")
+			Content.AddNode(BrowseButton, 500, RowTop, 80, 36)
+			BrowseButtons.Put(Id, BrowseButton)
+			If HasAllowClear(Pref) Then
+				Dim ClearButton As Button
+				ClearButton.Initialize("pageClear")
+				ClearButton.Tag = Id
+				ClearButton.Text = Localization.Text("ui.clear")
+				Content.AddNode(ClearButton, 590, RowTop, 60, 36)
+				ClearButtons.Put(Id, ClearButton)
+			End If
 		End If
 	End If
 	ControlTypes.Put(Id, TypeName)
 	RowTop = RowTop + Theme.RowSpacing + 32
+End Sub
+
+Private Sub pageBrowse_Click
+	Dim BrowseButton As Button = Sender
+	BrowseFile(BrowseButton.Tag)
+End Sub
+
+Private Sub pageClear_Click
+	Dim ClearButton As Button = Sender
+	ClearFile(ClearButton.Tag)
+End Sub
+
+Private Sub BrowseFile(Id As String)
+	Dim Pref As Map = Model.GetPreference(Id)
+	Dim TypeName As String = Pref.Get("type")
+	Dim Options As Map = BuildProviderOptions(Pref)
+	Dim Result As PrefsFileResult
+	If TypeName = "directory" Then
+		Result = FileProvider.SelectDirectory(Options)
+	Else
+		Result = FileProvider.SelectFile(Options)
+	End If
+	If Result.Success Then
+		Dim Stored As String = Result.Locator
+		If TypeName = "file" And HasCopyToAppStorage(Pref) Then
+			Dim Copied As String = FileProvider.CopyToAppStorage(Result.Path, "")
+			If Copied <> "" Then Stored = Copied
+		End If
+		Dim Field As TextField = Controls.Get(Id)
+		Field.Text = Stored
+		StatusLabel.Text = ""
+	Else If Result.Cancelled Then
+		' Keep the existing value.
+	Else
+		StatusLabel.Text = Result.Message
+		StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
+	End If
+End Sub
+
+Private Sub ClearFile(Id As String)
+	Dim Field As TextField = Controls.Get(Id)
+	Field.Text = ""
+End Sub
+
+Private Sub BuildProviderOptions(Pref As Map) As Map
+	Dim Source As Map
+	Source.Initialize
+	If Pref.ContainsKey("options") Then Source = Pref.Get("options")
+	Dim Result As Map
+	Result.Initialize
+	For Each Key As String In Source.Keys
+		Result.Put(Key, Source.Get(Key))
+	Next
+	Result.Put("title", Localization.Text(Pref.Get("titleKey")))
+	Return Result
+End Sub
+
+Private Sub HasAllowClear(Pref As Map) As Boolean
+	If Pref.ContainsKey("options") = False Then Return False
+	Dim Options As Map = Pref.Get("options")
+	If Options.ContainsKey("allowClear") = False Then Return False
+	Dim Value As Boolean = Options.Get("allowClear")
+	Return Value
+End Sub
+
+Private Sub HasCopyToAppStorage(Pref As Map) As Boolean
+	If Pref.ContainsKey("options") = False Then Return False
+	Dim Options As Map = Pref.Get("options")
+	If Options.ContainsKey("copyToAppStorage") = False Then Return False
+	Dim Value As Boolean = Options.Get("copyToAppStorage")
+	Return Value
 End Sub
 
 Public Sub RefreshValues
@@ -239,7 +337,7 @@ End Sub
 Private Sub UpdateControl(Id As String, Value As Object)
 	Dim TypeName As String = ControlTypes.Get(Id)
 	Select TypeName
-		Case "text", "number", "password", "time", "datetime"
+		Case "text", "number", "password", "time", "datetime", "file", "directory"
 			Dim Input As TextField = Controls.Get(Id)
 			Input.Text = "" & Value
 		Case "multiline"
@@ -341,6 +439,14 @@ Public Sub RefreshLocalization
 	SaveButton.Text = Localization.Text("ui.save")
 	CancelButton.Text = Localization.Text("ui.cancel")
 	ResetButton.Text = Localization.Text("ui.reset")
+	For Each ButtonId As String In BrowseButtons.Keys
+		Dim BrowseButton As Button = BrowseButtons.Get(ButtonId)
+		BrowseButton.Text = Localization.Text("ui.browse")
+	Next
+	For Each ButtonId As String In ClearButtons.Keys
+		Dim ClearButton As Button = ClearButtons.Get(ButtonId)
+		ClearButton.Text = Localization.Text("ui.clear")
+	Next
 End Sub
 
 Public Sub RefreshTheme
@@ -364,6 +470,9 @@ Public Sub RefreshTheme
 		If ControlTypes.Get(Id) = "text" Or ControlTypes.Get(Id) = "number" Or ControlTypes.Get(Id) = "password" Or ControlTypes.Get(Id) = "time" Or ControlTypes.Get(Id) = "datetime" Then
 			Dim Input As TextField = Controls.Get(Id)
 			Input.Style = InputCss
+		Else If ControlTypes.Get(Id) = "file" Or ControlTypes.Get(Id) = "directory" Then
+			Dim PathField As TextField = Controls.Get(Id)
+			PathField.Style = InputCss
 		Else If ControlTypes.Get(Id) = "multiline" Then
 			Dim MultilineInput As TextArea = Controls.Get(Id)
 			MultilineInput.Style = InputCss
@@ -410,6 +519,15 @@ Private Sub ApplyButtonStyles
 	CancelButton.Style = "-fx-background-color: " & ColorCss(Theme.SecondaryButtonBackgroundColor) & "; -fx-text-fill: " & ColorCss(Theme.SecondaryButtonTextColor) & "; -fx-background-radius: 4;"
 	ResetButton.TextColor = fx.Colors.From32Bit(Theme.SecondaryButtonTextColor)
 	ResetButton.Style = "-fx-background-color: " & ColorCss(Theme.SecondaryButtonBackgroundColor) & "; -fx-text-fill: " & ColorCss(Theme.SecondaryButtonTextColor) & "; -fx-background-radius: 4;"
+	Dim SecondaryStyle As String = "-fx-background-color: " & ColorCss(Theme.SecondaryButtonBackgroundColor) & "; -fx-text-fill: " & ColorCss(Theme.SecondaryButtonTextColor) & "; -fx-background-radius: 4;"
+	For Each ButtonId As String In BrowseButtons.Keys
+		Dim BrowseButton As Button = BrowseButtons.Get(ButtonId)
+		BrowseButton.Style = SecondaryStyle
+	Next
+	For Each ButtonId As String In ClearButtons.Keys
+		Dim ClearButton As Button = ClearButtons.Get(ButtonId)
+		ClearButton.Style = SecondaryStyle
+	Next
 End Sub
 
 Private Sub InputCss As String
@@ -467,6 +585,9 @@ Private Sub Save_Click
 		Dim TypeName As String = ControlTypes.Get(Id)
 		Dim Value As Object
 		Select TypeName
+			Case "file", "directory"
+				Dim PathField As TextField = Controls.Get(Id)
+				Value = PathField.Text
 			Case "text", "password", "number", "time", "datetime"
 				Dim Input As TextField = Controls.Get(Id)
 				If TypeName = "number" Then

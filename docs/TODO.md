@@ -61,12 +61,16 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Verify values restore after process restart (reported: `Restored 12 value(s)` and values reappear).
 - [x] Document migration policy and confirm the demo store path is app-owned (`File.DirApp`).
 
-## M5 — File and directory preferences
+## M5 — File and directory preferences — IN PROGRESS
 
-- [ ] Define `PrefsFileProvider` and a normalized selection result model.
-- [ ] Verify JavaFX file chooser behavior for B4J; keep media-picker dependencies optional.
-- [ ] Implement filters, cancel preservation, clear behavior, and optional app-managed copying.
-- [ ] Document URI/path/access limitations and directory support.
+- [x] Define `PrefsFileProvider` and a normalized `PrefsFileResult` selection model.
+- [x] Implement B4J `FileChooser`/`DirectoryChooser` selection with extension filters.
+- [x] Add `file` and `directory` types to the schema, model, controller, dialog, and page.
+- [x] Implement cancel-preserves-value, optional Clear, and optional copy-to-app-storage.
+- [x] Allow an application-supplied picker via `SetCustomHandler` (no mandatory MediaChooser dependency).
+- [x] Document URI/path/access limitations and directory support.
+- [ ] Verify Browse/Clear/cancel and extension filtering in both presentations.
+- [ ] Verify copy-to-app-storage behavior with a real selection.
 
 ## M6 — B4A and B4i adapters
 

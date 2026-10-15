@@ -29,7 +29,7 @@
       "required": ["id", "type", "titleKey"],
       "properties": {
         "id": {"$ref": "#/$defs/id"},
-        "type": {"enum": ["text", "multiline", "password", "number", "switch", "checkbox", "choice", "multichoice", "date", "slider", "time", "datetime", "label", "action"]},
+        "type": {"enum": ["text", "multiline", "password", "number", "switch", "checkbox", "choice", "multichoice", "date", "slider", "time", "datetime", "file", "directory", "label", "action"]},
         "titleKey": {"type": "string", "minLength": 1},
         "descriptionKey": {"type": "string"},
         "defaultValue": {},
@@ -51,6 +51,8 @@
         {"if": {"properties": {"type": {"const": "date"}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "string", "pattern": "^$|^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}}}},
         {"if": {"properties": {"type": {"const": "time"}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "string", "pattern": "^$|^([01][0-9]|2[0-3]):[0-5][0-9]$"}}}},
         {"if": {"properties": {"type": {"const": "datetime"}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "string", "pattern": "^$|^[0-9]{4}-[0-9]{2}-[0-9]{2}T([01][0-9]|2[0-3]):[0-5][0-9]$"}}}},
+        {"if": {"properties": {"type": {"const": "file"}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "string"}, "options": {"type": "object", "additionalProperties": false, "properties": {"extensions": {"type": "array", "items": {"type": "string"}}, "allowClear": {"type": "boolean"}, "copyToAppStorage": {"type": "boolean"}, "preview": {"type": "boolean"}, "selectionType": {"type": "string"}, "title": {"type": "string"}, "initialDirectory": {"type": "string"}}}}}},
+        {"if": {"properties": {"type": {"const": "directory"}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "string"}, "options": {"type": "object", "additionalProperties": false, "properties": {"allowClear": {"type": "boolean"}, "copyToAppStorage": {"type": "boolean"}, "title": {"type": "string"}, "initialDirectory": {"type": "string"}}}}}},
         {"if": {"properties": {"type": {"enum": ["switch", "checkbox"]}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "boolean"}}}},
         {"if": {"properties": {"type": {"const": "choice"}}, "required": ["type"]}, "then": {
           "required": ["defaultValue", "options"],

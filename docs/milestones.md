@@ -35,9 +35,9 @@ The B4J model/controller and both renderers include multiline, password, checkbo
 
 `PrefsStore` provides map-backed persistence with JSON import/export, independent of controller state. When a store is set, committed values persist after Save/commit, programmatic `SetValue`, and reset. Saving merges committed values into the stored map so unknown keys are preserved; loading applies only known, valid value preferences. `ExportValues`/`ImportValues` support JSON round-tripping, and the store exposes its own schema version separately from library versioning. The B4J demo persists to an application-owned file under `File.DirApp` and restores it at startup; a full close-and-relaunch restored the saved values (`Restored 12 value(s)`).
 
-## M5 — File and directory preferences
+## M5 — File and directory preferences — in progress
 
-Add an optional file-provider contract and normalized selection result. Use JavaFX chooser APIs for B4J; evaluate other platform providers separately. Document URI/path/access differences and optional app-managed copying. No mandatory external picker dependency is planned.
+`PrefsFileProvider` defines the picker contract and `PrefsFileResult` normalizes selections (success/cancelled, path, URI, display name, MIME type, access). The B4J implementation uses JavaFX `FileChooser`/`DirectoryChooser` with optional extension filters; applications may supply their own picker via `SetCustomHandler`, so no external picker is mandatory. `file` and `directory` preference types are integrated into the schema, model, controller, and both presentations, with cancel-preserves-value, optional Clear, and optional copy-to-app-storage. URI/path/access limitations are documented. Interactive Browse/Clear/cancel and copy-to-app-storage verification remains pending.
 
 ## M6 — B4A and B4i adapters
 

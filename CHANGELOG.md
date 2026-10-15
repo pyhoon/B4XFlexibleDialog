@@ -10,6 +10,7 @@
 - Added non-value `label` and `action` preferences; action buttons raise a `<prefix>_Action` callback.
 - Added `ResetToDefaults` / `ResetPreference` value operations and draft-reset Reset buttons in both presentations.
 - Added `PrefsStore` persistence: map-backed storage, JSON import/export, unknown-key preservation, and auto-persist after commit/set/reset.
+- Added `file` and `directory` preference types with a `PrefsFileProvider`/`PrefsFileResult` picker abstraction, extension filters, optional Clear, and optional copy-to-app-storage.
 - Added startup assertions for the new value types and validation cases.
 
 ## 0.1.0 — Milestone 1 foundation

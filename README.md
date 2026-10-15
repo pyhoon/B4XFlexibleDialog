@@ -33,6 +33,8 @@ The modal dialog is capped at 600 DIP and scrolls its preference body when neede
 - `PrefsLocalization.bas`: language dictionaries and missing-key fallback.
 - `PrefsTheme.bas`: minimal light/dark colors and layout spacing.
 - `PrefsStore.bas`: persistence adapter (map-backed with JSON import/export); preserves unknown stored keys.
+- `PrefsFileProvider.bas`: file/directory picker abstraction; default B4J `FileChooser`/`DirectoryChooser`, optional custom handler, optional copy-to-app-storage.
+- `PrefsFileResult.bas`: normalized selection result (success/cancelled, path, URI, display name, MIME type, access).
 - `B4XFlexibleDialog.bas`: facade and callback forwarding.
 
 ## Definition JSON v1
@@ -55,8 +57,12 @@ Supported preference contracts:
 | `time` | String `HH:mm` (24-hour); omitted default becomes `""` | Valid range is 00:00–23:59. |
 | `datetime` | String `yyyy-MM-dd'T'HH:mm`; omitted default becomes `""` | ISO date plus 24-hour time; no timezone is implied. |
 | `slider` | Numeric; omitted default becomes `options.min` or `0` | Optional numeric `options.min` / `options.max`; defaults to 0–100 if omitted. |
+| `file` | String path or URI; omitted default becomes `""` | Browse button uses `PrefsFileProvider`. Options: `extensions` (allowed list), `allowClear`, `copyToAppStorage`, `preview` (reserved), `title`, `initialDirectory`. Non-empty values must match `extensions` when present. |
+| `directory` | String path or URI; omitted default becomes `""` | Browse button uses the directory picker. Options: `allowClear`, `copyToAppStorage` (reserved), `title`, `initialDirectory`. |
 | `label` | No stored value | Display-only text. Uses `descriptionKey` when present, otherwise `titleKey`. It is excluded from value maps. |
 | `action` | No stored value | Renders a button; activation calls the `<prefix>_Action(PreferenceId)` callback. It is excluded from value maps. |
+
+`file`/`directory` values are stored as strings. On B4J the default provider returns an absolute filesystem path and a `file://` URI; other platforms must not assume a permanent path, so the normalized `PrefsFileResult` carries path, URI, display name, MIME type, and an access descriptor. Cancelling the picker preserves the existing value. `SetFileProvider` lets an application supply its own picker via `SetCustomHandler(Target, FileSub, DirectorySub)`, where each sub takes the options `Map` and returns a `PrefsFileResult`; `CopyToAppStorage` copies a selection into `File.DirApp\prefs-files`.
 
 `label` and `action` are non-value preferences; they are not stored in committed/draft maps, and `SetValue` rejects them. `defaultValue` is optional for text, multiline, password, number, switch, checkbox, multichoice, date, time, datetime, and slider (defaults above), and required for choice. String preferences support optional root fields `required`, `minLength`, and `maxLength`; empty required strings and values outside length bounds fail validation. Date values use ISO `yyyy-MM-dd` strings and are converted to/from B4J DatePicker ticks only at the UI boundary. Time/datetime are timezone-free wall-clock values. Multichoice values are copied when read/written to keep snapshots independent. Unknown schema versions, duplicate IDs, unsupported types, type mismatches, invalid choice defaults, malformed JSON, and invalid bounds are rejected with `LastError`.
 
@@ -137,6 +143,8 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Dialog/page Reset button loads defaults into the draft | **PASS** (reported GUI test) |
 | Label/action rendering, localization, and `_Action` callback | **PASS** (reported GUI test) |
 | Store merge, unknown-key preservation, JSON round-trip, and `ApplyValues` | **PASS** (reported demo run) |
+| `file`/`directory` validation (empty optional, allowed/disallowed extension, directory path) | **Included; run in demo on startup** |
+| File/directory Browse, Clear, and cancel-preserves-value in dialog and page | **B4J build verified; GUI test pending** |
 | Values restored after application restart | **PASS** (reported: `Restored 12 value(s)` after relaunch) |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |

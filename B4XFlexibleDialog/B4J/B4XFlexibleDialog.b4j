@@ -20,9 +20,11 @@ Module5=PrefsModel
 Module6=PrefsPage
 Module7=PrefsStore
 Module8=PrefsTheme
+Module9=PrefsFileResult
+Module10=PrefsFileProvider
 NumberOfFiles=4
 NumberOfLibraries=3
-NumberOfModules=8
+NumberOfModules=10
 Version=10.7
 @EndOfDesignText@
 #Region Project Attributes
@@ -253,6 +255,10 @@ Private Sub RunCoreChecks(Definition As String)
 	Assert("invalid datetime rejected", Values.SetValue("meeting_at", "2026-02-30T17:30") = False)
 	Assert("action preference stores no value", Values.SetValue("clear_cache", "x") = False)
 	Assert("label preference stores no value", Values.SetValue("account_note", "x") = False)
+	Assert("file accepts empty optional value", Values.SetValue("company_logo", ""))
+	Assert("file accepts allowed extension", Values.SetValue("company_logo", "C:\pics\logo.png"))
+	Assert("file rejects disallowed extension", Values.SetValue("company_logo", "C:\pics\notes.txt") = False)
+	Assert("directory accepts a path", Values.SetValue("export_folder", "C:\Exports"))
 	Dim StoredValues As Map = Values.GetValues
 	Assert("value map excludes label/action", StoredValues.ContainsKey("clear_cache") = False And StoredValues.ContainsKey("account_note") = False)
 	Dim ValueSnapshot As Map = Values.GetValues

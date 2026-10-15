@@ -19,6 +19,8 @@
         {"id": "font_scale", "type": "slider", "titleKey": "setting.font_scale", "defaultValue": 1.0, "options": {"min": 0.8, "max": 1.4}},
         {"id": "reminder_time", "type": "time", "titleKey": "setting.reminder_time", "defaultValue": "09:30"},
         {"id": "meeting_at", "type": "datetime", "titleKey": "setting.meeting_at", "defaultValue": "2025-01-15T09:30", "required": true},
+        {"id": "company_logo", "type": "file", "titleKey": "setting.company_logo", "defaultValue": "", "options": {"extensions": ["png", "jpg", "jpeg", "webp"], "preview": true, "allowClear": true, "copyToAppStorage": false}},
+        {"id": "export_folder", "type": "directory", "titleKey": "setting.export_folder", "defaultValue": "", "options": {"allowClear": true}},
         {"id": "account_note", "type": "label", "titleKey": "setting.account_note", "descriptionKey": "setting.account_note_description"},
         {"id": "clear_cache", "type": "action", "titleKey": "setting.clear_cache"}
       ]

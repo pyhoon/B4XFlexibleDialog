@@ -16,6 +16,7 @@ Sub Class_Globals
 	Private ActivePage As PrefsPage
 	Private PageActive As Boolean
 	Private PageStylesheetAdded As Boolean
+	Private FileProvider As PrefsFileProvider
 	Private Ready As Boolean
 	Public LastError As String
 End Sub
@@ -28,8 +29,17 @@ Public Sub Initialize(EventTarget As Object, EventName As String, Owner As Form)
 	Controller.Initialize(Model)
 	Localization.Initialize
 	CurrentTheme.Initialize(False)
+	FileProvider.Initialize(OwnerForm)
 	Ready = False
 	LastError = ""
+End Sub
+
+Public Sub SetFileProvider(Provider As PrefsFileProvider)
+	FileProvider = Provider
+End Sub
+
+Public Sub GetFileProvider As PrefsFileProvider
+	Return FileProvider
 End Sub
 
 Public Sub LoadDefinition(DefinitionJson As String) As Boolean
@@ -173,7 +183,7 @@ Public Sub Show
 	End If
 	If PageActive Then ActivePage.RefreshValues
 	Dim Dialog As PrefsDialog
-	Dialog.Initialize(OwnerForm, Controller, Model, Localization, CurrentTheme, Callback, EventPrefix)
+	Dialog.Initialize(OwnerForm, Controller, Model, Localization, CurrentTheme, FileProvider, Callback, EventPrefix)
 	Dim WasSaved As Boolean = Dialog.Show
 	If PageActive Then ActivePage.RefreshValues
 	CallSub2(Callback, EventPrefix & "_DialogClosed", WasSaved)
@@ -190,7 +200,7 @@ Public Sub CreatePage(Container As AnchorPane)
 		If OwnerForm.Stylesheets.IndexOf(CssUri) = -1 Then OwnerForm.Stylesheets.Add(CssUri)
 		PageStylesheetAdded = True
 	End If
-	ActivePage.Initialize(Container, Controller, Model, Localization, CurrentTheme, Callback, EventPrefix)
+	ActivePage.Initialize(Container, Controller, Model, Localization, CurrentTheme, FileProvider, Callback, EventPrefix)
 	PageActive = True
 End Sub
 
