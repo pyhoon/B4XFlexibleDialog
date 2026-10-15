@@ -64,7 +64,7 @@ Private Sub BuildPage
 	Content.StyleClasses.Add("prefs-surface")
 	Content.PrefWidth = Max(740, Container.Width - 24)
 	ContentWidth = Content.PrefWidth
-	InputLeft = 380
+	InputLeft = 240
 	Scroll.Initialize("page")
 	Scroll.StyleClasses.Add("prefs-surface")
 	Scroll.FitToWidth = True
@@ -97,11 +97,11 @@ Private Sub BuildPage
 	Content.AddNode(StatusLabel, 34, RowTop, ContentWidth - 30, 26)
 	RowTop = RowTop + 34
 	ResetButton.Initialize("pageReset")
-	Content.AddNode(ResetButton, InputLeft + 10, RowTop, 90, 36)
+	Content.AddNode(ResetButton, InputLeft, RowTop, 90, 36)
 	CancelButton.Initialize("pageCancel")
-	Content.AddNode(CancelButton, InputLeft + 120, RowTop, 90, 36)
+	Content.AddNode(CancelButton, InputLeft + 110, RowTop, 90, 36)
 	SaveButton.Initialize("pageSave")
-	Content.AddNode(SaveButton, InputLeft + 230, RowTop, 110, 36)
+	Content.AddNode(SaveButton, InputLeft + 220, RowTop, 110, 36)
 	RowTop = RowTop + 52
 	Content.PrefHeight = RowTop
 	RefreshTheme
