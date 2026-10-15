@@ -31,7 +31,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Verify sizing, scrolling, cleanup, repeated mounting, and caller-owned layout behavior (reported from interactive demo tests).
 - [x] Run interactive page acceptance tests for Save, Cancel, programmatic updates, localization, and theme refresh (reported passing).
 
-## M3 — Additional preference types and validation — IN PROGRESS
+## M3 — Additional preference types and validation — COMPLETE
 
 - [x] Add initial `multiline`, `password`, and `checkbox` controls to both B4J presentations.
 - [x] Add `multichoice` with string-list values and defensive copies.
@@ -42,13 +42,13 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Document current defaults and required/string-length validation.
 - [x] Add required/minimum/maximum string-length checks to model and controller.
 - [x] Add `label` (display-only) and `action` (callback button) non-value preferences to both presentations.
-- [ ] Verify label/action rendering, localization, and the `_Action` callback in both presentations.
+- [x] Verify label/action rendering, localization, and the `_Action` callback in both presentations (reported passing).
 - [x] Validate that multichoice defaults and assigned values are unique selections from declared options.
 - [x] Run GUI tests for multiline, password, checkbox, and multichoice controls (reported passing).
 - [x] Verify scrollbar contrast in light/dark themes for dialog and page (reported passing).
 - [x] Add `ResetToDefaults` / `ResetPreference` controller operations and facade accessors.
 - [x] Add draft-reset Reset buttons to the dialog and page with localized status.
-- [ ] Verify dialog/page Reset behavior and localized validation messages.
+- [x] Verify dialog/page Reset behavior and localized validation messages (reported passing).
 
 ## M4 — Persistence and migrations
 

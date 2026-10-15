@@ -118,17 +118,18 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Invalid numbers (out-of-range and non-numeric text) block Save | **PASS** (reported GUI test) |
 | In-dialog language/theme switching preserves values | **PASS** (reported GUI test) |
 | Dark/light scrollbar contrast in dialog and page | **PASS** (reported GUI test) |
-| Programmatic `ResetToDefaults` / `ResetPreference` restore defaults | **Included; run in demo on startup** |
-| Dialog/page Reset button loads defaults into the draft | **B4J build verified; GUI test pending** |
+| Programmatic `ResetToDefaults` / `ResetPreference` restore defaults | **PASS** (reported demo run) |
+| Dialog/page Reset button loads defaults into the draft | **PASS** (reported GUI test) |
+| Label/action rendering, localization, and `_Action` callback | **PASS** (reported GUI test) |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
 | Page mounting/resizing, Save/Cancel, repeated dispose/remount, localization/theme refresh | **PASS** (reported GUI test) |
 | Multiline/password/checkbox/multichoice/date/time/datetime/slider controls and validation | **PASS** (reported GUI test) |
 | Modal dialog sizing at 600 DIP | **PASS** (reported GUI test) |
-| Values survive application reboot | **Not supported by Milestone 1**; persistence is deferred |
+| Values survive application reboot | **Not supported yet**; persistence is deferred to Milestone 4 |
 
-The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestone 1, 2, and Milestone 3 GUI results above were reported from demo runs. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
+The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestones 1–3 GUI results above were reported from demo runs. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
 
 ## Deferred beyond current Milestone 3 scope
 
-B4A/B4i support, adaptive presentation, more preference types, persistence and migrations, import/export, immediate-save mode, file providers, custom renderers, conditional display, advanced validators, advanced styling, automated GUI testing, and distributable `.b4xlib` packaging.
+Persistence and migrations (M4), file/directory preferences and providers (M5), B4A/B4i support (M6), custom renderers (`custom`) and adaptive presentation (M7), import/export, immediate-save mode, conditional display, advanced validators, advanced styling, automated GUI testing, and distributable `.b4xlib` packaging.
