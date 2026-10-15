@@ -255,14 +255,14 @@ Private Sub AddPreference(Pref As Map)
 			PathField.Initialize("dlg")
 			PathField.Text = "" & Controller.GetValue(Id)
 			PathField.Style = InputCss
-			ContentPane.AddNode(PathField, 290, RowTop, 190, 34)
+			ContentPane.AddNode(PathField, 290, RowTop, 164, 34)
 			Controls.Put(Id, PathField)
 			Dim BrowseButton As Button
 			BrowseButton.Initialize("dlg")
 			BrowseButton.Text = Localization.Text("ui.browse")
 			BrowseButton.Tag = "browse|" & Id
 			BrowseButton.Style = SecondaryButtonCss
-			ContentPane.AddNode(BrowseButton, 486, RowTop, 74, 34)
+			ContentPane.AddNode(BrowseButton, 458, RowTop, 78, 34)
 			BrowseButtons.Put(Id, BrowseButton)
 			If HasAllowClear(Pref) Then
 				Dim ClearButton As Button
@@ -270,7 +270,7 @@ Private Sub AddPreference(Pref As Map)
 				ClearButton.Text = Localization.Text("ui.clear")
 				ClearButton.Tag = "clear|" & Id
 				ClearButton.Style = SecondaryButtonCss
-				ContentPane.AddNode(ClearButton, 562, RowTop, 40, 34)
+				ContentPane.AddNode(ClearButton, 540, RowTop, 78, 34)
 				ClearButtons.Put(Id, ClearButton)
 			End If
 		End If

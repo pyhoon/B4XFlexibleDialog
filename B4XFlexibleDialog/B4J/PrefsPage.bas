@@ -226,20 +226,20 @@ Private Sub AddPreference(Pref As Map)
 			PathField.Initialize("page")
 			PathField.Tag = Id
 			PathField.Text = "" & Controller.GetValue(Id)
-			Content.AddNode(PathField, 290, RowTop, 200, 36)
+			Content.AddNode(PathField, 290, RowTop, 184, 36)
 			Controls.Put(Id, PathField)
 			Dim BrowseButton As Button
 			BrowseButton.Initialize("pageBrowse")
 			BrowseButton.Tag = Id
 			BrowseButton.Text = Localization.Text("ui.browse")
-			Content.AddNode(BrowseButton, 500, RowTop, 80, 36)
+			Content.AddNode(BrowseButton, 478, RowTop, 78, 36)
 			BrowseButtons.Put(Id, BrowseButton)
 			If HasAllowClear(Pref) Then
 				Dim ClearButton As Button
 				ClearButton.Initialize("pageClear")
 				ClearButton.Tag = Id
 				ClearButton.Text = Localization.Text("ui.clear")
-				Content.AddNode(ClearButton, 590, RowTop, 60, 36)
+				Content.AddNode(ClearButton, 560, RowTop, 78, 36)
 				ClearButtons.Put(Id, ClearButton)
 			End If
 		End If
