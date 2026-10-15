@@ -29,7 +29,7 @@
       "required": ["id", "type", "titleKey"],
       "properties": {
         "id": {"$ref": "#/$defs/id"},
-        "type": {"enum": ["text", "multiline", "password", "number", "switch", "checkbox", "choice", "multichoice"]},
+        "type": {"enum": ["text", "multiline", "password", "number", "switch", "checkbox", "choice", "multichoice", "date", "slider"]},
         "titleKey": {"type": "string", "minLength": 1},
         "defaultValue": {},
         "options": {"type": "object"},
@@ -43,6 +43,11 @@
           "defaultValue": {"type": "number"},
           "options": {"type": "object", "additionalProperties": false, "properties": {"min": {"type": "number"}, "max": {"type": "number"}}}
         }}},
+        {"if": {"properties": {"type": {"const": "slider"}}, "required": ["type"]}, "then": {"properties": {
+          "defaultValue": {"type": "number"},
+          "options": {"type": "object", "additionalProperties": false, "properties": {"min": {"type": "number"}, "max": {"type": "number"}}}
+        }}},
+        {"if": {"properties": {"type": {"const": "date"}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "string", "pattern": "^$|^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}}}},
         {"if": {"properties": {"type": {"enum": ["switch", "checkbox"]}}, "required": ["type"]}, "then": {"properties": {"defaultValue": {"type": "boolean"}}}},
         {"if": {"properties": {"type": {"const": "choice"}}, "required": ["type"]}, "then": {
           "required": ["defaultValue", "options"],

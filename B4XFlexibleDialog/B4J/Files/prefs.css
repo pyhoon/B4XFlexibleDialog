@@ -67,3 +67,52 @@
     -fx-background-color: -prefs-accent;
     -fx-text-fill: -prefs-checkmark-text;
 }
+
+.prefs-surface .slider .track {
+    -fx-background-color: -prefs-input-border;
+    -fx-background-radius: 3px;
+}
+
+.prefs-surface .slider .thumb {
+    -fx-background-color: -prefs-accent;
+    -fx-border-color: -prefs-input-text;
+    -fx-border-radius: 1em;
+    -fx-background-radius: 1em;
+}
+
+.prefs-surface .date-picker > .text-field {
+    -fx-control-inner-background: -prefs-input-bg;
+    -fx-background-color: -prefs-input-bg;
+    -fx-text-fill: -prefs-input-text;
+    -fx-border-color: -prefs-input-border;
+}
+
+.prefs-surface .date-picker > .arrow-button {
+    -fx-background-color: -prefs-input-bg;
+    -fx-border-color: -prefs-input-border;
+}
+
+.date-picker-popup {
+    -fx-background-color: -prefs-input-bg;
+    -fx-border-color: -prefs-input-border;
+}
+
+.date-picker-popup > .month-year-pane {
+    -fx-background-color: -prefs-accent;
+}
+
+.date-picker-popup > .month-year-pane > .label {
+    -fx-text-fill: -prefs-checkmark-text;
+}
+
+.date-picker-popup > .calendar-grid > .day-cell {
+    -fx-background-color: -prefs-input-bg;
+    -fx-text-fill: -prefs-input-text;
+    -fx-border-color: -prefs-input-border;
+}
+
+.date-picker-popup > .calendar-grid > .day-cell:hover,
+.date-picker-popup > .calendar-grid > .day-cell:selected {
+    -fx-background-color: -prefs-accent;
+    -fx-text-fill: -prefs-checkmark-text;
+}

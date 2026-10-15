@@ -99,7 +99,7 @@ Public Sub ValidateValue(Id As String, Value As Object) As String
 				Dim MaximumLength As Int = Pref.Get("maxLength")
 				If TextValue.Length > MaximumLength Then Return "Preference " & Id & " must contain no more than " & MaximumLength & " characters."
 			End If
-		Case "number"
+		Case "number", "slider"
 			If IsNumberObject(Value) = False Then Return "Preference " & Id & " must be a number."
 			Dim Options As Map
 			Options.Initialize
@@ -145,6 +145,14 @@ Public Sub ValidateValue(Id As String, Value As Object) As String
 				Next
 				If FoundChoice = False Then Return "Preference " & Id & " contains an unknown choice value."
 			Next
+		Case "date"
+			If IsStringObject(Value) = False Then Return "Preference " & Id & " must be an ISO yyyy-MM-dd date string."
+			Dim DateValue As String = Value
+			If Pref.ContainsKey("required") Then
+				Dim RequiredDate As Boolean = Pref.Get("required")
+				If RequiredDate And DateValue.Length = 0 Then Return "Preference " & Id & " is required."
+			End If
+			If DateValue <> "" And IsIsoDate(DateValue) = False Then Return "Preference " & Id & " must be a valid ISO yyyy-MM-dd date."
 	End Select
 	Return ""
 End Sub
@@ -192,4 +200,18 @@ End Sub
 Private Sub IsListObject(Value As Object) As Boolean
 	If Value Is List Then Return True
 	Return False
+End Sub
+
+Private Sub IsIsoDate(Value As String) As Boolean
+	Dim PreviousFormat As String = DateTime.DateFormat
+	DateTime.DateFormat = "yyyy-MM-dd"
+	Try
+		Dim Ticks As Long = DateTime.DateParse(Value)
+		Dim Normalized As String = DateTime.Date(Ticks)
+		DateTime.DateFormat = PreviousFormat
+		Return Normalized = Value
+	Catch
+		DateTime.DateFormat = PreviousFormat
+		Return False
+	End Try
 End Sub

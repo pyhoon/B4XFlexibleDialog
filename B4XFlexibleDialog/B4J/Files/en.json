@@ -9,6 +9,8 @@
   "setting.show_tips": "Show tips",
   "setting.display_mode": "Display mode",
   "setting.notifications": "Notifications",
+  "setting.start_date": "Start date",
+  "setting.font_scale": "Font scale",
   "display.compact": "Compact",
   "display.comfortable": "Comfortable",
   "notification.email": "Email",

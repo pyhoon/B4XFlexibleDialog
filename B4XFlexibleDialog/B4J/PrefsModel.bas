@@ -79,7 +79,12 @@ Private Sub ValidatePreference(Pref As Map) As Boolean
 	If Pref.ContainsKey("defaultValue") = False Then
 		Select TypeName
 			Case "text", "multiline", "password": Pref.Put("defaultValue", "")
+			Case "date": Pref.Put("defaultValue", "")
 			Case "number": Pref.Put("defaultValue", 0)
+			Case "slider"
+				Dim SliderDefault As Double = 0
+				If Options.ContainsKey("min") Then SliderDefault = Options.Get("min")
+				Pref.Put("defaultValue", SliderDefault)
 			Case "switch", "checkbox": Pref.Put("defaultValue", False)
 			Case "choice": Return Fail("Preference " & Id & ": defaultValue is required for choice.")
 			Case "multichoice"
@@ -93,7 +98,12 @@ Private Sub ValidatePreference(Pref As Map) As Boolean
 		Case "text", "multiline", "password"
 			If IsStringObject(Value) = False Then Return Fail("Preference " & Id & ": defaultValue must be a string.")
 			If ValidateStringConstraints(Pref, Value) = False Then Return False
-		Case "number"
+		Case "date"
+			If IsStringObject(Value) = False Then Return Fail("Preference " & Id & ": date defaultValue must be an ISO yyyy-MM-dd string.")
+			Dim DateValue As String = Value
+			If ValidateRequired(Pref, DateValue) = False Then Return False
+			If DateValue <> "" And IsIsoDate(DateValue) = False Then Return Fail("Preference " & Id & ": date defaultValue must be a valid ISO yyyy-MM-dd date.")
+		Case "number", "slider"
 			If IsNumberObject(Value) = False Then Return Fail("Preference " & Id & ": defaultValue must be a number.")
 			If Options.ContainsKey("min") And IsNumberObject(Options.Get("min")) = False Then Return Fail("Preference " & Id & ": options.min must be a number.")
 			If Options.ContainsKey("max") And IsNumberObject(Options.Get("max")) = False Then Return Fail("Preference " & Id & ": options.max must be a number.")
@@ -170,11 +180,7 @@ End Sub
 
 Private Sub ValidateStringConstraints(Pref As Map, Value As String) As Boolean
 	Dim Id As String = Pref.Get("id")
-	If Pref.ContainsKey("required") And IsBooleanObject(Pref.Get("required")) = False Then Return Fail("Preference " & Id & ": required must be Boolean.")
-	If Pref.ContainsKey("required") Then
-		Dim RequiredValue As Boolean = Pref.Get("required")
-		If RequiredValue And Value.Length = 0 Then Return Fail("Preference " & Id & ": required defaultValue cannot be empty.")
-	End If
+	If ValidateRequired(Pref, Value) = False Then Return False
 	If Pref.ContainsKey("minLength") And IsNumberObject(Pref.Get("minLength")) = False Then Return Fail("Preference " & Id & ": minLength must be an integer.")
 	If Pref.ContainsKey("maxLength") And IsNumberObject(Pref.Get("maxLength")) = False Then Return Fail("Preference " & Id & ": maxLength must be an integer.")
 	Dim Minimum As Int = 0
@@ -195,6 +201,30 @@ Private Sub ValidateStringConstraints(Pref As Map, Value As String) As Boolean
 	If Value.Length < Minimum Then Return Fail("Preference " & Id & ": defaultValue is shorter than minLength.")
 	If Value.Length > Maximum Then Return Fail("Preference " & Id & ": defaultValue exceeds maxLength.")
 	Return True
+End Sub
+
+Private Sub ValidateRequired(Pref As Map, Value As String) As Boolean
+	Dim Id As String = Pref.Get("id")
+	If Pref.ContainsKey("required") And IsBooleanObject(Pref.Get("required")) = False Then Return Fail("Preference " & Id & ": required must be Boolean.")
+	If Pref.ContainsKey("required") Then
+		Dim RequiredValue As Boolean = Pref.Get("required")
+		If RequiredValue And Value.Length = 0 Then Return Fail("Preference " & Id & ": required defaultValue cannot be empty.")
+	End If
+	Return True
+End Sub
+
+Private Sub IsIsoDate(Value As String) As Boolean
+	Dim PreviousFormat As String = DateTime.DateFormat
+	DateTime.DateFormat = "yyyy-MM-dd"
+	Try
+		Dim Ticks As Long = DateTime.DateParse(Value)
+		Dim Normalized As String = DateTime.Date(Ticks)
+		DateTime.DateFormat = PreviousFormat
+		Return Normalized = Value
+	Catch
+		DateTime.DateFormat = PreviousFormat
+		Return False
+	End Try
 End Sub
 
 Public Sub GetPreferenceIds As List
@@ -247,7 +277,7 @@ End Sub
 Private Sub IsSupportedType(Value As Object) As Boolean
 	If IsStringObject(Value) = False Then Return False
 	Dim T As String = Value
-	Return T = "text" Or T = "multiline" Or T = "password" Or T = "number" Or T = "switch" Or T = "checkbox" Or T = "choice" Or T = "multichoice"
+	Return T = "text" Or T = "multiline" Or T = "password" Or T = "number" Or T = "switch" Or T = "checkbox" Or T = "choice" Or T = "multichoice" Or T = "date" Or T = "slider"
 End Sub
 
 Private Sub IsStringObject(Value As Object) As Boolean

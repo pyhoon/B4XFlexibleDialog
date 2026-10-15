@@ -20,6 +20,7 @@ Sub Class_Globals
 	Private ControlTypes As Map
 	Private TitleLabels As Map
 	Private SectionLabels As Map
+	Private SliderLabels As Map
 	Private PageTitle As Label
 	Private StatusLabel As Label
 	Private SaveButton As Button
@@ -46,6 +47,7 @@ Private Sub BuildPage
 	ControlTypes.Initialize
 	TitleLabels.Initialize
 	SectionLabels.Initialize
+	SliderLabels.Initialize
 	RowTop = 18
 	Content.Initialize("page")
 	Content.StyleClasses.Add("prefs-surface")
@@ -149,6 +151,30 @@ Private Sub AddPreference(Pref As Map)
 			Content.AddNode(Multi, 290, RowTop, 320, 90)
 			Controls.Put(Id, Multi)
 			RowTop = RowTop + 56
+		Else If TypeName = "date" Then
+			Dim DateInput As DatePicker
+			DateInput.Initialize("")
+			DateInput.DateFormat = "yyyy-MM-dd"
+			DateInput.DateTicks = IsoToTicks(Controller.GetValue(Id))
+			Content.AddNode(DateInput, 290, RowTop, 220, 36)
+			Controls.Put(Id, DateInput)
+		Else If TypeName = "slider" Then
+			Dim ValueSlider As Slider
+			ValueSlider.Initialize("page")
+			ValueSlider.Tag = Id
+			Dim SliderOptions As Map
+			SliderOptions.Initialize
+			If Pref.ContainsKey("options") Then SliderOptions = Pref.Get("options")
+			If SliderOptions.ContainsKey("min") Then ValueSlider.MinValue = SliderOptions.Get("min") Else ValueSlider.MinValue = 0
+			If SliderOptions.ContainsKey("max") Then ValueSlider.MaxValue = SliderOptions.Get("max") Else ValueSlider.MaxValue = 100
+			Dim SliderValueLabel As Label
+			SliderValueLabel.Initialize("")
+			Content.AddNode(SliderValueLabel, 540, RowTop + 4, 70, 28)
+			SliderLabels.Put(Id, SliderValueLabel)
+			ValueSlider.Value = Controller.GetValue(Id)
+			SliderValueLabel.Text = "" & ValueSlider.Value
+			Content.AddNode(ValueSlider, 290, RowTop, 240, 36)
+			Controls.Put(Id, ValueSlider)
 		Else If TypeName = "choice" Then
 			Dim Choice As ComboBox
 			Choice.Initialize("page")
@@ -213,6 +239,14 @@ Private Sub UpdateControl(Id As String, Value As Object)
 				Next
 			Next
 			Multi.SetSelectedIndices(SelectedIndices)
+		Case "date"
+			Dim DateInput As DatePicker = Controls.Get(Id)
+			DateInput.DateTicks = IsoToTicks(Value)
+		Case "slider"
+			Dim ValueSlider As Slider = Controls.Get(Id)
+			ValueSlider.Value = Value
+			Dim SliderValueLabel As Label = SliderLabels.Get(Id)
+			SliderValueLabel.Text = "" & ValueSlider.Value
 		Case "switch", "checkbox"
 			Dim Check As CheckBox = Controls.Get(Id)
 			Check.Checked = Value
@@ -267,6 +301,9 @@ Public Sub RefreshLocalization
 					Multi.Items.Add(Localization.Text(Item.Get("titleKey")))
 				Next
 				Multi.SetSelectedIndices(SelectedIndices)
+			Else If Pref.Get("type") = "slider" Then
+				Dim SliderValueLabel As Label = SliderLabels.Get(Id)
+				SliderValueLabel.TextColor = fx.Colors.From32Bit(Theme.TextColor)
 			End If
 		Next
 	Next
@@ -304,6 +341,14 @@ Public Sub RefreshTheme
 		Else If ControlTypes.Get(Id) = "multichoice" Then
 			Dim Multi As ListView = Controls.Get(Id)
 			Multi.Style = InputCss
+		Else If ControlTypes.Get(Id) = "date" Then
+			Dim DateInput As DatePicker = Controls.Get(Id)
+			DateInput.Style = InputCss
+		Else If ControlTypes.Get(Id) = "slider" Then
+			Dim ValueSlider As Slider = Controls.Get(Id)
+			ValueSlider.Style = "-fx-accent: " & ColorCss(Theme.AccentColor) & ";"
+			Dim SliderValueLabel As Label = SliderLabels.Get(Id)
+			SliderValueLabel.TextColor = fx.Colors.From32Bit(Theme.TextColor)
 		End If
 	Next
 	ApplyButtonStyles
@@ -356,6 +401,14 @@ Private Sub page_Click
 	' Preference controls use this event name but are read when Save is pressed.
 End Sub
 
+Private Sub page_ValueChange(Value As Double)
+	Dim ValueSlider As Slider = Sender
+	Dim Id As String = ValueSlider.Tag
+	If SliderLabels.ContainsKey(Id) = False Then Return
+	Dim SliderValueLabel As Label = SliderLabels.Get(Id)
+	SliderValueLabel.Text = "" & Value
+End Sub
+
 Private Sub Save_Click
 	For Each Id As String In Controls.Keys
 		Dim TypeName As String = ControlTypes.Get(Id)
@@ -390,6 +443,12 @@ Private Sub Save_Click
 					SelectedValues.Add(SelectedItem.Get("value"))
 				Next
 				Value = SelectedValues
+			Case "date"
+				Dim DateInput As DatePicker = Controls.Get(Id)
+				Value = TicksToIso(DateInput.DateTicks)
+			Case "slider"
+				Dim ValueSlider As Slider = Controls.Get(Id)
+				Value = ValueSlider.Value
 			Case "switch", "checkbox"
 				Dim Check As CheckBox = Controls.Get(Id)
 				Value = Check.Checked
@@ -441,4 +500,27 @@ Public Sub Dispose
 	Controller.CancelDraft
 	Scroll.RemoveNodeFromParent
 	IsDisposed = True
+End Sub
+
+Private Sub IsoToTicks(Value As String) As Long
+	If Value = "" Then Return 0
+	Dim PreviousFormat As String = DateTime.DateFormat
+	DateTime.DateFormat = "yyyy-MM-dd"
+	Try
+		Dim Result As Long = DateTime.DateParse(Value)
+		DateTime.DateFormat = PreviousFormat
+		Return Result
+	Catch
+		DateTime.DateFormat = PreviousFormat
+		Return 0
+	End Try
+End Sub
+
+Private Sub TicksToIso(Ticks As Long) As String
+	If Ticks = 0 Then Return ""
+	Dim PreviousFormat As String = DateTime.DateFormat
+	DateTime.DateFormat = "yyyy-MM-dd"
+	Dim Result As String = DateTime.Date(Ticks)
+	DateTime.DateFormat = PreviousFormat
+	Return Result
 End Sub

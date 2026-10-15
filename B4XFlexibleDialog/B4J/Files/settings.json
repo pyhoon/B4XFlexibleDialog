@@ -14,7 +14,9 @@
         {"id": "dark_mode", "type": "switch", "titleKey": "setting.dark_mode", "defaultValue": false},
         {"id": "show_tips", "type": "checkbox", "titleKey": "setting.show_tips", "defaultValue": true},
         {"id": "display_mode", "type": "choice", "titleKey": "setting.display_mode", "defaultValue": "compact", "options": {"items": [{"value": "compact", "titleKey": "display.compact"}, {"value": "comfortable", "titleKey": "display.comfortable"}]}},
-        {"id": "notifications", "type": "multichoice", "titleKey": "setting.notifications", "defaultValue": ["email"], "options": {"items": [{"value": "email", "titleKey": "notification.email"}, {"value": "push", "titleKey": "notification.push"}, {"value": "weekly", "titleKey": "notification.weekly"}]}}
+        {"id": "notifications", "type": "multichoice", "titleKey": "setting.notifications", "defaultValue": ["email"], "options": {"items": [{"value": "email", "titleKey": "notification.email"}, {"value": "push", "titleKey": "notification.push"}, {"value": "weekly", "titleKey": "notification.weekly"}]}},
+        {"id": "start_date", "type": "date", "titleKey": "setting.start_date", "defaultValue": "2025-01-15", "required": true},
+        {"id": "font_scale", "type": "slider", "titleKey": "setting.font_scale", "defaultValue": 1.0, "options": {"min": 0.8, "max": 1.4}}
       ]
     }
   ]

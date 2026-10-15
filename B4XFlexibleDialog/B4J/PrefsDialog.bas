@@ -8,6 +8,8 @@ Version=10.7
 Sub Class_Globals
 	Private fx As JFX
 	Private DialogForm As Form
+	Private DialogScroll As ScrollPane
+	Private ContentPane As Pane
 	Private OwnerForm As Form
 	Private Controller As PrefsController
 	Private Model As PrefsModel
@@ -19,6 +21,7 @@ Sub Class_Globals
 	Private ControlTypes As Map
 	Private TitleLabels As Map
 	Private SectionLabels As Map
+	Private SliderLabels As Map
 	Private StatusLabel As Label
 	Private SaveButton As Button
 	Private CancelButton As Button
@@ -44,6 +47,7 @@ Public Sub Show As Boolean
 	ControlTypes.Initialize
 	TitleLabels.Initialize
 	SectionLabels.Initialize
+	SliderLabels.Initialize
 	Saved = False
 	RowTop = 18
 	Dim PreferenceCount As Int = Model.GetPreferenceIds.Size
@@ -63,13 +67,20 @@ Public Sub Show As Boolean
 	DialogForm.Stylesheets.Add(File.GetUri(File.DirAssets, "prefs.css"))
 	DialogForm.RootPane.StyleClasses.Add("prefs-surface")
 	ApplyTheme
+	ContentPane.Initialize("dlg")
+	DialogScroll.Initialize("dlg")
+	DialogScroll.FitToWidth = True
+	DialogScroll.InnerNode = ContentPane
+	DialogScroll.Style = "-fx-background-color: transparent; -fx-background: transparent;"
+	DialogForm.RootPane.AddNode(DialogScroll, 0, 0, -1, Height - 140)
+	DialogForm.RootPane.SetAnchors(DialogScroll, 0, 0, 0, 140)
 	Dim SectionList As List = Model.GetSections
 	For Each Section As Map In SectionList
 		Dim SectionTitle As Label
 		SectionTitle.Initialize("")
 		SectionTitle.Text = Localization.Text(Section.Get("titleKey"))
 		SectionTitle.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
-		DialogForm.RootPane.AddNode(SectionTitle, 24, RowTop, 590, 28)
+		ContentPane.AddNode(SectionTitle, 24, RowTop, 590, 28)
 		SectionLabels.Put(Section.Get("id"), SectionTitle)
 		RowTop = RowTop + Theme.SectionSpacing + 12
 		Dim Items As List = Section.Get("preferences")
@@ -78,6 +89,8 @@ Public Sub Show As Boolean
 		Next
 		RowTop = RowTop + 6
 	Next
+	ContentPane.PrefWidth = 620
+	ContentPane.PrefHeight = RowTop + 20
 	StatusLabel.Initialize("")
 	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 	DialogForm.RootPane.AddNode(StatusLabel, 24, Height - 105, 590, 24)
@@ -111,7 +124,7 @@ Private Sub AddPreference(Pref As Map)
 		Check.TextColor = fx.Colors.From32Bit(Theme.TextColor)
 		Check.Style = "-fx-accent: " & ColorCss(Theme.AccentColor) & "; -fx-focus-color: " & ColorCss(Theme.AccentColor) & ";"
 		Check.Checked = Controller.GetValue(Id)
-		DialogForm.RootPane.AddNode(Check, 34, RowTop, 560, 34)
+		ContentPane.AddNode(Check, 34, RowTop, 560, 34)
 		Controls.Put(Id, Check)
 		TitleLabels.Put(Id, Check)
 	Else
@@ -119,7 +132,7 @@ Private Sub AddPreference(Pref As Map)
 		Title.Initialize("")
 		Title.Text = Localization.Text(Pref.Get("titleKey"))
 		Title.TextColor = fx.Colors.From32Bit(Theme.TextColor)
-		DialogForm.RootPane.AddNode(Title, 34, RowTop + 4, 240, 28)
+		ContentPane.AddNode(Title, 34, RowTop + 4, 240, 28)
 		TitleLabels.Put(Id, Title)
 		If TypeName = "text" Or TypeName = "number" Or TypeName = "password" Then
 			Dim Input As TextField
@@ -130,7 +143,7 @@ Private Sub AddPreference(Pref As Map)
 			End If
 			Input.Text = "" & Controller.GetValue(Id)
 			Input.Style = InputCss
-			DialogForm.RootPane.AddNode(Input, 290, RowTop, 300, 34)
+			ContentPane.AddNode(Input, 290, RowTop, 300, 34)
 			Controls.Put(Id, Input)
 		Else If TypeName = "multiline" Then
 			Dim MultilineInput As TextArea
@@ -138,7 +151,7 @@ Private Sub AddPreference(Pref As Map)
 			MultilineInput.Text = "" & Controller.GetValue(Id)
 			MultilineInput.WrapText = True
 			MultilineInput.Style = InputCss
-			DialogForm.RootPane.AddNode(MultilineInput, 290, RowTop, 300, 76)
+			ContentPane.AddNode(MultilineInput, 290, RowTop, 300, 76)
 			Controls.Put(Id, MultilineInput)
 			RowTop = RowTop + 42
 		Else If TypeName = "multichoice" Then
@@ -161,9 +174,36 @@ Private Sub AddPreference(Pref As Map)
 				Next
 			Next
 			Multi.SetSelectedIndices(SelectedIndices)
-			DialogForm.RootPane.AddNode(Multi, 290, RowTop, 300, 90)
+			ContentPane.AddNode(Multi, 290, RowTop, 300, 90)
 			Controls.Put(Id, Multi)
 			RowTop = RowTop + 56
+		Else If TypeName = "date" Then
+			Dim DateInput As DatePicker
+			DateInput.Initialize("")
+			DateInput.DateFormat = "yyyy-MM-dd"
+			DateInput.DateTicks = IsoToTicks(Controller.GetValue(Id))
+			DateInput.Style = InputCss
+			ContentPane.AddNode(DateInput, 290, RowTop, 220, 34)
+			Controls.Put(Id, DateInput)
+		Else If TypeName = "slider" Then
+			Dim ValueSlider As Slider
+			ValueSlider.Initialize("dlg")
+			ValueSlider.Tag = Id
+			Dim SliderOptions As Map
+			SliderOptions.Initialize
+			If Pref.ContainsKey("options") Then SliderOptions = Pref.Get("options")
+			If SliderOptions.ContainsKey("min") Then ValueSlider.MinValue = SliderOptions.Get("min") Else ValueSlider.MinValue = 0
+			If SliderOptions.ContainsKey("max") Then ValueSlider.MaxValue = SliderOptions.Get("max") Else ValueSlider.MaxValue = 100
+			ValueSlider.Value = Controller.GetValue(Id)
+			ValueSlider.Style = "-fx-accent: " & ColorCss(Theme.AccentColor) & ";"
+			ContentPane.AddNode(ValueSlider, 290, RowTop, 240, 34)
+			Controls.Put(Id, ValueSlider)
+			Dim SliderValueLabel As Label
+			SliderValueLabel.Initialize("")
+			SliderValueLabel.Text = "" & ValueSlider.Value
+			SliderValueLabel.TextColor = fx.Colors.From32Bit(Theme.TextColor)
+			ContentPane.AddNode(SliderValueLabel, 540, RowTop + 4, 60, 28)
+			SliderLabels.Put(Id, SliderValueLabel)
 		Else If TypeName = "choice" Then
 			Dim Choice As ComboBox
 			Choice.Initialize("dlg")
@@ -177,7 +217,7 @@ Private Sub AddPreference(Pref As Map)
 				If Item.Get("value") = Controller.GetValue(Id) Then Selected = I
 			Next
 			Choice.SelectedIndex = Selected
-			DialogForm.RootPane.AddNode(Choice, 290, RowTop, 300, 34)
+			ContentPane.AddNode(Choice, 290, RowTop, 300, 34)
 			Controls.Put(Id, Choice)
 		End If
 	End If
@@ -233,6 +273,12 @@ Private Sub Save_Click
 					SelectedValues.Add(SelectedItem.Get("value"))
 				Next
 				Value = SelectedValues
+			Case "date"
+				Dim DateInput As DatePicker = Controls.Get(Id)
+				Value = TicksToIso(DateInput.DateTicks)
+			Case "slider"
+				Dim ValueSlider As Slider = Controls.Get(Id)
+				Value = ValueSlider.Value
 			Case "choice"
 				Dim Choice As ComboBox = Controls.Get(Id)
 				If Choice.SelectedIndex < 0 Then
@@ -343,9 +389,25 @@ Private Sub Theme_Click
 		Else If TypeName = "multichoice" Then
 			Dim Multi As ListView = Controls.Get(Id)
 			Multi.Style = InputCss
+		Else If TypeName = "date" Then
+			Dim DateInput As DatePicker = Controls.Get(Id)
+			DateInput.Style = InputCss
+		Else If TypeName = "slider" Then
+			Dim ValueSlider As Slider = Controls.Get(Id)
+			ValueSlider.Style = "-fx-accent: " & ColorCss(Theme.AccentColor) & ";"
+			Dim SliderValueLabel As Label = SliderLabels.Get(Id)
+			SliderValueLabel.TextColor = fx.Colors.From32Bit(Theme.TextColor)
 		End If
 	Next
 	RefreshButtons
+End Sub
+
+Private Sub dlg_ValueChange(Value As Double)
+	Dim ValueSlider As Slider = Sender
+	Dim Id As String = ValueSlider.Tag
+	If SliderLabels.ContainsKey(Id) = False Then Return
+	Dim SliderValueLabel As Label = SliderLabels.Get(Id)
+	SliderValueLabel.Text = "" & Value
 End Sub
 
 Private Sub ApplyTheme
@@ -381,4 +443,27 @@ Private Sub ColorCss(Color As Int) As String
 	Dim G As Int = Bit.And(Bit.ShiftRight(Color, 8), 255)
 	Dim B As Int = Bit.And(Color, 255)
 	Return "rgb(" & R & "," & G & "," & B & ")"
+End Sub
+
+Private Sub IsoToTicks(Value As String) As Long
+	If Value = "" Then Return 0
+	Dim PreviousFormat As String = DateTime.DateFormat
+	DateTime.DateFormat = "yyyy-MM-dd"
+	Try
+		Dim Result As Long = DateTime.DateParse(Value)
+		DateTime.DateFormat = PreviousFormat
+		Return Result
+	Catch
+		DateTime.DateFormat = PreviousFormat
+		Return 0
+	End Try
+End Sub
+
+Private Sub TicksToIso(Ticks As Long) As String
+	If Ticks = 0 Then Return ""
+	Dim PreviousFormat As String = DateTime.DateFormat
+	DateTime.DateFormat = "yyyy-MM-dd"
+	Dim Result As String = DateTime.Date(Ticks)
+	DateTime.DateFormat = PreviousFormat
+	Return Result
 End Sub

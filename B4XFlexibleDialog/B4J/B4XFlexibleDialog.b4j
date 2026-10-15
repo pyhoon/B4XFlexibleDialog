@@ -216,6 +216,9 @@ Private Sub RunCoreChecks(Definition As String)
 	ReturnedNotificationValues.Add("unknown")
 	Dim StoredNotificationValues As List = Values.GetValue("notifications")
 	Assert("multichoice values are returned defensively", StoredNotificationValues.Size = 2)
+	Assert("ISO date value accepted", Values.SetValue("start_date", "2026-08-24"))
+	Assert("invalid date value rejected", Values.SetValue("start_date", "2026-02-30") = False)
+	Assert("slider value accepted", Values.SetValue("font_scale", 1.2))
 	Dim ValueSnapshot As Map = Values.GetValues
 	Dim SnapshotNotifications As List = ValueSnapshot.Get("notifications")
 	SnapshotNotifications.Clear
