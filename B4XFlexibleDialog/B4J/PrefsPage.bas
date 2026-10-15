@@ -77,14 +77,12 @@ Private Sub BuildPage
 		RowTop = RowTop + 8
 	Next
 	StatusLabel.Initialize("")
-	StatusLabel.TextColor = fx.Colors.From32Bit(16724787)
+	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
 	Content.AddNode(StatusLabel, 24, RowTop, 600, 26)
 	RowTop = RowTop + 38
-	SaveButton.Initialize("page")
-	SaveButton.Tag = "save"
+	SaveButton.Initialize("pageSave")
 	Content.AddNode(SaveButton, 24, RowTop, 110, 36)
-	CancelButton.Initialize("page")
-	CancelButton.Tag = "cancel"
+	CancelButton.Initialize("pageCancel")
 	Content.AddNode(CancelButton, 144, RowTop, 110, 36)
 	RowTop = RowTop + 56
 	Content.PrefHeight = RowTop
@@ -239,11 +237,16 @@ Public Sub RefreshTheme
 	ApplyButtonStyles
 End Sub
 
+Public Sub SetTheme(Value As PrefsTheme)
+	Theme = Value
+	RefreshTheme
+End Sub
+
 Private Sub ApplyTheme
 	Content.Style = "-fx-background-color: " & ColorCss(Theme.BackgroundColor) & "; -prefs-input-bg: " & ColorCss(Theme.InputBackgroundColor) & "; -prefs-input-text: " & ColorCss(Theme.TextColor) & "; -prefs-input-border: " & ColorCss(Theme.InputBorderColor) & "; -prefs-accent: " & ColorCss(Theme.AccentColor) & "; -prefs-checkmark-text: " & ColorCss(Theme.PrimaryButtonTextColor) & ";"
 	Scroll.Style = "-fx-background-color: " & ColorCss(Theme.BackgroundColor) & "; -fx-background: " & ColorCss(Theme.BackgroundColor) & ";"
 	PageTitle.TextColor = fx.Colors.From32Bit(Theme.TextColor)
-	StatusLabel.TextColor = fx.Colors.From32Bit(16724787)
+	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
 	ApplyButtonStyles
 End Sub
 
@@ -269,10 +272,16 @@ Private Sub ColorCss(Color As Int) As String
 	Return "rgb(" & R & "," & G & "," & B & ")"
 End Sub
 
+Private Sub pageSave_Click
+	Save_Click
+End Sub
+
+Private Sub pageCancel_Click
+	Cancel_Click
+End Sub
+
 Private Sub page_Click
-	Dim Source As Button = Sender
-	If Source.Tag = "save" Then Save_Click
-	If Source.Tag = "cancel" Then Cancel_Click
+	' Preference controls use this event name but are read when Save is pressed.
 End Sub
 
 Private Sub Save_Click
@@ -285,6 +294,7 @@ Private Sub Save_Click
 				If TypeName = "number" Then
 					If IsNumber(Input.Text) = False Then
 						StatusLabel.Text = Localization.Text("validation.number") & " (" & Id & ")"
+						StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 						Return
 					End If
 					Dim NumberValue As Double = Input.Text
@@ -299,6 +309,7 @@ Private Sub Save_Click
 				Dim Choice As ComboBox = Controls.Get(Id)
 				If Choice.SelectedIndex < 0 Then
 					StatusLabel.Text = Localization.Text("validation.choice") & " (" & Id & ")"
+					StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 					Return
 				End If
 				Dim Pref As Map = Model.GetPreference(Id)
@@ -309,12 +320,14 @@ Private Sub Save_Click
 		End Select
 		If Controller.SetDraftValue(Id, Value) = False Then
 			StatusLabel.Text = Controller.LastError
+			StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 			Return
 		End If
 	Next
 	Dim Validation As String = Controller.ValidateDraft
 	If Validation <> "" Then
 		StatusLabel.Text = Validation
+		StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 		Return
 	End If
 	If CallSub2(Callback, EventPrefix & "_BeforeSave", Controller.GetDraftValues) = False Then Return
@@ -322,6 +335,7 @@ Private Sub Save_Click
 	CallSub2(Callback, EventPrefix & "_AfterSave", Controller.GetValues)
 	Controller.BeginDraft
 	StatusLabel.Text = Localization.Text("ui.saved")
+	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
 End Sub
 
 Private Sub Cancel_Click
@@ -331,6 +345,7 @@ Private Sub Cancel_Click
 		UpdateControl(Id, Controller.GetValue(Id))
 	Next
 	StatusLabel.Text = Localization.Text("ui.cancelled")
+	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
 End Sub
 
 Public Sub Dispose

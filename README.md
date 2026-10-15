@@ -102,10 +102,10 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | In-dialog language/theme switching preserves values | **PASS** (reported GUI test) |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
-| Page mounting/resizing, Save/Cancel, and repeated dispose/remount | **NOT YET GUI-VERIFIED** |
+| Page mounting/resizing, Save/Cancel, repeated dispose/remount, localization/theme refresh | **PASS** (reported GUI test) |
 | Values survive application reboot | **Not supported by Milestone 1**; persistence is deferred |
 
-The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestone 1 GUI results above were reported from demo runs. Milestone 2 page source compiles, but interactive page behavior remains to be exercised. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
+The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestone 1 and Milestone 2 GUI results above were reported from demo runs. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
 
 ## Deferred to Milestone 2+
 

@@ -8,6 +8,7 @@ Sub Class_Globals
 	Public BackgroundColor As Int
 	Public TextColor As Int
 	Public SecondaryTextColor As Int
+	Public ErrorTextColor As Int
 	Public AccentColor As Int
 	Public InputBackgroundColor As Int
 	Public InputBorderColor As Int
@@ -31,6 +32,7 @@ Private Sub ApplyTheme(Dark As Boolean)
 		BackgroundColor = -13619152
 		TextColor = -986896
 		SecondaryTextColor = -5197648
+		ErrorTextColor = -7697792
 		AccentColor = -7686920
 		InputBackgroundColor = -12434878
 		InputBorderColor = -9408400
@@ -41,6 +43,7 @@ Private Sub ApplyTheme(Dark As Boolean)
 		BackgroundColor = -1
 		TextColor = -14540254
 		SecondaryTextColor = -10066330
+		ErrorTextColor = -4645860
 		AccentColor = -14856488
 		InputBackgroundColor = -1
 		InputBorderColor = -6381922

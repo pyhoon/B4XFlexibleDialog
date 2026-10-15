@@ -63,7 +63,7 @@ End Sub
 
 Public Sub SetTheme(Value As PrefsTheme)
 	CurrentTheme = Value
-	If PageActive Then ActivePage.RefreshTheme
+	If PageActive Then ActivePage.SetTheme(Value)
 End Sub
 
 Public Sub CreateLightTheme As PrefsTheme

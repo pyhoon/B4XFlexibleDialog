@@ -72,7 +72,7 @@ Public Sub Show As Boolean
 		RowTop = RowTop + 6
 	Next
 	StatusLabel.Initialize("")
-	StatusLabel.TextColor = fx.Colors.From32Bit(16724787)
+	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 	DialogForm.RootPane.AddNode(StatusLabel, 24, Height - 105, 590, 24)
 	LanguageButton.Initialize("dlg")
 	LanguageButton.Text = Localization.Text("ui.language")
@@ -163,6 +163,7 @@ Private Sub Save_Click
 				If TypeName = "number" Then
 					If IsNumber(Input.Text) = False Then
 						StatusLabel.Text = Localization.Text("validation.number") & " (" & Id & ")"
+						StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 						Return
 					End If
 					Dim NumberValue As Double = Input.Text
@@ -177,6 +178,7 @@ Private Sub Save_Click
 				Dim Choice As ComboBox = Controls.Get(Id)
 				If Choice.SelectedIndex < 0 Then
 					StatusLabel.Text = Localization.Text("validation.choice") & " (" & Id & ")"
+					StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 					Return
 				End If
 				Dim Pref As Map = Model.GetPreference(Id)
@@ -187,12 +189,14 @@ Private Sub Save_Click
 		End Select
 		If Controller.SetDraftValue(Id, Value) = False Then
 			StatusLabel.Text = Controller.LastError
+			StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 			Return
 		End If
 	Next
 	Dim Validation As String = Controller.ValidateDraft
 	If Validation <> "" Then
 		StatusLabel.Text = Validation
+		StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 		Return
 	End If
 	Dim DraftValues As Map = Controller.GetDraftValues
