@@ -22,10 +22,12 @@ The modal dialog is capped at 600 DIP and scrolls its preference body when neede
 `dist/B4XFlexibleDialog.b4xlib` is a distributable B4J library built by `tools/package-b4xlib.ps1`:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/package-b4xlib.ps1 -Version 0.2.0
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/package-b4xlib.ps1 -Version 0.2
 ```
 
-The archive contains the platform-independent modules at the root (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`), the B4J-specific modules under `B4J/` (`B4XFlexibleDialog`, `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`), `Files/prefs.css`, and a `manifest.txt` declaring `B4J.DependsOn=jCore, jFX, Json`. Shared modules intentionally avoid JavaFX so they can be reused by future platform ports.
+`Version` must be a valid decimal (for example `0.2`, not `0.2.0`).
+
+The archive contains the platform-independent modules at the root (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`), the B4J-specific modules under `B4J/` (`B4XFlexibleDialog`, `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`), `Files/prefs.css`, and a `manifest.txt` declaring `B4J.DependsOn=jFX, Json`. Shared modules intentionally avoid JavaFX so they can be reused by future platform ports.
 
 To consume it in B4J, add `B4XFlexibleDialog.b4xlib` to the Libraries folder, reference the library in the project, and call `Prefs.Initialize` as shown above. This was verified by adding the packaged library to a fresh B4J project, copying the demo `Files\*`, and confirming it compiles and shows the dialog.
 
