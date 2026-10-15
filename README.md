@@ -27,7 +27,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/package-b4xlib.ps1 -Ve
 
 The archive contains the platform-independent modules at the root (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`), the B4J-specific modules under `B4J/` (`B4XFlexibleDialog`, `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`), `Files/prefs.css`, and a `manifest.txt` declaring `B4J.DependsOn=jCore, jFX, Json`. Shared modules intentionally avoid JavaFX so they can be reused by future platform ports.
 
-To consume it in B4J, add `B4XFlexibleDialog.b4xlib` to the Libraries folder, reference the library in the project, and call `Prefs.Initialize` as shown above.
+To consume it in B4J, add `B4XFlexibleDialog.b4xlib` to the Libraries folder, reference the library in the project, and call `Prefs.Initialize` as shown above. This was verified by adding the packaged library to a fresh B4J project, copying the demo `Files\*`, and confirming it compiles and shows the dialog.
 
 ### Verified dependencies
 
@@ -159,6 +159,7 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | File/directory Browse/Clear and extension filtering in dialog and page | **PASS** (reported GUI test) |
 | Copy-to-app-storage | Implemented; not exercised (disabled in demo definition) |
 | Values restored after application restart | **PASS** (reported: `Restored 12 value(s)` after relaunch) |
+| Packaged `.b4xlib` compiles and runs from a fresh B4J project | **PASS** (reported) |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
 | Page mounting/resizing, Save/Cancel, repeated dispose/remount, localization/theme refresh | **PASS** (reported GUI test) |
