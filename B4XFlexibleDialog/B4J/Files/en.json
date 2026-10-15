@@ -1,0 +1,16 @@
+{
+  "settings.title": "Settings",
+  "section.general": "General",
+  "setting.username": "Username",
+  "setting.items_per_page": "Items per page",
+  "setting.dark_mode": "Dark mode",
+  "setting.display_mode": "Display mode",
+  "display.compact": "Compact",
+  "display.comfortable": "Comfortable",
+  "ui.save": "Save",
+  "ui.cancel": "Cancel",
+  "ui.language": "Language",
+  "ui.theme": "Theme",
+  "validation.number": "Enter a valid number",
+  "validation.choice": "Select an option"
+}

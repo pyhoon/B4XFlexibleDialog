@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "demo.settings",
+  "titleKey": "settings.title",
+  "sections": [
+    {
+      "id": "general",
+      "titleKey": "section.general",
+      "preferences": [
+        {"id": "username", "type": "text", "titleKey": "setting.username", "defaultValue": "Guest"},
+        {"id": "items_per_page", "type": "number", "titleKey": "setting.items_per_page", "defaultValue": 20, "options": {"min": 5, "max": 200}},
+        {"id": "dark_mode", "type": "switch", "titleKey": "setting.dark_mode", "defaultValue": false},
+        {"id": "display_mode", "type": "choice", "titleKey": "setting.display_mode", "defaultValue": "compact", "options": {"items": [{"value": "compact", "titleKey": "display.compact"}, {"value": "comfortable", "titleKey": "display.comfortable"}]}}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+﻿AppType=JavaFX
+Build1=Default,b4j.example
+File1=en.json
+File2=ms.json
+File3=prefs.css
+File4=settings.json
+FileGroup1=Default Group
+FileGroup2=Default Group
+FileGroup3=Default Group
+FileGroup4=Default Group
+Group=Default Group
+Library1=jcore
+Library2=jfx
+Library3=json
+Module1=B4XFlexibleDialog
+Module2=PrefsController
+Module3=PrefsDialog
+Module4=PrefsLocalization
+Module5=PrefsModel
+Module6=PrefsTheme
+NumberOfFiles=4
+NumberOfLibraries=3
+NumberOfModules=6
+Version=10.7
+@EndOfDesignText@
+#Region Project Attributes
+	#MainFormWidth: 500
+	#MainFormHeight: 300
+#End Region
+
+Sub Process_Globals
+	Private fx As JFX
+	Private MainForm As Form
+	Private Prefs As B4XFlexibleDialog
+	Private En As Map
+	Private Ms As Map
+	Private MainOpenButton As Button
+	Private MainLanguageButton As Button
+	Private MainThemeButton As Button
+	Private MainStatus As Label
+End Sub
+
+Sub AppStart (Form1 As Form, Args() As String)
+	MainForm = Form1
+	MainForm.Title = "B4XFlexibleDialog demo"
+	LoadDictionaries
+	Prefs.Initialize(Me, "Prefs", MainForm)
+	Prefs.SetDictionary("en", En)
+	Prefs.SetDictionary("ms", Ms)
+	Prefs.SetLanguage("en")
+	Prefs.SetTheme(Prefs.CreateLightTheme)
+	Dim Definition As String = File.ReadString(File.DirAssets, "settings.json")
+	If Prefs.LoadDefinition(Definition) = False Then
+		fx.Msgbox(MainForm, Prefs.LastError, "Definition error")
+		Return
+	End If
+	RunCoreChecks(Definition)
+	MainOpenButton.Initialize("mainOpen")
+	MainOpenButton.Text = "Open preferences"
+	MainForm.RootPane.AddNode(MainOpenButton, 30, 30, 210, 42)
+	MainLanguageButton.Initialize("mainLanguage")
+	MainForm.RootPane.AddNode(MainLanguageButton, 30, 90, 210, 42)
+	MainThemeButton.Initialize("mainTheme")
+	MainForm.RootPane.AddNode(MainThemeButton, 30, 150, 210, 42)
+	MainStatus.Initialize("")
+	MainForm.RootPane.AddNode(MainStatus, 30, 215, 400, 32)
+	UpdateDemoAppearance
+	MainForm.Show
+End Sub
+
+Private Sub LoadDictionaries
+	Dim Parser As JSONParser
+	Parser.Initialize(File.ReadString(File.DirAssets, "en.json"))
+	En = Parser.NextObject
+	Parser.Initialize(File.ReadString(File.DirAssets, "ms.json"))
+	Ms = Parser.NextObject
+End Sub
+
+Private Sub mainOpen_Click
+	Prefs.Show
+End Sub
+
+Private Sub mainLanguage_Click
+	If Prefs.GetLanguage = "en" Then
+		Prefs.SetLanguage("ms")
+	Else
+		Prefs.SetLanguage("en")
+	End If
+	Log("Demo language changed to " & Prefs.GetLanguage)
+	UpdateDemoAppearance
+End Sub
+
+Private Sub mainTheme_Click
+	If Prefs.IsDarkTheme Then
+		Prefs.SetTheme(Prefs.CreateLightTheme)
+	Else
+		Prefs.SetTheme(Prefs.CreateDarkTheme)
+	End If
+	Log("Demo theme changed. Dark=" & Prefs.IsDarkTheme)
+	UpdateDemoAppearance
+End Sub
+
+Private Sub UpdateDemoAppearance
+	If Prefs.GetLanguage = "ms" Then
+		MainLanguageButton.Text = "Bahasa: Melayu (tukar ke English)"
+		MainStatus.Text = "Bahasa: Melayu"
+	Else
+		MainLanguageButton.Text = "Language: English (switch to Malay)"
+		MainStatus.Text = "Language: English"
+	End If
+	If Prefs.IsDarkTheme Then
+		MainThemeButton.Text = "Theme: Dark"
+		MainForm.RootPane.Style = "-fx-background-color: #303030;"
+		MainStatus.TextColor = fx.Colors.From32Bit(-986896)
+		MainLanguageButton.TextColor = fx.Colors.From32Bit(-986896)
+		MainThemeButton.TextColor = fx.Colors.From32Bit(-986896)
+		MainOpenButton.Style = "-fx-background-color: #8ab4f8; -fx-text-fill: #202124; -fx-font-weight: bold; -fx-background-radius: 4;"
+		MainLanguageButton.Style = "-fx-background-color: #484848; -fx-text-fill: #f0f0f0; -fx-background-radius: 4;"
+		MainThemeButton.Style = "-fx-background-color: #484848; -fx-text-fill: #f0f0f0; -fx-background-radius: 4;"
+	Else
+		MainThemeButton.Text = "Theme: Light"
+		MainForm.RootPane.Style = "-fx-background-color: #ffffff;"
+		MainStatus.TextColor = fx.Colors.From32Bit(-14540254)
+		MainLanguageButton.TextColor = fx.Colors.From32Bit(-14540254)
+		MainThemeButton.TextColor = fx.Colors.From32Bit(-14540254)
+		MainOpenButton.Style = "-fx-background-color: #1d4ed8; -fx-text-fill: #ffffff; -fx-font-weight: bold; -fx-background-radius: 4;"
+		MainLanguageButton.Style = "-fx-background-color: #e5e7eb; -fx-text-fill: #1f2937; -fx-background-radius: 4;"
+		MainThemeButton.Style = "-fx-background-color: #e5e7eb; -fx-text-fill: #1f2937; -fx-background-radius: 4;"
+	End If
+	MainStatus.Text = MainStatus.Text & " | Dialog theme: " & MainThemeButton.Text.SubString(7)
+End Sub
+
+Private Sub Prefs_BeforeSave(Values As Map) As Boolean
+	Return True
+End Sub
+
+Private Sub Prefs_AfterSave(Values As Map)
+	Log("Saved values: " & Values)
+End Sub
+
+Private Sub Prefs_DialogClosed(WasSaved As Boolean)
+	Log("Dialog closed. Saved=" & WasSaved & " Current values=" & Prefs.GetValues)
+End Sub
+
+Private Sub RunCoreChecks(Definition As String)
+	Dim TestModel As PrefsModel
+	TestModel.Initialize
+	Assert("valid JSON definition", TestModel.LoadFromJson(Definition))
+	Dim BadModel As PrefsModel
+	BadModel.Initialize
+	Assert("malformed JSON rejected", BadModel.LoadFromJson("{") = False)
+	BadModel.Initialize
+	Assert("duplicate IDs rejected", BadModel.LoadFromJson("{""schemaVersion"":1,""id"":""x"",""sections"":[{""id"":""s"",""preferences"":[{""id"":""dup"",""type"":""text"",""titleKey"":""a""},{""id"":""dup"",""type"":""text"",""titleKey"":""b""}]}]}") = False)
+	BadModel.Initialize
+	Assert("unknown type rejected", BadModel.LoadFromJson("{""schemaVersion"":1,""id"":""x"",""sections"":[{""id"":""s"",""preferences"":[{""id"":""x"",""type"":""widget"",""titleKey"":""a""}]}]}") = False)
+	Dim Values As PrefsController
+	Values.Initialize(TestModel)
+	Dim DefaultName As String = Values.GetValue("username")
+	Dim DefaultNumber As Double = Values.GetValue("items_per_page")
+	Assert("defaults loaded", DefaultName = "Guest" And DefaultNumber = 20)
+	Dim SetSucceeded As Boolean = Values.SetValue("username", "Test")
+	Dim ChangedName As String = Values.GetValue("username")
+	Assert("typed programmatic set/get", SetSucceeded And ChangedName = "Test")
+	Assert("number bounds enforced", Values.SetValue("items_per_page", 999) = False)
+	Values.BeginDraft
+	Values.SetDraftValue("username", "Discard me")
+	Values.CancelDraft
+	Dim CurrentName As String = Values.GetValue("username")
+	Assert("draft cancel keeps committed value", CurrentName = "Test")
+	Values.BeginDraft
+	Values.SetDraftValue("username", "Committed")
+	Values.CommitDraft
+	CurrentName = Values.GetValue("username")
+	Assert("draft commit updates all values", CurrentName = "Committed")
+	Dim Snapshot As Map = Values.GetValues
+	Snapshot.Put("username", "Mutated snapshot")
+	CurrentName = Values.GetValue("username")
+	Assert("GetValues returns snapshot", CurrentName = "Committed")
+End Sub
+
+Private Sub Assert(TestName As String, Passed As Boolean)
+	If Passed Then
+		Log("PASS: " & TestName)
+	Else
+		LogError("FAIL: " & TestName)
+	End If
+End Sub

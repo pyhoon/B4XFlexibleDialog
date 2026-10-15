@@ -1,0 +1,16 @@
+{
+  "settings.title": "Tetapan",
+  "section.general": "Umum",
+  "setting.username": "Nama pengguna",
+  "setting.items_per_page": "Item setiap halaman",
+  "setting.dark_mode": "Mod gelap",
+  "setting.display_mode": "Mod paparan",
+  "display.compact": "Padat",
+  "display.comfortable": "Selesa",
+  "ui.save": "Simpan",
+  "ui.cancel": "Batal",
+  "ui.language": "Bahasa",
+  "ui.theme": "Tema",
+  "validation.number": "Masukkan nombor yang sah",
+  "validation.choice": "Pilih satu pilihan"
+}
