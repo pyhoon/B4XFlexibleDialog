@@ -27,6 +27,8 @@
   "ui.cancel": "Cancel",
   "ui.language": "Language",
   "ui.theme": "Theme",
+  "ui.reset": "Reset",
+  "ui.reset_done": "Defaults restored",
   "ui.saved": "Changes saved",
   "ui.cancelled": "Edits discarded",
   "validation.number": "Enter a valid number",

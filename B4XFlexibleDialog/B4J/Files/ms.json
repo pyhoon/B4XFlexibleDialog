@@ -27,6 +27,8 @@
   "ui.cancel": "Batal",
   "ui.language": "Bahasa",
   "ui.theme": "Tema",
+  "ui.reset": "Set semula",
+  "ui.reset_done": "Tetapan asal dipulihkan",
   "ui.saved": "Perubahan disimpan",
   "ui.cancelled": "Suntingan dibatalkan",
   "validation.number": "Masukkan nombor yang sah",

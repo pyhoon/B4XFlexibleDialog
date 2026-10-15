@@ -26,6 +26,7 @@ Sub Class_Globals
 	Private StatusLabel As Label
 	Private SaveButton As Button
 	Private CancelButton As Button
+	Private ResetButton As Button
 	Private LanguageButton As Button
 	Private ThemeButton As Button
 	Private Saved As Boolean
@@ -104,6 +105,9 @@ Public Sub Show As Boolean
 	ThemeButton.Text = Localization.Text("ui.theme")
 	ThemeButton.TextColor = fx.Colors.From32Bit(Theme.AccentColor)
 	DialogForm.RootPane.AddNode(ThemeButton, 140, Height - 68, 100, 34)
+	ResetButton.Initialize("dlg")
+	ResetButton.Text = Localization.Text("ui.reset")
+	DialogForm.RootPane.AddNode(ResetButton, 300, Height - 68, 90, 34)
 	CancelButton.Initialize("dlg")
 	CancelButton.Text = Localization.Text("ui.cancel")
 	DialogForm.RootPane.AddNode(CancelButton, 400, Height - 68, 90, 34)
@@ -252,9 +256,19 @@ Private Sub dlg_Click
 		Dim B As Button = Source
 		If B.Text = Localization.Text("ui.save") Then Save_Click
 		If B.Text = Localization.Text("ui.cancel") Then DialogForm.Close
+		If B.Text = Localization.Text("ui.reset") Then Reset_Click
 		If B.Text = Localization.Text("ui.language") Then Language_Click
 		If B.Text = Localization.Text("ui.theme") Then Theme_Click
 	End If
+End Sub
+
+Private Sub Reset_Click
+	Controller.ResetDraftToDefaults
+	For Each Id As String In Controls.Keys
+		SetControlValue(Id, ControlTypes.Get(Id), Controller.GetDraftValues.Get(Id))
+	Next
+	StatusLabel.Text = Localization.Text("ui.reset_done")
+	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
 End Sub
 
 Private Sub Save_Click
@@ -457,12 +471,15 @@ End Sub
 Private Sub RefreshButtons
 	SaveButton.Text = Localization.Text("ui.save")
 	CancelButton.Text = Localization.Text("ui.cancel")
+	ResetButton.Text = Localization.Text("ui.reset")
 	LanguageButton.Text = Localization.Text("ui.language")
 	ThemeButton.Text = Localization.Text("ui.theme")
 	SaveButton.TextColor = fx.Colors.From32Bit(Theme.PrimaryButtonTextColor)
 	SaveButton.Style = "-fx-background-color: " & ColorCss(Theme.AccentColor) & "; -fx-text-fill: " & ColorCss(Theme.PrimaryButtonTextColor) & "; -fx-font-weight: bold; -fx-background-radius: 4;"
 	CancelButton.TextColor = fx.Colors.From32Bit(Theme.SecondaryButtonTextColor)
 	CancelButton.Style = SecondaryButtonCss
+	ResetButton.TextColor = fx.Colors.From32Bit(Theme.SecondaryButtonTextColor)
+	ResetButton.Style = SecondaryButtonCss
 	LanguageButton.TextColor = fx.Colors.From32Bit(Theme.SecondaryButtonTextColor)
 	LanguageButton.Style = SecondaryButtonCss
 	ThemeButton.TextColor = fx.Colors.From32Bit(Theme.SecondaryButtonTextColor)
@@ -505,4 +522,55 @@ Private Sub TicksToIso(Ticks As Long) As String
 	Dim Result As String = DateTime.Date(Ticks)
 	DateTime.DateFormat = PreviousFormat
 	Return Result
+End Sub
+
+Private Sub SetControlValue(Id As String, TypeName As String, Value As Object)
+	Select TypeName
+		Case "text", "password", "number", "time", "datetime"
+			Dim Input As TextField = Controls.Get(Id)
+			Input.Text = "" & Value
+		Case "multiline"
+			Dim MultilineInput As TextArea = Controls.Get(Id)
+			MultilineInput.Text = "" & Value
+		Case "switch", "checkbox"
+			Dim Check As CheckBox = Controls.Get(Id)
+			Check.Checked = Value
+		Case "date"
+			Dim DateInput As DatePicker = Controls.Get(Id)
+			DateInput.DateTicks = IsoToTicks(Value)
+		Case "slider"
+			Dim ValueSlider As Slider = Controls.Get(Id)
+			ValueSlider.Value = Value
+			Dim SliderValueLabel As Label = SliderLabels.Get(Id)
+			SliderValueLabel.Text = "" & ValueSlider.Value
+		Case "choice"
+			Dim Choice As ComboBox = Controls.Get(Id)
+			Dim Pref As Map = Model.GetPreference(Id)
+			Dim Options As Map = Pref.Get("options")
+			Dim Items As List = Options.Get("items")
+			Dim SelectedValue As String = Value
+			Choice.SelectedIndex = -1
+			For I = 0 To Items.Size - 1
+				Dim Item As Map = Items.Get(I)
+				Dim ItemValue As String = Item.Get("value")
+				If ItemValue = SelectedValue Then Choice.SelectedIndex = I
+			Next
+		Case "multichoice"
+			Dim Multi As ListView = Controls.Get(Id)
+			Dim SelectedValues As List = Value
+			Dim Pref As Map = Model.GetPreference(Id)
+			Dim Options As Map = Pref.Get("options")
+			Dim Items As List = Options.Get("items")
+			Dim SelectedIndices As List
+			SelectedIndices.Initialize
+			For I = 0 To Items.Size - 1
+				Dim Item As Map = Items.Get(I)
+				Dim ItemValue As String = Item.Get("value")
+				For Each SelectedObject As Object In SelectedValues
+					Dim SelectedValue As String = SelectedObject
+					If ItemValue = SelectedValue Then SelectedIndices.Add(I)
+				Next
+			Next
+			Multi.SetSelectedIndices(SelectedIndices)
+	End Select
 End Sub

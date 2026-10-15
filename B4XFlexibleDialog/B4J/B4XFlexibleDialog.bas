@@ -107,6 +107,18 @@ Public Sub GetValues As Map
 	Return Controller.GetValues
 End Sub
 
+Public Sub ResetToDefaults
+	If CheckReady = False Then Return
+	Controller.ResetToDefaults
+	If PageActive Then ActivePage.RefreshValues
+End Sub
+
+Public Sub ResetPreference(Id As String)
+	If CheckReady = False Then Return
+	Controller.ResetPreference(Id)
+	If PageActive Then ActivePage.RefreshValue(Id, Controller.GetValue(Id))
+End Sub
+
 Public Sub Show
 	If CheckReady = False Then
 		LogError(LastError)

@@ -26,6 +26,7 @@ Sub Class_Globals
 	Private StatusLabel As Label
 	Private SaveButton As Button
 	Private CancelButton As Button
+	Private ResetButton As Button
 	Private RowTop As Int
 	Private IsDisposed As Boolean
 End Sub
@@ -89,6 +90,8 @@ Private Sub BuildPage
 	Content.AddNode(SaveButton, 24, RowTop, 110, 36)
 	CancelButton.Initialize("pageCancel")
 	Content.AddNode(CancelButton, 144, RowTop, 110, 36)
+	ResetButton.Initialize("pageReset")
+	Content.AddNode(ResetButton, 264, RowTop, 110, 36)
 	RowTop = RowTop + 56
 	Content.PrefHeight = RowTop
 	RefreshTheme
@@ -337,6 +340,7 @@ Public Sub RefreshLocalization
 	Next
 	SaveButton.Text = Localization.Text("ui.save")
 	CancelButton.Text = Localization.Text("ui.cancel")
+	ResetButton.Text = Localization.Text("ui.reset")
 End Sub
 
 Public Sub RefreshTheme
@@ -404,6 +408,8 @@ Private Sub ApplyButtonStyles
 	SaveButton.Style = "-fx-background-color: " & ColorCss(Theme.AccentColor) & "; -fx-text-fill: " & ColorCss(Theme.PrimaryButtonTextColor) & "; -fx-font-weight: bold; -fx-background-radius: 4;"
 	CancelButton.TextColor = fx.Colors.From32Bit(Theme.SecondaryButtonTextColor)
 	CancelButton.Style = "-fx-background-color: " & ColorCss(Theme.SecondaryButtonBackgroundColor) & "; -fx-text-fill: " & ColorCss(Theme.SecondaryButtonTextColor) & "; -fx-background-radius: 4;"
+	ResetButton.TextColor = fx.Colors.From32Bit(Theme.SecondaryButtonTextColor)
+	ResetButton.Style = "-fx-background-color: " & ColorCss(Theme.SecondaryButtonBackgroundColor) & "; -fx-text-fill: " & ColorCss(Theme.SecondaryButtonTextColor) & "; -fx-background-radius: 4;"
 End Sub
 
 Private Sub InputCss As String
@@ -427,6 +433,15 @@ End Sub
 
 Private Sub pageCancel_Click
 	Cancel_Click
+End Sub
+
+Private Sub pageReset_Click
+	Controller.ResetDraftToDefaults
+	For Each Id As String In Controls.Keys
+		UpdateControl(Id, Controller.GetDraftValues.Get(Id))
+	Next
+	StatusLabel.Text = Localization.Text("ui.reset_done")
+	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
 End Sub
 
 Private Sub pageAction_Click

@@ -72,13 +72,15 @@ If Prefs.LoadDefinition(DefinitionJson) = False Then LogError(Prefs.LastError)
 Prefs.SetValue("username", "Aeric") ' Boolean result; LastError on failure
 Dim Value As Object = Prefs.GetValue("username")
 Dim Values As Map = Prefs.GetValues ' Copy/snapshot
+Prefs.ResetToDefaults ' Restores every value preference to its default
+Prefs.ResetPreference("username") ' Restores one value preference to its default
 Prefs.Show ' Synchronous modal form, owned by MainForm
 Prefs.CreatePage(MainForm.RootPane) ' Anchors a page in this caller-owned container
 Prefs.RefreshPage ' Rebuilds visible values from committed state
 Prefs.DisposePage ' Removes only the library-owned page node
 ```
 
-`SetValue` validates IDs, types, choice membership, string constraints, and number bounds; failed sets do not modify values. `GetValues` returns a copied map and clones list-valued multichoice values. `Show` creates draft values from the committed map. Save reads all controls, validates the complete draft, calls `BeforeSave`, commits only if accepted, then calls `AfterSave`. Cancel and the window close button discard the draft. Save and Cancel are mutually exclusive outcomes. Reopening after Save shows the committed in-memory values.
+`SetValue` validates IDs, types, choice membership, string constraints, and number bounds; failed sets do not modify values. `GetValues` returns a copied map and clones list-valued multichoice values. `ResetToDefaults` and `ResetPreference` operate on committed values for value preferences and are excluded from change events (no change event exists in this milestone). `Show` creates draft values from the committed map. Save reads all controls, validates the complete draft, calls `BeforeSave`, commits only if accepted, then calls `AfterSave`. Cancel and the window close button discard the draft. The dialog and page Reset buttons load each value preference's default into the current draft and refresh the visible controls; Save then commits them, or Cancel discards. Save and Cancel are mutually exclusive outcomes. Reopening after Save shows the committed in-memory values.
 
 `CreatePage` accepts a B4J `AnchorPane` and mounts a scrollable page without clearing or owning the caller's other nodes/navigation. Page Save commits and leaves the page mounted; page Cancel discards current edits and reloads committed values. Programmatic `SetValue`, language changes, and theme changes refresh the visible page. `RefreshPage` discards uncommitted page edits and reloads committed values. Opening the modal dialog while a page is mounted also resets the page draft to committed values; after the dialog closes, the page refreshes from the resulting committed state. Save before switching presentations if edits should be kept.
 
@@ -116,6 +118,8 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Invalid numbers (out-of-range and non-numeric text) block Save | **PASS** (reported GUI test) |
 | In-dialog language/theme switching preserves values | **PASS** (reported GUI test) |
 | Dark/light scrollbar contrast in dialog and page | **PASS** (reported GUI test) |
+| Programmatic `ResetToDefaults` / `ResetPreference` restore defaults | **Included; run in demo on startup** |
+| Dialog/page Reset button loads defaults into the draft | **B4J build verified; GUI test pending** |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
 | Page mounting/resizing, Save/Cancel, repeated dispose/remount, localization/theme refresh | **PASS** (reported GUI test) |

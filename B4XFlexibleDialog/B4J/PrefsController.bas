@@ -41,6 +41,37 @@ Public Sub GetValues As Map
 	Return CopyMap(Committed)
 End Sub
 
+Public Sub GetDefaultValue(Id As String) As Object
+	Dim Pref As Map = Model.GetPreference(Id)
+	If Pref.IsInitialized = False Then Return Null
+	If Pref.Get("type") = "label" Or Pref.Get("type") = "action" Then Return Null
+	Return CopyValue(Pref.Get("defaultValue"))
+End Sub
+
+Public Sub ResetToDefaults
+	For Each Id As String In Model.GetPreferenceIds
+		Dim Pref As Map = Model.GetPreference(Id)
+		If Pref.Get("type") <> "label" And Pref.Get("type") <> "action" Then Committed.Put(Id, CopyValue(Pref.Get("defaultValue")))
+	Next
+	If HasDraft Then Draft = CopyMap(Committed)
+End Sub
+
+Public Sub ResetPreference(Id As String)
+	Dim Pref As Map = Model.GetPreference(Id)
+	If Pref.IsInitialized = False Then Return
+	If Pref.Get("type") = "label" Or Pref.Get("type") = "action" Then Return
+	Committed.Put(Id, CopyValue(Pref.Get("defaultValue")))
+	If HasDraft Then Draft.Put(Id, CopyValue(Pref.Get("defaultValue")))
+End Sub
+
+Public Sub ResetDraftToDefaults
+	If HasDraft = False Then BeginDraft
+	For Each Id As String In Model.GetPreferenceIds
+		Dim Pref As Map = Model.GetPreference(Id)
+		If Pref.Get("type") <> "label" And Pref.Get("type") <> "action" Then Draft.Put(Id, CopyValue(Pref.Get("defaultValue")))
+	Next
+End Sub
+
 Public Sub BeginDraft
 	Draft = CopyMap(Committed)
 	HasDraft = True

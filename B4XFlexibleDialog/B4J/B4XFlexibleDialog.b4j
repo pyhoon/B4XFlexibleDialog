@@ -231,6 +231,13 @@ Private Sub RunCoreChecks(Definition As String)
 	Assert("label preference stores no value", Values.SetValue("account_note", "x") = False)
 	Dim StoredValues As Map = Values.GetValues
 	Assert("value map excludes label/action", StoredValues.ContainsKey("clear_cache") = False And StoredValues.ContainsKey("account_note") = False)
+	Values.SetValue("items_per_page", 42)
+	Values.ResetPreference("items_per_page")
+	Dim ResetNumber As Double = Values.GetValue("items_per_page")
+	Assert("ResetPreference restores default", ResetNumber = 20)
+	Values.ResetToDefaults
+	Dim ResetName As String = Values.GetValue("username")
+	Assert("ResetToDefaults restores all defaults", ResetName = "Guest")
 	Dim ValueSnapshot As Map = Values.GetValues
 	Dim SnapshotNotifications As List = ValueSnapshot.Get("notifications")
 	SnapshotNotifications.Clear

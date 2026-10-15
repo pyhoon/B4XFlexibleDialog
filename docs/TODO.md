@@ -46,7 +46,9 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Validate that multichoice defaults and assigned values are unique selections from declared options.
 - [x] Run GUI tests for multiline, password, checkbox, and multichoice controls (reported passing).
 - [x] Verify scrollbar contrast in light/dark themes for dialog and page (reported passing).
-- [ ] Add Reset and localized validation feedback.
+- [x] Add `ResetToDefaults` / `ResetPreference` controller operations and facade accessors.
+- [x] Add draft-reset Reset buttons to the dialog and page with localized status.
+- [ ] Verify dialog/page Reset behavior and localized validation messages.
 
 ## M4 — Persistence and migrations
 
