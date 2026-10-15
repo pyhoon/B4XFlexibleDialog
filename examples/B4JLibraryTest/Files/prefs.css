@@ -1,0 +1,154 @@
+/* Theme lookups are set on the dialog root pane by PrefsDialog.ApplyTheme. */
+.prefs-surface .check-box {
+    -fx-text-fill: -prefs-input-text;
+    -fx-accent: -prefs-accent;
+    -fx-focus-color: -prefs-accent;
+}
+
+.prefs-surface .check-box .box {
+    -fx-background-color: -prefs-input-bg;
+    -fx-border-color: -prefs-input-border;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+}
+
+.prefs-surface .check-box:selected > .box {
+    -fx-background-color: -prefs-accent;
+    -fx-border-color: -prefs-accent;
+}
+
+.prefs-surface .check-box:selected > .box > .mark {
+    -fx-background-color: -prefs-checkmark-text;
+}
+
+.prefs-surface .combo-box-base {
+    -fx-background-color: -prefs-input-bg;
+    -fx-border-color: -prefs-input-border;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-focus-color: -prefs-accent;
+    -fx-mark-color: -prefs-input-text;
+}
+
+.prefs-surface .combo-box .list-cell {
+    -fx-background-color: -prefs-input-bg;
+    -fx-text-fill: -prefs-input-text;
+}
+
+.prefs-surface .combo-box-popup .list-view {
+    -fx-background-color: -prefs-input-bg;
+    -fx-border-color: -prefs-input-border;
+}
+
+.prefs-surface .combo-box-popup .list-cell {
+    -fx-background-color: -prefs-input-bg;
+    -fx-text-fill: -prefs-input-text;
+}
+
+.prefs-surface .combo-box-popup .list-cell:hover,
+.prefs-surface .combo-box-popup .list-cell:selected {
+    -fx-background-color: -prefs-accent;
+    -fx-text-fill: -prefs-checkmark-text;
+}
+
+.prefs-surface .list-view {
+    -fx-background-color: -prefs-input-bg;
+    -fx-control-inner-background: -prefs-input-bg;
+    -fx-border-color: -prefs-input-border;
+}
+
+.prefs-surface .list-cell {
+    -fx-background-color: -prefs-input-bg;
+    -fx-text-fill: -prefs-input-text;
+}
+
+.prefs-surface .list-cell:filled:selected,
+.prefs-surface .list-cell:filled:selected:focused {
+    -fx-background-color: -prefs-accent;
+    -fx-text-fill: -prefs-checkmark-text;
+}
+
+.prefs-surface .slider .track {
+    -fx-background-color: -prefs-input-border;
+    -fx-background-radius: 3px;
+}
+
+.prefs-surface .slider .thumb {
+    -fx-background-color: -prefs-accent;
+    -fx-border-color: -prefs-input-text;
+    -fx-border-radius: 1em;
+    -fx-background-radius: 1em;
+}
+
+.prefs-surface .date-picker > .text-field {
+    -fx-control-inner-background: -prefs-input-bg;
+    -fx-background-color: -prefs-input-bg;
+    -fx-text-fill: -prefs-input-text;
+    -fx-border-color: -prefs-input-border;
+}
+
+.prefs-surface .date-picker > .arrow-button {
+    -fx-background-color: -prefs-input-bg;
+    -fx-border-color: -prefs-input-border;
+}
+
+.date-picker-popup {
+    -fx-background-color: -prefs-input-bg;
+    -fx-border-color: -prefs-input-border;
+}
+
+.date-picker-popup > .month-year-pane {
+    -fx-background-color: -prefs-accent;
+}
+
+.date-picker-popup > .month-year-pane > .label {
+    -fx-text-fill: -prefs-checkmark-text;
+}
+
+.date-picker-popup > .calendar-grid > .day-cell {
+    -fx-background-color: -prefs-input-bg;
+    -fx-text-fill: -prefs-input-text;
+    -fx-border-color: -prefs-input-border;
+}
+
+.date-picker-popup > .calendar-grid > .day-cell:hover,
+.date-picker-popup > .calendar-grid > .day-cell:selected {
+    -fx-background-color: -prefs-accent;
+    -fx-text-fill: -prefs-checkmark-text;
+}
+
+.prefs-surface .scroll-bar:vertical,
+.prefs-surface .scroll-bar:horizontal {
+    -fx-background-color: -prefs-input-bg;
+    -fx-background-radius: 0;
+    -fx-padding: 2px;
+}
+
+.prefs-surface .scroll-bar .track {
+    -fx-background-color: -prefs-input-bg;
+    -fx-background-radius: 3px;
+}
+
+.prefs-surface .scroll-bar .thumb {
+    -fx-background-color: -prefs-input-border;
+    -fx-background-radius: 5px;
+}
+
+.prefs-surface .scroll-bar .thumb:hover {
+    -fx-background-color: -prefs-accent;
+}
+
+.prefs-surface .scroll-bar .increment-button,
+.prefs-surface .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 3px;
+}
+
+.prefs-surface .scroll-bar .increment-arrow,
+.prefs-surface .scroll-bar .decrement-arrow {
+    -fx-background-color: -prefs-input-text;
+}
+
+.prefs-surface .corner {
+    -fx-background-color: -prefs-input-bg;
+}

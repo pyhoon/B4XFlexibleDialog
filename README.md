@@ -31,6 +31,8 @@ The archive contains the platform-independent modules at the root (`PrefsModel`,
 
 To consume it in B4J, add `B4XFlexibleDialog.b4xlib` to the Libraries folder, reference the library in the project, and call `Prefs.Initialize` as shown above. This was verified by adding the packaged library to a fresh B4J project, copying the demo `Files\*`, and confirming it compiles and shows the dialog.
 
+A ready-to-run consumer project is included at [`examples/B4JLibraryTest`](examples/B4JLibraryTest). Install the `.b4xlib`, open `B4JLibraryTest.b4j`, and run; it builds to `examples/B4JLibraryTest/Objects/B4JLibraryTest.jar` with the library referenced as `b4xflexibledialog`.
+
 ### Verified dependencies
 
 - B4J 10.7 / JavaFX (`jFX`, library key `jfx`)

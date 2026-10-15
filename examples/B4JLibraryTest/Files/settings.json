@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "demo.settings",
+  "titleKey": "settings.title",
+  "sections": [
+    {
+      "id": "general",
+      "titleKey": "section.general",
+      "preferences": [
+        {"id": "username", "type": "text", "titleKey": "setting.username", "defaultValue": "Guest", "required": true, "minLength": 3, "maxLength": 32},
+        {"id": "about", "type": "multiline", "titleKey": "setting.about", "defaultValue": "", "maxLength": 120},
+        {"id": "api_key", "type": "password", "titleKey": "setting.api_key", "defaultValue": ""},
+        {"id": "items_per_page", "type": "number", "titleKey": "setting.items_per_page", "defaultValue": 20, "options": {"min": 5, "max": 200}},
+        {"id": "dark_mode", "type": "switch", "titleKey": "setting.dark_mode", "defaultValue": false},
+        {"id": "show_tips", "type": "checkbox", "titleKey": "setting.show_tips", "defaultValue": true},
+        {"id": "display_mode", "type": "choice", "titleKey": "setting.display_mode", "defaultValue": "compact", "options": {"items": [{"value": "compact", "titleKey": "display.compact"}, {"value": "comfortable", "titleKey": "display.comfortable"}]}},
+        {"id": "notifications", "type": "multichoice", "titleKey": "setting.notifications", "defaultValue": ["email"], "options": {"items": [{"value": "email", "titleKey": "notification.email"}, {"value": "push", "titleKey": "notification.push"}, {"value": "weekly", "titleKey": "notification.weekly"}]}},
+        {"id": "start_date", "type": "date", "titleKey": "setting.start_date", "defaultValue": "2025-01-15", "required": true},
+        {"id": "font_scale", "type": "slider", "titleKey": "setting.font_scale", "defaultValue": 1.0, "options": {"min": 0.8, "max": 1.4}},
+        {"id": "reminder_time", "type": "time", "titleKey": "setting.reminder_time", "defaultValue": "09:30"},
+        {"id": "meeting_at", "type": "datetime", "titleKey": "setting.meeting_at", "defaultValue": "2025-01-15T09:30", "required": true},
+        {"id": "company_logo", "type": "file", "titleKey": "setting.company_logo", "defaultValue": "", "options": {"extensions": ["png", "jpg", "jpeg", "webp"], "preview": true, "allowClear": true, "copyToAppStorage": false}},
+        {"id": "export_folder", "type": "directory", "titleKey": "setting.export_folder", "defaultValue": "", "options": {"allowClear": true}},
+        {"id": "account_note", "type": "label", "titleKey": "setting.account_note", "descriptionKey": "setting.account_note_description"},
+        {"id": "clear_cache", "type": "action", "titleKey": "setting.clear_cache"}
+      ]
+    }
+  ]
+}

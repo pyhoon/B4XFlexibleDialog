@@ -1,0 +1,87 @@
+AppType=JavaFX
+Build1=Default,b4j.example
+File1=en.json
+File2=ms.json
+File3=prefs.css
+File4=settings.json
+FileGroup1=Default Group
+FileGroup2=Default Group
+FileGroup3=Default Group
+FileGroup4=Default Group
+Group=Default Group
+Library1=jcore
+Library2=jfx
+Library3=json
+Library4=b4xflexibledialog
+NumberOfFiles=4
+NumberOfLibraries=4
+NumberOfModules=0
+Version=10.7
+@EndOfDesignText@
+#Region Project Attributes
+	#MainFormWidth: 640
+	#MainFormHeight: 420
+#End Region
+
+Sub Process_Globals
+	Private fx As JFX
+	Private MainForm As Form
+	Private Prefs As B4XFlexibleDialog
+	Private Store As PrefsStore
+	Private En As Map
+	Private Ms As Map
+End Sub
+
+Sub AppStart (Form1 As Form, Args() As String)
+	MainForm = Form1
+	MainForm.Title = "B4XFlexibleDialog library test"
+
+	Dim Parser As JSONParser
+	Parser.Initialize(File.ReadString(File.DirAssets, "en.json"))
+	En = Parser.NextObject
+	Parser.Initialize(File.ReadString(File.DirAssets, "ms.json"))
+	Ms = Parser.NextObject
+
+	Prefs.Initialize(Me, "Prefs", MainForm)
+	Prefs.SetDictionary("en", En)
+	Prefs.SetDictionary("ms", Ms)
+	Prefs.SetLanguage("en")
+	Prefs.SetTheme(Prefs.CreateLightTheme)
+
+	If Prefs.LoadDefinition(File.ReadString(File.DirAssets, "settings.json")) = False Then
+		fx.Msgbox(MainForm, Prefs.LastError, "Definition error")
+		Return
+	End If
+
+	Store.Initialize
+	Prefs.SetStore(Store)
+	If File.Exists(File.DirApp, "prefs-store.json") Then
+		If Store.FromJson(File.ReadString(File.DirApp, "prefs-store.json")) Then Prefs.LoadStoredValues
+	End If
+
+	Dim btn As Button
+	btn.Initialize("btn")
+	btn.Text = "Open preferences"
+	MainForm.RootPane.AddNode(btn, 30, 30, 200, 42)
+	MainForm.Show
+End Sub
+
+Sub btn_Click
+	Prefs.Show
+End Sub
+
+Sub Prefs_BeforeSave(Values As Map) As Boolean
+	Return True
+End Sub
+
+Sub Prefs_AfterSave(Values As Map)
+	File.WriteString(File.DirApp, "prefs-store.json", Store.ToJson)
+End Sub
+
+Sub Prefs_DialogClosed(WasSaved As Boolean)
+	Log("Closed. Saved=" & WasSaved & " Values=" & Prefs.GetValues)
+End Sub
+
+Sub Prefs_Action(PreferenceId As String)
+	Log("Action: " & PreferenceId)
+End Sub
