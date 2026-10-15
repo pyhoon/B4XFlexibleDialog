@@ -34,6 +34,8 @@ Sub Class_Globals
 	Private ThemeButton As Button
 	Private Saved As Boolean
 	Private RowTop As Int
+	Private ContentWidth As Int
+	Private InputLeft As Int
 End Sub
 
 Public Sub Initialize(Owner As Form, ValueController As PrefsController, Definition As PrefsModel, L10n As PrefsLocalization, UiTheme As PrefsTheme, Provider As PrefsFileProvider, Target As Object, TargetEvent As String)
@@ -69,7 +71,9 @@ Public Sub Show As Boolean
 		If Preference.Get("type") = "multichoice" Then MultichoiceCount = MultichoiceCount + 1
 	Next
 	Dim Height As Int = Min(600, Max(380, 220 + PreferenceCount * 56 + SectionCount * 36 + MultilineCount * 52 + MultichoiceCount * 62))
-	DialogForm.Initialize("dlg", 650, Height)
+	ContentWidth = 740
+	InputLeft = 400
+	DialogForm.Initialize("dlg", ContentWidth + 40, Height)
 	DialogForm.Title = Localization.Text(Model.GetTitleKey)
 	DialogForm.SetOwner(OwnerForm)
 	DialogForm.Resizable = True
@@ -89,7 +93,7 @@ Public Sub Show As Boolean
 		SectionTitle.Initialize("")
 		SectionTitle.Text = Localization.Text(Section.Get("titleKey"))
 		SectionTitle.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
-		ContentPane.AddNode(SectionTitle, 24, RowTop, 590, 28)
+		ContentPane.AddNode(SectionTitle, 24, RowTop, ContentWidth - 40, 28)
 		SectionLabels.Put(Section.Get("id"), SectionTitle)
 		RowTop = RowTop + Theme.SectionSpacing + 12
 		Dim Items As List = Section.Get("preferences")
@@ -98,11 +102,11 @@ Public Sub Show As Boolean
 		Next
 		RowTop = RowTop + 6
 	Next
-	ContentPane.PrefWidth = 620
+	ContentPane.PrefWidth = ContentWidth
 	ContentPane.PrefHeight = RowTop + 20
 	StatusLabel.Initialize("")
 	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
-	DialogForm.RootPane.AddNode(StatusLabel, 24, Height - 105, 590, 24)
+	DialogForm.RootPane.AddNode(StatusLabel, 24, Height - 105, ContentWidth - 20, 24)
 	LanguageButton.Initialize("dlg")
 	LanguageButton.Text = Localization.Text("ui.language")
 	LanguageButton.TextColor = fx.Colors.From32Bit(Theme.AccentColor)
@@ -113,13 +117,13 @@ Public Sub Show As Boolean
 	DialogForm.RootPane.AddNode(ThemeButton, 140, Height - 68, 100, 34)
 	ResetButton.Initialize("dlg")
 	ResetButton.Text = Localization.Text("ui.reset")
-	DialogForm.RootPane.AddNode(ResetButton, 300, Height - 68, 90, 34)
+	DialogForm.RootPane.AddNode(ResetButton, 430, Height - 68, 90, 34)
 	CancelButton.Initialize("dlg")
 	CancelButton.Text = Localization.Text("ui.cancel")
-	DialogForm.RootPane.AddNode(CancelButton, 400, Height - 68, 90, 34)
+	DialogForm.RootPane.AddNode(CancelButton, 540, Height - 68, 90, 34)
 	SaveButton.Initialize("dlg")
 	SaveButton.Text = Localization.Text("ui.save")
-	DialogForm.RootPane.AddNode(SaveButton, 500, Height - 68, 100, 34)
+	DialogForm.RootPane.AddNode(SaveButton, 640, Height - 68, 110, 34)
 	RefreshButtons
 	DialogForm.ShowAndWait
 	If Saved = False Then Controller.CancelDraft
@@ -136,7 +140,7 @@ Private Sub AddPreference(Pref As Map)
 		If Pref.ContainsKey("descriptionKey") Then InfoKey = Pref.Get("descriptionKey")
 		InfoLabel.Text = Localization.Text(InfoKey)
 		InfoLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
-		ContentPane.AddNode(InfoLabel, 34, RowTop + 4, 560, 30)
+		ContentPane.AddNode(InfoLabel, 34, RowTop + 4, ContentWidth - 60, 30)
 		TitleLabels.Put(Id, InfoLabel)
 	Else If TypeName = "action" Then
 		Dim ActionButton As Button
@@ -144,7 +148,7 @@ Private Sub AddPreference(Pref As Map)
 		ActionButton.Tag = Id
 		ActionButton.Text = Localization.Text(Pref.Get("titleKey"))
 		ActionButton.Style = "-fx-background-color: " & ColorCss(Theme.AccentColor) & "; -fx-text-fill: " & ColorCss(Theme.PrimaryButtonTextColor) & ";"
-		ContentPane.AddNode(ActionButton, 290, RowTop, 220, 34)
+		ContentPane.AddNode(ActionButton, InputLeft, RowTop, 220, 34)
 		ActionButtons.Put(Id, ActionButton)
 	Else If TypeName = "switch" Or TypeName = "checkbox" Then
 		Dim Check As CheckBox
@@ -153,7 +157,7 @@ Private Sub AddPreference(Pref As Map)
 		Check.TextColor = fx.Colors.From32Bit(Theme.TextColor)
 		Check.Style = "-fx-accent: " & ColorCss(Theme.AccentColor) & "; -fx-focus-color: " & ColorCss(Theme.AccentColor) & ";"
 		Check.Checked = Controller.GetValue(Id)
-		ContentPane.AddNode(Check, 34, RowTop, 560, 34)
+		ContentPane.AddNode(Check, 34, RowTop, ContentWidth - 80, 34)
 		Controls.Put(Id, Check)
 		TitleLabels.Put(Id, Check)
 	Else
@@ -174,7 +178,7 @@ Private Sub AddPreference(Pref As Map)
 			If TypeName = "time" Then Input.PromptText = Localization.Text("format.time")
 			If TypeName = "datetime" Then Input.PromptText = Localization.Text("format.datetime")
 			Input.Style = InputCss
-			ContentPane.AddNode(Input, 290, RowTop, 300, 34)
+			ContentPane.AddNode(Input, InputLeft, RowTop, 300, 34)
 			Controls.Put(Id, Input)
 		Else If TypeName = "multiline" Then
 			Dim MultilineInput As TextArea
@@ -182,7 +186,7 @@ Private Sub AddPreference(Pref As Map)
 			MultilineInput.Text = "" & Controller.GetValue(Id)
 			MultilineInput.WrapText = True
 			MultilineInput.Style = InputCss
-			ContentPane.AddNode(MultilineInput, 290, RowTop, 300, 76)
+			ContentPane.AddNode(MultilineInput, InputLeft, RowTop, 300, 76)
 			Controls.Put(Id, MultilineInput)
 			RowTop = RowTop + 42
 		Else If TypeName = "multichoice" Then
@@ -205,7 +209,7 @@ Private Sub AddPreference(Pref As Map)
 				Next
 			Next
 			Multi.SetSelectedIndices(SelectedIndices)
-			ContentPane.AddNode(Multi, 290, RowTop, 300, 90)
+			ContentPane.AddNode(Multi, InputLeft, RowTop, 300, 90)
 			Controls.Put(Id, Multi)
 			RowTop = RowTop + 56
 		Else If TypeName = "date" Then
@@ -214,7 +218,7 @@ Private Sub AddPreference(Pref As Map)
 			DateInput.DateFormat = "yyyy-MM-dd"
 			DateInput.DateTicks = IsoToTicks(Controller.GetValue(Id))
 			DateInput.Style = InputCss
-			ContentPane.AddNode(DateInput, 290, RowTop, 220, 34)
+			ContentPane.AddNode(DateInput, InputLeft, RowTop, 220, 34)
 			Controls.Put(Id, DateInput)
 		Else If TypeName = "slider" Then
 			Dim ValueSlider As Slider
@@ -227,13 +231,13 @@ Private Sub AddPreference(Pref As Map)
 			If SliderOptions.ContainsKey("max") Then ValueSlider.MaxValue = SliderOptions.Get("max") Else ValueSlider.MaxValue = 100
 			ValueSlider.Value = Controller.GetValue(Id)
 			ValueSlider.Style = "-fx-accent: " & ColorCss(Theme.AccentColor) & ";"
-			ContentPane.AddNode(ValueSlider, 290, RowTop, 240, 34)
+			ContentPane.AddNode(ValueSlider, InputLeft, RowTop, 240, 34)
 			Controls.Put(Id, ValueSlider)
 			Dim SliderValueLabel As Label
 			SliderValueLabel.Initialize("")
 			SliderValueLabel.Text = "" & ValueSlider.Value
 			SliderValueLabel.TextColor = fx.Colors.From32Bit(Theme.TextColor)
-			ContentPane.AddNode(SliderValueLabel, 540, RowTop + 4, 60, 28)
+			ContentPane.AddNode(SliderValueLabel, InputLeft + 250, RowTop + 4, 70, 28)
 			SliderLabels.Put(Id, SliderValueLabel)
 		Else If TypeName = "choice" Then
 			Dim Choice As ComboBox
@@ -248,21 +252,21 @@ Private Sub AddPreference(Pref As Map)
 				If Item.Get("value") = Controller.GetValue(Id) Then Selected = I
 			Next
 			Choice.SelectedIndex = Selected
-			ContentPane.AddNode(Choice, 290, RowTop, 300, 34)
+			ContentPane.AddNode(Choice, InputLeft, RowTop, 300, 34)
 			Controls.Put(Id, Choice)
 		Else If TypeName = "file" Or TypeName = "directory" Then
 			Dim PathField As TextField
 			PathField.Initialize("dlg")
 			PathField.Text = "" & Controller.GetValue(Id)
 			PathField.Style = InputCss
-			ContentPane.AddNode(PathField, 290, RowTop, 164, 34)
+			ContentPane.AddNode(PathField, InputLeft, RowTop, 164, 34)
 			Controls.Put(Id, PathField)
 			Dim BrowseButton As Button
 			BrowseButton.Initialize("dlg")
 			BrowseButton.Text = Localization.Text("ui.browse")
 			BrowseButton.Tag = "browse|" & Id
 			BrowseButton.Style = SecondaryButtonCss
-			ContentPane.AddNode(BrowseButton, 458, RowTop, 78, 34)
+			ContentPane.AddNode(BrowseButton, InputLeft + 168, RowTop, 78, 34)
 			BrowseButtons.Put(Id, BrowseButton)
 			If HasAllowClear(Pref) Then
 				Dim ClearButton As Button
@@ -270,7 +274,7 @@ Private Sub AddPreference(Pref As Map)
 				ClearButton.Text = Localization.Text("ui.clear")
 				ClearButton.Tag = "clear|" & Id
 				ClearButton.Style = SecondaryButtonCss
-				ContentPane.AddNode(ClearButton, 540, RowTop, 78, 34)
+				ContentPane.AddNode(ClearButton, InputLeft + 250, RowTop, 78, 34)
 				ClearButtons.Put(Id, ClearButton)
 			End If
 		End If
