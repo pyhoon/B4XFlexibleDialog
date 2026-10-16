@@ -216,7 +216,7 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Store merge, unknown-key preservation, JSON round-trip, and `ApplyValues` | **PASS** (reported demo run) |
 | `file`/`directory` validation (empty optional, allowed/disallowed extension, directory path) | **Included; run in demo on startup** |
 | File/directory Browse/Clear and extension filtering in dialog and page | **PASS** (reported GUI test) |
-| Copy-to-app-storage | Implemented; not exercised (disabled in demo definition) |
+| Copy-to-app-storage | Implemented; enabled in the B4J demo (`company_logo`) — verification pending |
 | Values restored after application restart | **PASS** (B4J reported `Restored 12 value(s)`; B4A reported `Restored 11 value(s)` after relaunch) |
 | Packaged `.b4xlib` compiles and runs from a fresh B4J project | **PASS** (reported) |
 | `custom` definition validation (missing options/renderer rejected) | **Included; run in demo on startup** |
