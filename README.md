@@ -27,11 +27,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/package-b4xlib.ps1 -Ve
 
 `Version` must be a valid decimal (for example `0.2`, not `0.2.0`).
 
-The archive contains the platform-independent modules at the root (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`, `PrefsSelfTest`), the B4J-specific modules under `B4J/` (`B4XFlexibleDialog`, `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`), `Files/prefs.css`, and a `manifest.txt` declaring `B4J.DependsOn=jFX, Json`. Shared modules intentionally avoid JavaFX so they can be reused by future platform ports.
+The archive contains the platform-independent modules at the root (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`, `PrefsSelfTest`), the B4J-specific modules under `B4J/` (`B4XFlexibleDialog`, `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`), the B4A-specific modules under `B4A/` (`PrefsRenderer`, `PrefsDirPicker`), `Files/prefs.css`, and a `manifest.txt` declaring `B4J.DependsOn=jFX, Json, jXUI` and `B4A.DependsOn=Core, Phone, XUI, JavaObject`. Shared modules intentionally avoid JavaFX so they can be reused by the platform ports; the public view API is `B4XView`-based (`CreatePage(Container As B4XView)`) so it compiles on B4J and B4A alike.
 
 To consume it in B4J, add `B4XFlexibleDialog.b4xlib` to the Libraries folder, reference the library in the project, and call `Prefs.Initialize` as shown above. This was verified by adding the packaged library to a fresh B4J project, copying the demo `Files\*`, and confirming it compiles and shows the dialog.
 
-A ready-to-run consumer project is included at [`examples/B4XPagesDemo`](examples/B4XPagesDemo). Install the `.b4xlib`, open `B4J/B4XPagesDemo.b4j`, and run; it builds to `examples/B4XPagesDemo/B4J/Objects/B4XPagesDemo.jar` with the library referenced as `b4xflexibledialog`. The shared `B4XMainPage` embeds the settings page next to a dialog button, demonstrating both presentations from one definition. B4J-only for now; B4A/B4i folders can be added once the facade supports those platforms.
+A ready-to-run consumer project is included at [`examples/B4XPagesDemo`](examples/B4XPagesDemo). Install the `.b4xlib`, open `B4J/B4XPagesDemo.b4j` (B4J) or `B4A/B4XPagesDemo.b4a` (B4A), and run; the B4J build lands in `examples/B4XPagesDemo/B4J/Objects/B4XPagesDemo.jar`, both with the library referenced as `b4xflexibledialog`. The shared `B4XMainPage` embeds the settings page next to a dialog button on B4J, and adds Save/Cancel around the same form on B4A (its renderer has no built-in chrome). Platform code is reached through the shared `AppHost` dispatcher and a per-platform `PrefsHost` class, keeping the page free of platform modules. B4i is a placeholder (`B4i/README.md`).
 
 ### Verified dependencies
 
@@ -75,7 +75,7 @@ of replacement controls. It was deliberately not adopted, for these reasons:
 | Area | B4J | B4A | B4i |
 | --- | --- | --- | --- |
 | Model, controller, localization, theme, store | Implemented and verified | Verified: `PrefsSelfTest` 29/29 `passed=` on device | Deferred (Mac/hosted builder required) |
-| `.b4xlib` packaging | Implemented and verified | Not packaged | Not packaged |
+| `.b4xlib` packaging | Implemented and verified | B4A modules packaged under `B4A/` (verified building the demo from the archive) | Not packaged |
 | Modal dialog renderer | Implemented and verified | Implemented and verified on device (`PrefsRenderer` activity form) | Not implemented |
 | Embedded page renderer | Implemented and verified | Covered by the same activity form; dedicated page container pending | Not implemented |
 | File/directory picker | Implemented and verified (JavaFX choosers) | Both implemented and verified (`ContentChooser` + SAF picker; tree URIs persist) | Not implemented (see limitations) |

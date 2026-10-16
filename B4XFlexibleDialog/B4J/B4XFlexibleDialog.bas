@@ -219,7 +219,10 @@ Public Sub Show
 	CallSub2(Callback, EventPrefix & "_DialogClosed", WasSaved)
 End Sub
 
-Public Sub CreatePage(Container As AnchorPane)
+' Mounts the settings page inside a caller-owned container. The container is
+' typed as B4XView so callers can pass any host view (an AnchorPane on B4J,
+' a Panel elsewhere) without depending on a platform-specific control type.
+Public Sub CreatePage(Container As B4XView)
 	If CheckReady = False Then
 		LogError(LastError)
 		Return

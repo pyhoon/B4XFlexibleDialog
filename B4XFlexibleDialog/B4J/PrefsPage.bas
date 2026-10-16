@@ -39,7 +39,9 @@ Sub Class_Globals
 	Private IsDisposed As Boolean
 End Sub
 
-Public Sub Initialize(TargetContainer As AnchorPane, ValueController As PrefsController, Definition As PrefsModel, L10n As PrefsLocalization, UiTheme As PrefsTheme, Provider As PrefsFileProvider, Renderers As Map, Target As Object, TargetEvent As String)
+' TargetContainer is a B4XView so the page API stays platform-neutral; the
+' anchor layout underneath still requires an AnchorPane on B4J.
+Public Sub Initialize(TargetContainer As B4XView, ValueController As PrefsController, Definition As PrefsModel, L10n As PrefsLocalization, UiTheme As PrefsTheme, Provider As PrefsFileProvider, Renderers As Map, Target As Object, TargetEvent As String)
 	Container = TargetContainer
 	Controller = ValueController
 	Model = Definition

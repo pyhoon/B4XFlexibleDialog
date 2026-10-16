@@ -14,6 +14,7 @@ Group=Default Group
 Library1=jcore
 Library2=jfx
 Library3=json
+Library4=jxui
 Module1=B4XFlexibleDialog
 Module10=PrefsStore
 Module11=PrefsTheme
@@ -26,7 +27,7 @@ Module7=PrefsModel
 Module8=PrefsPage
 Module9=PrefsSelfTest
 NumberOfFiles=5
-NumberOfLibraries=3
+NumberOfLibraries=4
 NumberOfModules=11
 Version=10.7
 @EndOfDesignText@
@@ -213,7 +214,7 @@ End Sub
 ' Sample custom renderer: a 1-5 star rating row using MaterialIcons glyphs.
 ' Demonstrates the full lifecycle contract documented on RegisterCustomRenderer.
 Private Sub Rating_Create(Args As Map) As Object
-	Dim Parent As Pane = Args.Get("parent")
+	Dim Parent As B4XView = Args.Get("parent")
 	Dim Left As Double = Args.Get("left")
 	Dim Top As Double = Args.Get("top")
 	Dim Width As Double = Args.Get("width")
@@ -236,7 +237,7 @@ Private Sub Rating_Create(Args As Map) As Object
 		Tag.Put("index", I)
 		Star.Tag = Tag
 		Star.Font = StarFont
-		Parent.AddNode(Star, Left + (I - 1) * StarWidth, Top, StarWidth, Height)
+		Parent.AddView(Star, Left + (I - 1) * StarWidth, Top, StarWidth, Height)
 		Buttons.Add(Star)
 	Next
 	Rating_Paint(Handle)
@@ -268,8 +269,9 @@ End Sub
 Private Sub Rating_Dispose(Handle As Object)
 	Dim H As Map = Handle
 	Dim Buttons As List = H.Get("buttons")
-	For Each Star As Label In Buttons
-		Star.RemoveNodeFromParent
+	For Each StarObject As Object In Buttons
+		Dim Star As B4XView = StarObject
+		Star.RemoveViewFromParent
 	Next
 End Sub
 

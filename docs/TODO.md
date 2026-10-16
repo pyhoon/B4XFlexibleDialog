@@ -88,6 +88,9 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Persist B4A demo values with `PrefsStore` and verify full restart restore (reported `Restored 11 value(s)`).
 - [ ] B4i project prepared but deferred (Mac/hosted builder required; revisit when builder access is available).
 - [x] Implement B4A platform-specific form renderer and native picker behavior (dialog/page containers remain B4J-only).
+- [x] Cast the public view API to `B4XView` (`CreatePage(Container As B4XView)`, B4J `PrefsPage.Initialize`, B4A `PrefsRenderer.Render`) so call sites are cross-platform.
+- [x] Package the B4A modules (`PrefsRenderer`, `PrefsDirPicker`) under `B4A/` and ship the `XUI`/`jXUI` dependencies in `manifest.txt`.
+- [x] Extend the B4XPages example to B4A (shared `B4XMainPage` + `AppHost` dispatcher, per-platform `PrefsHost` class) and add a B4i placeholder.
 - [x] Start a capability matrix in the README; keep extending it as platforms are verified.
 
 ## M7 — Extensibility and release — IN PROGRESS

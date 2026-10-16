@@ -18,6 +18,7 @@
 [CmdletBinding()]
 param(
     [string]$SourceDir,
+    [string]$B4ASourceDir,
     [string]$OutputDir,
     [string]$Version = '0.2',
     [string]$LibraryName = 'B4XFlexibleDialog'
@@ -26,6 +27,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 if (-not $SourceDir) { $SourceDir = Join-Path $PSScriptRoot '..\B4XFlexibleDialog\B4J' }
+if (-not $B4ASourceDir) { $B4ASourceDir = Join-Path $PSScriptRoot '..\B4XFlexibleDialog\B4A' }
 if (-not $OutputDir) { $OutputDir = Join-Path $PSScriptRoot '..\dist' }
 
 # Platform-independent modules (no JavaFX/UI references).
@@ -38,11 +40,17 @@ $b4jModules = @(
     'B4XFlexibleDialog', 'PrefsDialog', 'PrefsPage', 'PrefsFileProvider'
 )
 
+# B4A (Android) modules.
+$b4aModules = @(
+    'PrefsRenderer', 'PrefsDirPicker'
+)
+
 $SourceDir = (Resolve-Path -LiteralPath $SourceDir).Path
+$B4ASourceDir = (Resolve-Path -LiteralPath $B4ASourceDir).Path
 
 function Copy-Module {
-    param([string]$Name, [string]$Target)
-    $src = Join-Path $SourceDir ($Name + '.bas')
+    param([string]$Root, [string]$Name, [string]$Target)
+    $src = Join-Path $Root ($Name + '.bas')
     if (-not (Test-Path -LiteralPath $src)) { throw "Missing module: $src" }
     Copy-Item -LiteralPath $src -Destination $Target -Force
 }
@@ -50,17 +58,19 @@ function Copy-Module {
 $stage = Join-Path ([System.IO.Path]::GetTempPath()) ('b4xlib_' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $stage | Out-Null
 New-Item -ItemType Directory -Path (Join-Path $stage 'B4J') | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $stage 'B4A') | Out-Null
 New-Item -ItemType Directory -Path (Join-Path $stage 'Files') | Out-Null
 
 try {
-    foreach ($m in $sharedModules) { Copy-Module -Name $m -Target $stage }
-    foreach ($m in $b4jModules) { Copy-Module -Name $m -Target (Join-Path $stage 'B4J') }
+    foreach ($m in $sharedModules) { Copy-Module -Root $SourceDir -Name $m -Target $stage }
+    foreach ($m in $b4jModules) { Copy-Module -Root $SourceDir -Name $m -Target (Join-Path $stage 'B4J') }
+    foreach ($m in $b4aModules) { Copy-Module -Root $B4ASourceDir -Name $m -Target (Join-Path $stage 'B4A') }
 
     $css = Join-Path $SourceDir 'Files\prefs.css'
     if (-not (Test-Path -LiteralPath $css)) { throw "Missing asset: $css" }
     Copy-Item -LiteralPath $css -Destination (Join-Path $stage 'Files') -Force
 
-    $manifest = "Version=$Version`r`nB4J.DependsOn=jFX, Json`r`n"
+    $manifest = "Version=$Version`r`nB4J.DependsOn=jFX, Json, jXUI`r`nB4A.DependsOn=Core, Phone, XUI, JavaObject`r`n"
     Set-Content -LiteralPath (Join-Path $stage 'manifest.txt') -Value $manifest -NoNewline -Encoding Ascii
 
     if (-not (Test-Path -LiteralPath $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir | Out-Null }
@@ -81,6 +91,9 @@ try {
         }
         foreach ($m in $b4jModules) {
             $entries.Add([pscustomobject]@{ Path = (Join-Path $stage ('B4J\' + $m + '.bas')); Name = ('B4J/' + $m + '.bas') })
+        }
+        foreach ($m in $b4aModules) {
+            $entries.Add([pscustomobject]@{ Path = (Join-Path $stage ('B4A\' + $m + '.bas')); Name = ('B4A/' + $m + '.bas') })
         }
         $entries.Add([pscustomobject]@{ Path = (Join-Path $stage 'Files\prefs.css'); Name = 'Files/prefs.css' })
 

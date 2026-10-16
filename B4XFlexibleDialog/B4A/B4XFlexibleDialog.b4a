@@ -6,6 +6,7 @@ Library1=core
 Library2=json
 Library3=phone
 Library4=javaobject
+Library5=xui
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
 Module1=|relative|..\B4J\PrefsController
 Module10=Starter
@@ -18,7 +19,7 @@ Module7=|relative|..\B4J\PrefsSelfTest
 Module8=|relative|..\B4J\PrefsStore
 Module9=|relative|..\B4J\PrefsTheme
 NumberOfFiles=1
-NumberOfLibraries=4
+NumberOfLibraries=5
 NumberOfModules=10
 Version=14.2
 @EndOfDesignText@
@@ -222,7 +223,7 @@ End Sub
 ' contract as B4J (create/read/validate/refresh/dispose); B4A invokes
 ' create/read/validate/dispose, and re-render replaces refresh.
 Private Sub Rating_Create(Args As Map) As Object
-	Dim Parent As Panel = Args.Get("parent")
+	Dim Parent As B4XView = Args.Get("parent")
 	Dim Left As Int = Args.Get("left")
 	Dim Top As Int = Args.Get("top")
 	Dim Width As Int = Args.Get("width")
@@ -278,8 +279,9 @@ End Sub
 Private Sub Rating_Dispose(Handle As Object)
 	Dim H As Map = Handle
 	Dim Buttons As List = H.Get("buttons")
-	For Each Star As Label In Buttons
-		Star.RemoveView
+	For Each StarObject As Object In Buttons
+		Dim Star As B4XView = StarObject
+		Star.RemoveViewFromParent
 	Next
 End Sub
 

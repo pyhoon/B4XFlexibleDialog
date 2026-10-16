@@ -75,8 +75,9 @@ Public Sub RegisterCustomRenderer(Name As String, Target As Object, EventName As
 	CustomRenderers.Put(Name, Entry)
 End Sub
 
-' Builds the form inside Parent, replacing any previous content.
-Public Sub Render(Parent As Panel)
+' Builds the form inside Parent, replacing any previous content. Parent is a
+' B4XView so the same method works with a Panel or any other host view.
+Public Sub Render(Parent As B4XView)
 	Controller.BeginDraft
 	DisposeCustomHandles
 	Controls.Initialize
@@ -93,7 +94,7 @@ Public Sub Render(Parent As Panel)
 	RowTop = 8dip
 	Form.Initialize(100dip)
 	Parent.AddView(Form, 0, 0, Parent.Width, Parent.Height)
-	Dim ContentWidth As Int = Parent.Width - 32dip
+	Dim ContentWidth As Int = Round(Parent.Width) - 32dip
 	For Each Section As Object In Model.GetSections
 		Dim SectionMap As Map = Section
 		Dim SectionTitle As Label
