@@ -1,0 +1,346 @@
+B4A=true
+Group=Default Group
+ModulesStructureVersion=1
+Type=Class
+Version=14.2
+@EndOfDesignText@
+' Renders a preference definition into a B4A Panel using a ScrollView.
+' Value state, validation and Save/Cancel semantics come from the shared
+' PrefsController. The host activity owns navigation and the container:
+' call Render(Container) to build, Save to commit, Cancel to discard.
+' File and directory pickers are not implemented yet; those preferences
+' render their current value read-only.
+Sub Class_Globals
+	Private Model As PrefsModel
+	Private Controller As PrefsController
+	Private Localization As PrefsLocalization
+	Private Callback As Object
+	Private EventPrefix As String
+	Private Form As ScrollView
+	Private Controls As Map
+	Private ControlTypes As Map
+	Private ChoiceItems As Map
+	Private MultiChecks As Map
+	Private MultiValues As Map
+	Private SliderLabels As Map
+	Private SliderMin As Map
+	Private SliderMax As Map
+	Private StatusLabel As Label
+	Private RowTop As Int
+End Sub
+
+Public Sub Initialize(Target As Object, EventName As String, Definition As PrefsModel, ValueController As PrefsController, L10n As PrefsLocalization)
+	Callback = Target
+	EventPrefix = EventName
+	Model = Definition
+	Controller = ValueController
+	Localization = L10n
+End Sub
+
+' Builds the form inside Parent, replacing any previous content.
+Public Sub Render(Parent As Panel)
+	Controller.BeginDraft
+	Controls.Initialize
+	ControlTypes.Initialize
+	ChoiceItems.Initialize
+	MultiChecks.Initialize
+	MultiValues.Initialize
+	SliderLabels.Initialize
+	SliderMin.Initialize
+	SliderMax.Initialize
+	Parent.RemoveAllViews
+	RowTop = 8dip
+	Form.Initialize(100dip)
+	Parent.AddView(Form, 0, 0, Parent.Width, Parent.Height)
+	Dim ContentWidth As Int = Parent.Width - 32dip
+	For Each Section As Object In Model.GetSections
+		Dim SectionMap As Map = Section
+		Dim SectionTitle As Label
+		SectionTitle.Initialize("")
+		SectionTitle.Text = Localization.Text(SectionMap.Get("titleKey"))
+		SectionTitle.TextSize = 18
+		SectionTitle.TextColor = Colors.DarkGray
+		Form.Panel.AddView(SectionTitle, 16dip, RowTop, ContentWidth, 28dip)
+		RowTop = RowTop + 36dip
+		Dim Items As List = SectionMap.Get("preferences")
+		For Each PrefObject As Object In Items
+			Dim Pref As Map = PrefObject
+			AddPreference(Pref, ContentWidth)
+		Next
+		RowTop = RowTop + 8dip
+	Next
+	StatusLabel.Initialize("")
+	StatusLabel.Text = ""
+	StatusLabel.TextSize = 14
+	StatusLabel.TextColor = Colors.Red
+	Form.Panel.AddView(StatusLabel, 16dip, RowTop, ContentWidth, 30dip)
+	RowTop = RowTop + 38dip
+	Form.Panel.Height = RowTop
+End Sub
+
+Private Sub AddPreference(Pref As Map, ContentWidth As Int)
+	Dim Id As String = Pref.Get("id")
+	Dim TypeName As String = Pref.Get("type")
+	If TypeName = "label" Then
+		Dim InfoKey As String = Pref.Get("titleKey")
+		If Pref.ContainsKey("descriptionKey") Then InfoKey = Pref.Get("descriptionKey")
+		Dim InfoLabel As Label
+		InfoLabel.Initialize("")
+		InfoLabel.Text = Localization.Text(InfoKey)
+		InfoLabel.TextSize = 14
+		InfoLabel.TextColor = Colors.Gray
+		Form.Panel.AddView(InfoLabel, 16dip, RowTop, ContentWidth, 30dip)
+		RowTop = RowTop + 38dip
+		Return
+	End If
+	If TypeName = "action" Then
+		Dim ActionButton As Button
+		ActionButton.Initialize("prefsaction")
+		ActionButton.Tag = Id
+		ActionButton.Text = Localization.Text(Pref.Get("titleKey"))
+		ActionButton.TextSize = 16
+		Form.Panel.AddView(ActionButton, 16dip, RowTop, ContentWidth, 52dip)
+		RowTop = RowTop + 60dip
+		Return
+	End If
+	If TypeName = "switch" Or TypeName = "checkbox" Then
+		Dim Check As CheckBox
+		Check.Initialize("")
+		Check.Text = Localization.Text(Pref.Get("titleKey"))
+		Check.TextSize = 16
+		Check.Checked = Controller.GetValue(Id)
+		Form.Panel.AddView(Check, 16dip, RowTop, ContentWidth, 52dip)
+		Controls.Put(Id, Check)
+		ControlTypes.Put(Id, TypeName)
+		RowTop = RowTop + 60dip
+		Return
+	End If
+	AddTitle(Pref, ContentWidth)
+	If TypeName = "text" Or TypeName = "number" Then
+		Dim Input As EditText
+		Input.Initialize("")
+		Input.TextSize = 16
+		Input.SingleLine = True
+		If TypeName = "number" Then Input.InputType = Input.INPUT_TYPE_DECIMAL_NUMBERS
+		Input.Text = Controller.GetValue(Id)
+		Form.Panel.AddView(Input, 16dip, RowTop, ContentWidth, 52dip)
+		Controls.Put(Id, Input)
+		RowTop = RowTop + 60dip
+	Else If TypeName = "multiline" Then
+		Dim Area As EditText
+		Area.Initialize("")
+		Area.TextSize = 16
+		Area.SingleLine = False
+		Area.Text = Controller.GetValue(Id)
+		Form.Panel.AddView(Area, 16dip, RowTop, ContentWidth, 120dip)
+		Controls.Put(Id, Area)
+		RowTop = RowTop + 128dip
+	Else If TypeName = "password" Then
+		Dim Secret As EditText
+		Secret.Initialize("")
+		Secret.TextSize = 16
+		Secret.SingleLine = True
+		Secret.PasswordMode = True
+		Secret.Text = Controller.GetValue(Id)
+		Form.Panel.AddView(Secret, 16dip, RowTop, ContentWidth, 52dip)
+		Controls.Put(Id, Secret)
+		RowTop = RowTop + 60dip
+	Else If TypeName = "choice" Then
+		Dim Options As Map = Pref.Get("options")
+		Dim Items As List = Options.Get("items")
+		Dim Values As List
+		Values.Initialize
+		Dim Selector As Spinner
+		Selector.Initialize("")
+		Dim Selected As Int = -1
+		For I = 0 To Items.Size - 1
+			Dim Item As Map = Items.Get(I)
+			Selector.Add(Localization.Text(Item.Get("titleKey")))
+			Dim ItemValue As String = Item.Get("value")
+			Values.Add(ItemValue)
+			Dim CurrentValue As String = Controller.GetValue(Id)
+			If ItemValue = CurrentValue Then Selected = I
+		Next
+		Selector.SelectedIndex = Selected
+		Form.Panel.AddView(Selector, 16dip, RowTop, ContentWidth, 52dip)
+		Controls.Put(Id, Selector)
+		ChoiceItems.Put(Id, Values)
+		RowTop = RowTop + 60dip
+	Else If TypeName = "multichoice" Then
+		Dim MultiOptions As Map = Pref.Get("options")
+		Dim MultiItems As List = MultiOptions.Get("items")
+		Dim SelectedValues As List = Controller.GetValue(Id)
+		Dim Checks As List
+		Checks.Initialize
+		Dim ItemValues As List
+		ItemValues.Initialize
+		For I = 0 To MultiItems.Size - 1
+			Dim MultiItem As Map = MultiItems.Get(I)
+			Dim Box As CheckBox
+			Box.Initialize("")
+			Box.Text = Localization.Text(MultiItem.Get("titleKey"))
+			Box.TextSize = 16
+			Dim ItemValue As String = MultiItem.Get("value")
+			ItemValues.Add(ItemValue)
+			For Each SelectedObject As Object In SelectedValues
+				Dim SelectedValue As String = SelectedObject
+				If ItemValue = SelectedValue Then Box.Checked = True
+			Next
+			Form.Panel.AddView(Box, 24dip, RowTop, ContentWidth - 8dip, 44dip)
+			RowTop = RowTop + 48dip
+			Checks.Add(Box)
+		Next
+		Controls.Put(Id, Checks)
+		MultiValues.Put(Id, ItemValues)
+		RowTop = RowTop + 8dip
+	Else If TypeName = "date" Or TypeName = "time" Or TypeName = "datetime" Then
+		Dim Moment As EditText
+		Moment.Initialize("")
+		Moment.TextSize = 16
+		Moment.SingleLine = True
+		If TypeName = "time" Then Moment.Hint = "HH:mm"
+		If TypeName = "datetime" Then Moment.Hint = "yyyy-MM-ddTHH:mm"
+		Moment.Text = Controller.GetValue(Id)
+		Form.Panel.AddView(Moment, 16dip, RowTop, ContentWidth, 52dip)
+		Controls.Put(Id, Moment)
+		RowTop = RowTop + 60dip
+	Else If TypeName = "slider" Then
+		Dim SliderOptions As Map
+		SliderOptions.Initialize
+		If Pref.ContainsKey("options") Then SliderOptions = Pref.Get("options")
+		Dim Minimum As Double = 0
+		Dim Maximum As Double = 100
+		If SliderOptions.ContainsKey("min") Then Minimum = SliderOptions.Get("min")
+		If SliderOptions.ContainsKey("max") Then Maximum = SliderOptions.Get("max")
+		SliderMin.Put(Id, Minimum)
+		SliderMax.Put(Id, Maximum)
+		Dim Bar As SeekBar
+		Bar.Initialize("prefsseek")
+		Bar.Tag = Id
+		Bar.Max = 1000
+		Bar.Value = SliderToPosition(Controller.GetValue(Id), Minimum, Maximum)
+		Form.Panel.AddView(Bar, 16dip, RowTop, ContentWidth - 90dip, 52dip)
+		Dim ValueLabel As Label
+		ValueLabel.Initialize("")
+		ValueLabel.TextSize = 14
+		ValueLabel.Text = Controller.GetValue(Id)
+		Form.Panel.AddView(ValueLabel, 16dip + ContentWidth - 82dip, RowTop + 12dip, 74dip, 28dip)
+		SliderLabels.Put(Id, ValueLabel)
+		Controls.Put(Id, Bar)
+		RowTop = RowTop + 60dip
+	Else If TypeName = "file" Or TypeName = "directory" Then
+		Dim PathLabel As Label
+		PathLabel.Initialize("")
+		PathLabel.TextSize = 14
+		PathLabel.Text = Controller.GetValue(Id)
+		Form.Panel.AddView(PathLabel, 16dip, RowTop, ContentWidth, 52dip)
+		RowTop = RowTop + 60dip
+	End If
+	ControlTypes.Put(Id, TypeName)
+End Sub
+
+Private Sub AddTitle(Pref As Map, ContentWidth As Int)
+	Dim Title As Label
+	Title.Initialize("")
+	Title.Text = Localization.Text(Pref.Get("titleKey"))
+	Title.TextSize = 16
+	Form.Panel.AddView(Title, 16dip, RowTop, ContentWidth, 26dip)
+	RowTop = RowTop + 30dip
+End Sub
+
+Private Sub prefsaction_Click
+	Dim Source As Button = Sender
+	CallSub2(Callback, EventPrefix & "_Action", Source.Tag)
+End Sub
+
+Private Sub prefsseek_ValueChanged(Value As Int, UserChanged As Boolean)
+	Dim Bar As SeekBar = Sender
+	Dim Id As String = Bar.Tag
+	Dim Minimum As Double = SliderMin.Get(Id)
+	Dim Maximum As Double = SliderMax.Get(Id)
+	Dim Shown As Double = Minimum + (Maximum - Minimum) * (Value / 1000)
+	Dim ValueLabel As Label = SliderLabels.Get(Id)
+	ValueLabel.Text = Shown
+End Sub
+
+' Reads all controls into the draft, validates, and commits on success.
+' Returns True when the values were committed.
+Public Sub Save As Boolean
+	For Each Id As String In Controls.Keys
+		Dim TypeName As String = ControlTypes.Get(Id)
+		Dim Value As Object
+		Select TypeName
+			Case "text", "multiline", "password", "number", "date", "time", "datetime"
+				Dim Input As EditText = Controls.Get(Id)
+				If TypeName = "number" Then
+					If IsNumber(Input.Text) = False Then
+						ShowError("Enter a valid number (" & Id & ")")
+						Return False
+					End If
+					Dim NumberValue As Double = Input.Text
+					Value = NumberValue
+				Else
+					Value = Input.Text
+				End If
+			Case "switch", "checkbox"
+				Dim Check As CheckBox = Controls.Get(Id)
+				Value = Check.Checked
+			Case "choice"
+				Dim Selector As Spinner = Controls.Get(Id)
+				If Selector.SelectedIndex < 0 Then
+					ShowError("Select an option (" & Id & ")")
+					Return False
+				End If
+				Dim Values As List = ChoiceItems.Get(Id)
+				Value = Values.Get(Selector.SelectedIndex)
+			Case "multichoice"
+				Dim Checks As List = Controls.Get(Id)
+				Dim ItemValues As List = MultiValues.Get(Id)
+				Dim Selected As List
+				Selected.Initialize
+				For I = 0 To Checks.Size - 1
+					Dim Box As CheckBox = Checks.Get(I)
+					If Box.Checked Then Selected.Add(ItemValues.Get(I))
+				Next
+				Value = Selected
+			Case "slider"
+				Dim Bar As SeekBar = Controls.Get(Id)
+				Dim Minimum As Double = SliderMin.Get(Id)
+				Dim Maximum As Double = SliderMax.Get(Id)
+				Value = Minimum + (Maximum - Minimum) * (Bar.Value / 1000)
+			Case "file", "directory"
+				Continue
+		End Select
+		If Controller.SetDraftValue(Id, Value) = False Then
+			ShowError(Controller.LastError)
+			Return False
+		End If
+	Next
+	Dim Validation As String = Controller.ValidateDraft
+	If Validation <> "" Then
+		ShowError(Validation)
+		Return False
+	End If
+	If CallSub2(Callback, EventPrefix & "_BeforeSave", Controller.GetDraftValues) = False Then Return False
+	Controller.CommitDraft
+	CallSub2(Callback, EventPrefix & "_AfterSave", Controller.GetValues)
+	Return True
+End Sub
+
+' Discards the current draft edits.
+Public Sub Cancel
+	Controller.CancelDraft
+End Sub
+
+Private Sub ShowError(Message As String)
+	StatusLabel.Text = Message
+End Sub
+
+Private Sub SliderToPosition(Value As Object, Minimum As Double, Maximum As Double) As Int
+	Dim NumericValue As Double = Value
+	If Maximum = Minimum Then Return 0
+	Dim Position As Int = (NumericValue - Minimum) / (Maximum - Minimum) * 1000
+	If Position < 0 Then Position = 0
+	If Position > 1000 Then Position = 1000
+	Return Position
+End Sub

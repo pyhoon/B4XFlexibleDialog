@@ -41,7 +41,7 @@ The B4J model/controller and both renderers include multiline, password, checkbo
 
 ## M6 — B4A and B4i adapters — in progress
 
-The shared modules (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`) avoid JavaFX and compile unchanged on B4A (verified with B4ABuilder 14.20 through code, resource, and dex steps). A `PrefsSelfTest` class runs the core assertions without any UI, and a minimal B4A project reuses the same sources via relative module references and displays the result at startup. The B4A self-test reported `passed=29 failed=0` on device. The B4i project is prepared in the same shape but deferred until Mac/hosted builder access is available. Dialog/page renderers and native pickers remain B4J-only; see the README capability matrix. Do not claim cross-platform completion until B4A and B4i examples are compiled and exercised.
+The shared modules (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`) avoid JavaFX and compile unchanged on B4A (verified with B4ABuilder 14.20 through code, resource, and dex steps). A `PrefsSelfTest` class runs the core assertions without any UI, and a minimal B4A project reuses the same sources via relative module references and displays the result at startup. The B4A self-test reported `passed=29 failed=0` on device. A B4A `PrefsRenderer` renders the definition into a host panel with the same controller Save/Cancel semantics; it compiles but on-device form verification is pending. The B4i project is prepared in the same shape but deferred until Mac/hosted builder access is available. Do not claim cross-platform completion until B4A and B4i examples are compiled and exercised.
 
 ## M7 — Extensibility and release
 

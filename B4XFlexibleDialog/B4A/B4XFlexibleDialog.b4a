@@ -11,9 +11,10 @@ Module5=|relative|..\B4J\PrefsSelfTest
 Module6=|relative|..\B4J\PrefsStore
 Module7=|relative|..\B4J\PrefsTheme
 Module8=Starter
+Module9=PrefsRenderer
 NumberOfFiles=0
 NumberOfLibraries=2
-NumberOfModules=8
+NumberOfModules=9
 Version=14.2
 @EndOfDesignText@
 #Region Project Attributes 
@@ -43,21 +44,33 @@ Version=14.2
 #R8Optimizer: True
 #End If
 	
-' Shared-module validation for B4XFlexibleDialog.
-' Runs the platform-independent PrefsSelfTest at startup and shows the results.
-' No UI renderer is implemented on B4A yet.
+' B4A validation and renderer demo for B4XFlexibleDialog.
+' Runs the platform-independent PrefsSelfTest at startup, then offers a
+' rendered preferences form (text, number, switch, choice and more) with
+' Save/Cancel backed by the shared PrefsController.
 
 Sub Process_Globals
-
+	Private FormOpen As Boolean
 End Sub
 
 Sub Globals
 	Private ResultsLabel As Label
+	Private OpenButton As Button
+	Private Model As PrefsModel
+	Private Controller As PrefsController
+	Private Localization As PrefsLocalization
+	Private Renderer As PrefsRenderer
+	Private HostPanel As Panel
+	Private SaveButton As Button
+	Private CancelButton As Button
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
 	ResultsLabel.Initialize("")
-	Activity.AddView(ResultsLabel, 10dip, 10dip, 100%x - 20dip, 100%y - 20dip)
+	Activity.AddView(ResultsLabel, 10dip, 10dip, 100%x - 20dip, 100%y - 140dip)
+	OpenButton.Initialize("OpenButton")
+	OpenButton.Text = "Open preferences"
+	Activity.AddView(OpenButton, 10dip, 100%y - 120dip, 100%x - 20dip, 60dip)
 	Dim SelfTest As PrefsSelfTest
 	SelfTest.Initialize
 	Dim Outcome As Map = SelfTest.RunAll
@@ -66,6 +79,8 @@ Sub Activity_Create(FirstTime As Boolean)
 	Dim Report As String = "passed=" & Passed & " failed=" & Failed & CRLF & CRLF & Outcome.Get("log")
 	ResultsLabel.Text = Report
 	Log(Report)
+	LoadDefinition
+	FormOpen = False
 End Sub
 
 Sub Activity_Resume
@@ -74,4 +89,89 @@ End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)
 	
+End Sub
+
+Private Sub LoadDefinition
+	Dim EnDict As Map
+	EnDict.Initialize
+	EnDict.Put("settings.title", "Settings")
+	EnDict.Put("section.general", "General")
+	EnDict.Put("setting.username", "Username")
+	EnDict.Put("setting.items_per_page", "Items per page")
+	EnDict.Put("setting.dark_mode", "Dark mode")
+	EnDict.Put("setting.show_tips", "Show tips")
+	EnDict.Put("setting.display_mode", "Display mode")
+	EnDict.Put("display.compact", "Compact")
+	EnDict.Put("display.comfortable", "Comfortable")
+	EnDict.Put("setting.about", "About")
+	EnDict.Put("setting.api_key", "API key")
+	EnDict.Put("setting.notifications", "Notifications")
+	EnDict.Put("notification.email", "Email")
+	EnDict.Put("notification.push", "Push")
+	EnDict.Put("notification.weekly", "Weekly summary")
+	EnDict.Put("setting.font_scale", "Font scale")
+	EnDict.Put("setting.account_note", "Account information")
+	EnDict.Put("setting.account_note_description", "Changes are kept in memory only.")
+	EnDict.Put("setting.clear_cache", "Clear temporary cache")
+	Localization.Initialize
+	Localization.SetDictionary("en", EnDict)
+	Localization.SetLanguage("en")
+	Model.Initialize
+	If Model.LoadFromJson(DemoDefinition) = False Then
+		Log("Definition error: " & Model.LastError)
+		Return
+	End If
+	Controller.Initialize(Model)
+	Renderer.Initialize(Me, "Prefs", Model, Controller, Localization)
+End Sub
+
+Private Sub DemoDefinition As String
+	Return "{""schemaVersion"":1,""id"":""demo.settings"",""titleKey"":""settings.title"",""sections"":[{""id"":""general"",""titleKey"":""section.general"",""preferences"":[{""id"":""username"",""type"":""text"",""titleKey"":""setting.username"",""defaultValue"":""Guest"",""required"":true,""minLength"":3,""maxLength"":32},{""id"":""about"",""type"":""multiline"",""titleKey"":""setting.about"",""defaultValue"":"""",""maxLength"":120},{""id"":""api_key"",""type"":""password"",""titleKey"":""setting.api_key"",""defaultValue"":""""},{""id"":""items_per_page"",""type"":""number"",""titleKey"":""setting.items_per_page"",""defaultValue"":20,""options"":{""min"":5,""max"":200}},{""id"":""dark_mode"",""type"":""switch"",""titleKey"":""setting.dark_mode"",""defaultValue"":false},{""id"":""show_tips"",""type"":""checkbox"",""titleKey"":""setting.show_tips"",""defaultValue"":true},{""id"":""display_mode"",""type"":""choice"",""titleKey"":""setting.display_mode"",""defaultValue"":""compact"",""options"":{""items"":[{""value"":""compact"",""titleKey"":""display.compact""},{""value"":""comfortable"",""titleKey"":""display.comfortable""}]}},{""id"":""notifications"",""type"":""multichoice"",""titleKey"":""setting.notifications"",""defaultValue"":[""email""],""options"":{""items"":[{""value"":""email"",""titleKey"":""notification.email""},{""value"":""push"",""titleKey"":""notification.push""},{""value"":""weekly"",""titleKey"":""notification.weekly""}]}},{""id"":""font_scale"",""type"":""slider"",""titleKey"":""setting.font_scale"",""defaultValue"":1.0,""options"":{""min"":0.8,""max"":1.4}},{""id"":""account_note"",""type"":""label"",""titleKey"":""setting.account_note"",""descriptionKey"":""setting.account_note_description""},{""id"":""clear_cache"",""type"":""action"",""titleKey"":""setting.clear_cache""}]}]}"
+End Sub
+
+Sub OpenButton_Click
+	If FormOpen Then Return
+	FormOpen = True
+	HostPanel.Initialize("")
+	Activity.AddView(HostPanel, 0, 0, 100%x, 100%y - 140dip)
+	Renderer.Render(HostPanel)
+	SaveButton.Initialize("SaveButton")
+	SaveButton.Text = "Save"
+	Activity.AddView(SaveButton, 10dip, 100%y - 130dip, (100%x - 30dip) / 2, 60dip)
+	CancelButton.Initialize("CancelButton")
+	CancelButton.Text = "Cancel"
+	Activity.AddView(CancelButton, 20dip + (100%x - 30dip) / 2, 100%y - 130dip, (100%x - 30dip) / 2, 60dip)
+End Sub
+
+Sub SaveButton_Click
+	If Renderer.Save Then
+		Log("Saved values: " & Controller.GetValues)
+		CloseForm
+	Else
+		Log("Save blocked by validation")
+	End If
+End Sub
+
+Sub CancelButton_Click
+	Renderer.Cancel
+	CloseForm
+End Sub
+
+Private Sub CloseForm
+	FormOpen = False
+	HostPanel.RemoveView
+	SaveButton.RemoveView
+	CancelButton.RemoveView
+End Sub
+
+Sub Prefs_BeforeSave(Values As Map) As Boolean
+	Return True
+End Sub
+
+Sub Prefs_AfterSave(Values As Map)
+	Log("Saved values: " & Values)
+End Sub
+
+Sub Prefs_Action(PreferenceId As String)
+	Log("Action: " & PreferenceId)
 End Sub

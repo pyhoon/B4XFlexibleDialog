@@ -60,9 +60,9 @@ A ready-to-run consumer project is included at [`examples/B4JLibraryTest`](examp
 | --- | --- | --- | --- |
 | Model, controller, localization, theme, store | Implemented and verified | Verified: `PrefsSelfTest` 29/29 `passed=` on device | Deferred (Mac/hosted builder required) |
 | `.b4xlib` packaging | Implemented and verified | Not packaged | Not packaged |
-| Modal dialog renderer | Implemented and verified | Not implemented | Not implemented |
-| Embedded page renderer | Implemented and verified | Not implemented | Not implemented |
-| File/directory picker | Implemented and verified (JavaFX choosers) | Not implemented (see limitations) | Not implemented (see limitations) |
+| Modal dialog renderer | Implemented and verified | Implemented (`PrefsRenderer` activity form); on-device verification pending | Not implemented |
+| Embedded page renderer | Implemented and verified | Covered by the same activity form; dedicated page container pending | Not implemented |
+| File/directory picker | Implemented and verified (JavaFX choosers) | Not implemented (values render read-only; see limitations) | Not implemented (see limitations) |
 | Persistence | File-backed demo verified | Store API shared; app-owned path differs | Store API shared; app-owned path differs |
 
 The B4A validation project at `B4XFlexibleDialog/B4A` references the shared modules with relative paths (`Module=|relative|..\B4J\...`) and runs `PrefsSelfTest` at startup, showing `passed=`/`failed=` plus the full log. It reported `passed=29 failed=0` on device. It builds with:
@@ -76,8 +76,9 @@ The B4A validation project at `B4XFlexibleDialog/B4A` references the shared modu
 
 B4A/B4i notes and limitations:
 
-- The shared modules use only cross-platform keywords (`JSONParser`, `JSONGenerator`, `DateTime`, `Map`, `List`, `Asc`); no JavaFX references, so the same source compiles on B4A (verified) and is expected to compile on B4i (unverified).
-- `PrefsFileProvider` and the `PrefsDialog`/`PrefsPage` renderers are B4J-only. Android needs a Storage Access Framework / `ContentChooser` picker returning content URIs (no permanent path); iOS needs a document picker with security-scoped access. Neither is implemented.
+- The shared modules use only cross-platform keywords (`JSONParser`, `JSONGenerator`, `DateTime`, `Map`, `List`, `Asc`); no JavaFX references, so the same source compiles on B4A (verified) and is expected to compile on B4i (deferred).
+- The B4A `PrefsRenderer` class renders into a host `Panel` with a `ScrollView`: `EditText` (text/number/multiline/password), `CheckBox` (switch/checkbox), `Spinner` (choice), per-item `CheckBox` rows (multichoice), `EditText` with ISO hints (date/time/datetime), `SeekBar` (slider), `Label` (label), and `Button` (action, fires `<prefix>_Action`). File/directory values render read-only. Save validates the full draft and commits atomically; Cancel discards. The B4A demo wires the same `Prefs_BeforeSave` / `Prefs_AfterSave` / `Prefs_Action` callbacks. Class instances live in activity `Globals`, not `Process_Globals`.
+- The B4J-only `PrefsFileProvider` and `PrefsDialog`/`PrefsPage` renderers remain. Android needs a Storage Access Framework / `ContentChooser` picker returning content URIs (no permanent path); iOS needs a document picker with security-scoped access. Neither is implemented.
 - File/directory values must be treated as opaque strings or URIs; `copyToAppStorage` on B4J copies into `File.DirApp\prefs-files`, which has no B4A/B4i equivalent yet.
 - Persistence (`PrefsStore`) is platform code; only the storage location differs per platform (`File.DirApp` on B4J, app-internal dirs on B4A/B4i).
 - The B4i project at `B4XFlexibleDialog/B4i` is prepared but deferred: it cannot be compiled without a Mac/hosted builder.

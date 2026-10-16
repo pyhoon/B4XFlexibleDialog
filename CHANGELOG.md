@@ -12,6 +12,7 @@
 - Added `PrefsStore` persistence: map-backed storage, JSON import/export, unknown-key preservation, and auto-persist after commit/set/reset.
 - Added `file` and `directory` preference types with a `PrefsFileProvider`/`PrefsFileResult` picker abstraction, extension filters, optional Clear, and optional copy-to-app-storage.
 - Added a shared `PrefsSelfTest` class and B4A/B4i validation projects; the B4A project reuses the shared sources and compiles with B4ABuilder (runtime self-test pending on device).
+- Added a B4A activity-form renderer (`PrefsRenderer`) with the same controller Save/Cancel semantics; compiles with B4ABuilder (on-device verification pending).
 - Added a `.b4xlib` packaging script and generated `dist/B4XFlexibleDialog.b4xlib` (shared modules at root, B4J modules under `B4J/`).
 - Added startup assertions for the new value types and validation cases.
 
