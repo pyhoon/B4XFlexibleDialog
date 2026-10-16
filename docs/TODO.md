@@ -70,7 +70,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Allow an application-supplied picker via `SetCustomHandler` (no mandatory MediaChooser dependency).
 - [x] Document URI/path/access limitations and directory support.
 - [x] Verify Browse/Clear and extension filtering in both presentations (reported: paths populated in dialog and page).
-- [ ] Verify copy-to-app-storage with a real selection (enabled in the B4J demo definition; run and confirm the copy).
+- [x] Verify copy-to-app-storage with a real selection (reported: picked file copied under `prefs-files`, stored path points at the copy).
 
 ## M6 — B4A and B4i adapters — IN PROGRESS
 
