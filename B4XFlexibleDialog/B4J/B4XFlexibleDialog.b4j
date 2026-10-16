@@ -1,13 +1,15 @@
 ﻿AppType=JavaFX
 Build1=Default,b4j.example
-File1=en.json
-File2=ms.json
-File3=prefs.css
-File4=settings.json
+File1=b4x_materialicons.ttf
+File2=en.json
+File3=ms.json
+File4=prefs.css
+File5=settings.json
 FileGroup1=Default Group
 FileGroup2=Default Group
 FileGroup3=Default Group
 FileGroup4=Default Group
+FileGroup5=Default Group
 Group=Default Group
 Library1=jcore
 Library2=jfx
@@ -23,7 +25,7 @@ Module6=PrefsLocalization
 Module7=PrefsModel
 Module8=PrefsPage
 Module9=PrefsSelfTest
-NumberOfFiles=4
+NumberOfFiles=5
 NumberOfLibraries=3
 NumberOfModules=11
 Version=10.7
@@ -48,6 +50,7 @@ Sub Process_Globals
 	Private PageShown As Boolean
 	Private Store As PrefsStore
 	Private StoreFileName As String = "prefs-store.json"
+	Private StarFont As Font
 End Sub
 
 Sub AppStart (Form1 As Form, Args() As String)
@@ -207,8 +210,8 @@ Private Sub Prefs_Action(PreferenceId As String)
 	Log("Action preference activated: " & PreferenceId)
 End Sub
 
-' Sample custom renderer: a 1-5 rating row. Demonstrates the full lifecycle
-' contract documented on RegisterCustomRenderer.
+' Sample custom renderer: a 1-5 star rating row using MaterialIcons glyphs.
+' Demonstrates the full lifecycle contract documented on RegisterCustomRenderer.
 Private Sub Rating_Create(Args As Map) As Object
 	Dim Parent As Pane = Args.Get("parent")
 	Dim Left As Double = Args.Get("left")
@@ -216,25 +219,25 @@ Private Sub Rating_Create(Args As Map) As Object
 	Dim Width As Double = Args.Get("width")
 	Dim Height As Double = Args.Get("height")
 	Dim Value As Int = Args.Get("value")
+	If StarFont.IsInitialized = False Then StarFont = fx.LoadFont(File.DirAssets, "b4x_materialicons.ttf", 24)
 	Dim Buttons As List
 	Buttons.Initialize
 	Dim Handle As Map
 	Handle.Initialize
 	Handle.Put("buttons", Buttons)
 	Handle.Put("value", Value)
-	Dim ButtonWidth As Double = Width / 5
+	Dim StarWidth As Double = Width / 5
 	For I = 1 To 5
-		Dim B As Button
-		B.Initialize("ratingStar")
+		Dim Star As Label
+		Star.Initialize("ratingStar")
 		Dim Tag As Map
 		Tag.Initialize
 		Tag.Put("handle", Handle)
 		Tag.Put("index", I)
-		B.Tag = Tag
-		B.Text = I
-		B.TextSize = 16
-		Parent.AddNode(B, Left + (I - 1) * ButtonWidth, Top, ButtonWidth - 4, Height)
-		Buttons.Add(B)
+		Star.Tag = Tag
+		Star.Font = StarFont
+		Parent.AddNode(Star, Left + (I - 1) * StarWidth, Top, StarWidth, Height)
+		Buttons.Add(Star)
 	Next
 	Rating_Paint(Handle)
 	Return Handle
@@ -265,25 +268,25 @@ End Sub
 Private Sub Rating_Dispose(Handle As Object)
 	Dim H As Map = Handle
 	Dim Buttons As List = H.Get("buttons")
-	For Each B As Button In Buttons
-		B.RemoveNodeFromParent
+	For Each Star As Label In Buttons
+		Star.RemoveNodeFromParent
 	Next
 End Sub
 
 Private Sub Rating_Paint(Handle As Map)
 	Dim T As PrefsTheme = Prefs.GetTheme
-	Dim Accent As String = ThemeCss(T.AccentColor)
-	Dim OnText As String = ThemeCss(T.PrimaryButtonTextColor)
-	Dim OffBg As String = ThemeCss(T.SecondaryButtonBackgroundColor)
-	Dim OffText As String = ThemeCss(T.SecondaryButtonTextColor)
+	Dim OnText As String = ThemeCss(T.AccentColor)
+	Dim OffText As String = ThemeCss(T.SecondaryTextColor)
 	Dim Buttons As List = Handle.Get("buttons")
 	Dim Value As Int = Handle.Get("value")
 	For I = 0 To Buttons.Size - 1
-		Dim B As Button = Buttons.Get(I)
+		Dim Star As Label = Buttons.Get(I)
 		If I < Value Then
-			B.Style = "-fx-background-color: " & Accent & "; -fx-text-fill: " & OnText & "; -fx-font-weight: bold; -fx-background-radius: 4;"
+			Star.Text = Chr(0xE838)
+			Star.Style = "-fx-background-color: transparent; -fx-text-fill: " & OnText & ";"
 		Else
-			B.Style = "-fx-background-color: " & OffBg & "; -fx-text-fill: " & OffText & "; -fx-background-radius: 4;"
+			Star.Text = Chr(0xE83A)
+			Star.Style = "-fx-background-color: transparent; -fx-text-fill: " & OffText & ";"
 		End If
 	Next
 End Sub
@@ -295,9 +298,9 @@ Private Sub ThemeCss(Color As Int) As String
 	Return "rgb(" & R & "," & G & "," & B & ")"
 End Sub
 
-Private Sub ratingStar_Click
-	Dim B As Button = Sender
-	Dim Tag As Map = B.Tag
+Private Sub ratingStar_MouseClicked (EventData As MouseEvent)
+	Dim Star As Label = Sender
+	Dim Tag As Map = Star.Tag
 	Dim Handle As Map = Tag.Get("handle")
 	Handle.Put("value", Tag.Get("index"))
 	Rating_Paint(Handle)
