@@ -220,7 +220,7 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Values restored after application restart | **PASS** (B4J reported `Restored 12 value(s)`; B4A reported `Restored 11 value(s)` after relaunch) |
 | Packaged `.b4xlib` compiles and runs from a fresh B4J project | **PASS** (reported) |
 | `custom` definition validation (missing options/renderer rejected) | **Included; run in demo on startup** |
-| Custom renderer lifecycle (create/read/validate/refresh/dispose) in dialog and page | **B4J build verified; GUI test pending** |
+| Custom renderer lifecycle (create/read/validate/refresh/dispose) in dialog and page | **PASS** (reported GUI test) |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
 | Page mounting/resizing, Save/Cancel, repeated dispose/remount, localization/theme refresh | **PASS** (reported GUI test) |
