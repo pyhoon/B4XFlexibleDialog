@@ -5,9 +5,10 @@ B4A and B4i from a single shared page. The shared `B4XMainPage` owns the whole
 demo: it builds its UI with cross-platform views, wires up the library (the B4J
 facade in-process, or the B4A/B4i `PrefsRenderer`), persists values and hosts the
 sample `RatingStars` custom renderer. On B4J a button opens the modal dialog
-(`Prefs.Show`) alongside the embedded page (`Prefs.CreatePage`); on B4A/B4i the
-renderer has no built-in chrome, so the page provides Save/Cancel and renders the
-form into a host panel. Values persist locally and are restored on launch.
+(`Prefs.Show`) alongside the embedded page (`Prefs.CreatePage`); on B4A a button
+opens the same form in a modal overlay with Save/Cancel, next to the inline page.
+B4i has no renderer yet, so the page just provides Save/Cancel for the hosted
+panel. Values persist locally and are restored on launch.
 
 The page is the only module in the project (`B4XMainPage.bas`), so a page class
 never reaches into an Activity module (B4A forbids that), and no view-typed class
@@ -44,7 +45,7 @@ the shared page compiles on B4i while the real renderer is pending.
 ## What to look for
 
 - B4J: the page shows the settings form inline on the right; the dialog button opens the modal form.
-- B4A: the page hosts the same form with Save/Cancel buttons above it.
+- B4A: the page hosts the same form with Save/Cancel buttons above it; the dialog button opens it in a modal overlay with its own Save/Cancel.
 - Both presentations share committed values: Save in one and the other reflects it.
 - Edit values and Save; close and relaunch: values are restored from the local store file.
 - The `satisfaction` row is a custom star-rating renderer (`Rating_*` subs in `B4XMainPage`).

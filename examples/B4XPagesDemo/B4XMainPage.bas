@@ -12,9 +12,12 @@ Version=9.85
 ' events and for the sample RatingStars custom renderer.
 '
 ' Platform notes:
-'  - B4J: the facade needs the owner Form, obtained with B4XPages.GetNativeParent.
-'  - B4A/B4i: the renderer has no built-in Save/Cancel chrome, so the page
-'    provides those buttons.
+'  - B4J: the facade needs the owner Form, obtained with B4XPages.GetNativeParent;
+'    a button opens the modal dialog next to the embedded page.
+'  - B4A: a button opens the same form in a modal overlay with Save/Cancel, in
+'    addition to the inline page (the renderer has no built-in chrome).
+'  - B4i: the renderer has no built-in Save/Cancel chrome, so the page provides
+'    those buttons (no dialog).
 
 Sub Class_Globals
 	Private Root As B4XView
@@ -38,6 +41,17 @@ Sub Class_Globals
 	Private Localization As PrefsLocalization
 	Private Model As PrefsModel
 	Private Controller As PrefsController
+	#If B4A
+	Private OpenDialogButton As Button
+	Private DialogOverlay As B4XView
+	Private DialogCard As B4XView
+	Private DialogHost As B4XView
+	Private DialogTitle As Label
+	Private DialogSaveButton As Button
+	Private DialogCancelButton As Button
+	Private DialogRenderer As PrefsRenderer
+	Private DialogOpen As Boolean
+	#End If
 	#End If
 End Sub
 
@@ -70,10 +84,16 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	CancelButton.Initialize("CancelButton")
 	CancelButton.Text = "Cancel"
 	Root.AddView(CancelButton, 175dip, 64dip, 145dip, 44dip)
+	OpenDialogButton.Initialize("OpenDialogButton")
+	OpenDialogButton.Text = "Open preferences dialog"
+	Root.AddView(OpenDialogButton, 20dip, 116dip, 300dip, 44dip)
 	#End If
 
 	CreatePageHost
 	Root.AddView(PageHost, 340dip, 16dip, Max(200dip, Root.Width - 360dip), Max(240dip, Root.Height - 32dip))
+	#If B4A
+	CreateDialog
+	#End If
 	PageHostReady = True
 	Setup
 End Sub
@@ -81,6 +101,9 @@ End Sub
 ' Keeps the hosted page filling the right-hand side as the page is resized.
 Private Sub B4XPage_Resize (Width As Int, Height As Int)
 	If PageHostReady Then PageHost.SetLayoutAnimated(0, 340dip, 16dip, Max(200dip, Root.Width - 360dip), Max(240dip, Root.Height - 32dip))
+	#If B4A
+	If DialogOpen Then LayoutDialog
+	#End If
 End Sub
 
 Private Sub CreatePageHost
@@ -190,11 +213,13 @@ End Sub
 
 ' Called by the Save button; the B4A/B4i renderer has no built-in chrome.
 Public Sub SavePrefs
-	If Renderer.Save Then
-		Store.Save(Controller.GetValues)
-		File.WriteString(StoreDirectory, StoreFileName, Store.ToJson)
-		Log("Saved values: " & Controller.GetValues)
-	End If
+	If Renderer.Save Then CommitValues
+End Sub
+
+Private Sub CommitValues
+	Store.Save(Controller.GetValues)
+	File.WriteString(StoreDirectory, StoreFileName, Store.ToJson)
+	Log("Saved values: " & Controller.GetValues)
 End Sub
 
 Public Sub CancelPrefs
@@ -206,6 +231,12 @@ Sub Prefs_BrowseDirectory (Id As String)
 End Sub
 
 Sub DirPicker_DirectoryPicked (Uri As String)
+	#If B4A
+	If DialogOpen Then
+		DialogRenderer.SetDirectoryValue(Uri)
+		Return
+	End If
+	#End If
 	Renderer.SetDirectoryValue(Uri)
 End Sub
 
@@ -361,3 +392,97 @@ Private Sub Rating_StarClicked (StarObject As Object)
 	Handle.Put("value", Tag.Get("index"))
 	Rating_Paint(Handle)
 End Sub
+
+#If B4A
+' Builds the hidden modal overlay used by the "Open preferences dialog" button.
+' It mirrors the B4J dialog presentation alongside the inline hosted form: a dark
+' scrim over the page, a white card with the same form the renderer paints, and
+' Save/Cancel buttons (the B4A renderer has no built-in chrome).
+Private Sub CreateDialog
+	DialogOverlay = xui.CreatePanel("dialogOverlay")
+	DialogOverlay.Color = Colors.ARGB(150, 0, 0, 0)
+	Root.AddView(DialogOverlay, 0, 0, Root.Width, Root.Height)
+
+	DialogCard = xui.CreatePanel("dialogCard")
+	DialogCard.Color = Colors.White
+	DialogOverlay.AddView(DialogCard, 0, 0, 100dip, 100dip)
+
+	DialogTitle.Initialize("")
+	DialogTitle.Text = "Preferences"
+	DialogTitle.TextSize = 20
+	DialogTitle.TextColor = Colors.DarkGray
+	DialogCard.AddView(DialogTitle, 0, 0, 100dip, 40dip)
+
+	DialogHost = xui.CreatePanel("dialogHost")
+	DialogCard.AddView(DialogHost, 0, 0, 100dip, 100dip)
+
+	DialogSaveButton.Initialize("DialogSaveButton")
+	DialogSaveButton.Text = "Save"
+	DialogCard.AddView(DialogSaveButton, 0, 0, 140dip, 48dip)
+
+	DialogCancelButton.Initialize("DialogCancelButton")
+	DialogCancelButton.Text = "Cancel"
+	DialogCard.AddView(DialogCancelButton, 0, 0, 140dip, 48dip)
+
+	DialogOverlay.Visible = False
+	LayoutDialog
+End Sub
+
+' Empty handlers keep taps on the scrim/card from reaching the page behind them.
+Private Sub dialogOverlay_Click
+End Sub
+
+Private Sub dialogCard_Click
+End Sub
+
+Private Sub LayoutDialog
+	If DialogOverlay = Null Then Return
+	Dim Pad As Int = 16dip
+	Dim TitleHeight As Int = 44dip
+	Dim ButtonHeight As Int = 48dip
+	Dim CardWidth As Int = Min(560dip, Root.Width - 40dip)
+	Dim CardHeight As Int = Min(640dip, Root.Height - 60dip)
+	Dim CardLeft As Int = (Root.Width - CardWidth) / 2
+	Dim CardTop As Int = (Root.Height - CardHeight) / 2
+	DialogOverlay.SetLayoutAnimated(0, 0, 0, Root.Width, Root.Height)
+	DialogCard.SetLayoutAnimated(0, CardLeft, CardTop, CardWidth, CardHeight)
+	DialogTitle.SetLayoutAnimated(0, CardLeft + Pad, CardTop + Pad, CardWidth - Pad * 2, TitleHeight)
+	Dim HostTop As Int = CardTop + Pad + TitleHeight
+	Dim HostHeight As Int = CardHeight - Pad * 3 - TitleHeight - ButtonHeight
+	DialogHost.SetLayoutAnimated(0, CardLeft + Pad, HostTop, CardWidth - Pad * 2, HostHeight)
+	Dim ButtonWidth As Int = 140dip
+	Dim ButtonTop As Int = CardTop + CardHeight - Pad - ButtonHeight
+	DialogCancelButton.SetLayoutAnimated(0, CardLeft + CardWidth - Pad - ButtonWidth, ButtonTop, ButtonWidth, ButtonHeight)
+	DialogSaveButton.SetLayoutAnimated(0, CardLeft + CardWidth - Pad - ButtonWidth * 2 - 12dip, ButtonTop, ButtonWidth, ButtonHeight)
+End Sub
+
+Private Sub OpenDialogButton_Click
+	If DialogOpen Then Return
+	DialogRenderer.Initialize(Me, "Prefs", Model, Controller, Localization)
+	DialogRenderer.RegisterCustomRenderer("RatingStars", Me, "Rating")
+	DialogOpen = True
+	LayoutDialog
+	DialogRenderer.Render(DialogHost)
+	DialogOverlay.Visible = True
+	DialogOverlay.BringToFront
+End Sub
+
+Private Sub DialogSaveButton_Click
+	If DialogRenderer.Save Then
+		CommitValues
+		HideDialog
+	End If
+End Sub
+
+Private Sub DialogCancelButton_Click
+	DialogRenderer.Cancel
+	HideDialog
+End Sub
+
+Private Sub HideDialog
+	DialogOverlay.Visible = False
+	DialogRenderer.Dispose
+	DialogOpen = False
+	Renderer.Render(PageHost)
+End Sub
+#End If
