@@ -64,6 +64,8 @@ Sub Globals
 	Private Localization As PrefsLocalization
 	Private Renderer As PrefsRenderer
 	Private DirPicker As PrefsDirPicker
+	Private Store As PrefsStore
+	Private StoreFileName As String = "prefs-values.json"
 	Private HostPanel As Panel
 	Private SaveButton As Button
 	Private CancelButton As Button
@@ -131,6 +133,15 @@ Private Sub LoadDefinition
 	Controller.Initialize(Model)
 	Renderer.Initialize(Me, "Prefs", Model, Controller, Localization)
 	DirPicker.Initialize(Me, "DirPicker")
+	Store.Initialize
+	If File.Exists(File.DirInternal, StoreFileName) Then
+		If Store.FromJson(File.ReadString(File.DirInternal, StoreFileName)) Then
+			Dim Restored As Int = Controller.ApplyValues(Store.Load)
+			Log("Restored " & Restored & " value(s) from " & StoreFileName)
+		Else
+			Log("Stored values file could not be parsed: " & StoreFileName)
+		End If
+	End If
 End Sub
 
 Private Sub DemoDefinition As String
@@ -180,6 +191,8 @@ End Sub
 
 Sub Prefs_AfterSave(Values As Map)
 	Log("Saved values: " & Values)
+	Store.Save(Values)
+	File.WriteString(File.DirInternal, StoreFileName, Store.ToJson)
 End Sub
 
 Sub Prefs_Action(PreferenceId As String)
