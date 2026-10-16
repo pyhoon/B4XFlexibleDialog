@@ -30,6 +30,7 @@ Sub Class_Globals
 	Private FilePicker As ContentChooser
 	Private PendingFileId As String
 	Private PendingCopy As Boolean
+	Private PendingDirId As String
 	Private RowTop As Int
 End Sub
 
@@ -42,6 +43,7 @@ Public Sub Initialize(Target As Object, EventName As String, Definition As Prefs
 	FilePicker.Initialize("prefscc")
 	PendingFileId = ""
 	PendingCopy = False
+	PendingDirId = ""
 End Sub
 
 ' Builds the form inside Parent, replacing any previous content.
@@ -252,14 +254,38 @@ Private Sub AddPreference(Pref As Map, ContentWidth As Int)
 		Form.Panel.AddView(BrowseButton, 16dip + ContentWidth - 94dip, RowTop, 94dip, 52dip)
 		RowTop = RowTop + 60dip
 	Else If TypeName = "directory" Then
-		Dim PathLabel As Label
-		PathLabel.Initialize("")
-		PathLabel.TextSize = 14
-		PathLabel.Text = Controller.GetValue(Id)
-		Form.Panel.AddView(PathLabel, 16dip, RowTop, ContentWidth, 52dip)
+		Dim DirField As EditText
+		DirField.Initialize("")
+		DirField.TextSize = 14
+		DirField.SingleLine = True
+		DirField.Enabled = False
+		DirField.Text = Controller.GetValue(Id)
+		Form.Panel.AddView(DirField, 16dip, RowTop, ContentWidth - 110dip, 52dip)
+		Controls.Put(Id, DirField)
+		Dim DirBrowse As Button
+		DirBrowse.Initialize("prefsbrowsedir")
+		DirBrowse.Tag = Id
+		DirBrowse.Text = Localization.Text("ui.browse")
+		DirBrowse.TextSize = 16
+		Form.Panel.AddView(DirBrowse, 16dip + ContentWidth - 94dip, RowTop, 94dip, 52dip)
 		RowTop = RowTop + 60dip
 	End If
 	ControlTypes.Put(Id, TypeName)
+End Sub
+
+Private Sub prefsbrowsedir_Click
+	Dim Source As Button = Sender
+	PendingDirId = Source.Tag
+	CallSub2(Callback, EventPrefix & "_BrowseDirectory", PendingDirId)
+End Sub
+
+' Called by the host activity after an Android directory pick completes.
+' Stores the tree URI in the pending field; Save commits it like any value.
+Public Sub SetDirectoryValue(Uri As String)
+	If PendingDirId = "" Then Return
+	Dim Field As EditText = Controls.Get(PendingDirId)
+	Field.Text = Uri
+	PendingDirId = ""
 End Sub
 
 Private Sub prefsbrowse_Click
@@ -422,11 +448,9 @@ Public Sub Save As Boolean
 				Dim Minimum As Double = SliderMin.Get(Id)
 				Dim Maximum As Double = SliderMax.Get(Id)
 				Value = Minimum + (Maximum - Minimum) * (Bar.Value / 1000)
-			Case "file"
+			Case "file", "directory"
 				Dim PathField As EditText = Controls.Get(Id)
 				Value = PathField.Text
-			Case "directory"
-				Continue
 		End Select
 		If Controller.SetDraftValue(Id, Value) = False Then
 			ShowError(Controller.LastError)

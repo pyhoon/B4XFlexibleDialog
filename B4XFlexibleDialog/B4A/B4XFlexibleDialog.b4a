@@ -3,6 +3,8 @@ Group=Default Group
 Library1=core
 Library2=json
 Library3=phone
+Library4=externalstorage
+Library5=javaobject
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
 Module1=|relative|..\B4J\PrefsController
 Module2=|relative|..\B4J\PrefsFileResult
@@ -14,7 +16,7 @@ Module7=|relative|..\B4J\PrefsStore
 Module8=|relative|..\B4J\PrefsTheme
 Module9=Starter
 NumberOfFiles=0
-NumberOfLibraries=3
+NumberOfLibraries=5
 NumberOfModules=9
 Version=14.2
 @EndOfDesignText@
@@ -61,6 +63,7 @@ Sub Globals
 	Private Controller As PrefsController
 	Private Localization As PrefsLocalization
 	Private Renderer As PrefsRenderer
+	Private DirStorage As ExternalStorage
 	Private HostPanel As Panel
 	Private SaveButton As Button
 	Private CancelButton As Button
@@ -112,6 +115,7 @@ Private Sub LoadDefinition
 	EnDict.Put("notification.weekly", "Weekly summary")
 	EnDict.Put("setting.font_scale", "Font scale")
 	EnDict.Put("setting.company_logo", "Company logo")
+	EnDict.Put("setting.export_folder", "Export folder")
 	EnDict.Put("ui.browse", "Browse")
 	EnDict.Put("setting.account_note", "Account information")
 	EnDict.Put("setting.account_note_description", "Changes are kept in memory only.")
@@ -126,10 +130,11 @@ Private Sub LoadDefinition
 	End If
 	Controller.Initialize(Model)
 	Renderer.Initialize(Me, "Prefs", Model, Controller, Localization)
+	DirStorage.Initialize(Me, "DirStorage")
 End Sub
 
 Private Sub DemoDefinition As String
-	Return "{""schemaVersion"":1,""id"":""demo.settings"",""titleKey"":""settings.title"",""sections"":[{""id"":""general"",""titleKey"":""section.general"",""preferences"":[{""id"":""username"",""type"":""text"",""titleKey"":""setting.username"",""defaultValue"":""Guest"",""required"":true,""minLength"":3,""maxLength"":32},{""id"":""about"",""type"":""multiline"",""titleKey"":""setting.about"",""defaultValue"":"""",""maxLength"":120},{""id"":""api_key"",""type"":""password"",""titleKey"":""setting.api_key"",""defaultValue"":""""},{""id"":""items_per_page"",""type"":""number"",""titleKey"":""setting.items_per_page"",""defaultValue"":20,""options"":{""min"":5,""max"":200}},{""id"":""dark_mode"",""type"":""switch"",""titleKey"":""setting.dark_mode"",""defaultValue"":false},{""id"":""show_tips"",""type"":""checkbox"",""titleKey"":""setting.show_tips"",""defaultValue"":true},{""id"":""display_mode"",""type"":""choice"",""titleKey"":""setting.display_mode"",""defaultValue"":""compact"",""options"":{""items"":[{""value"":""compact"",""titleKey"":""display.compact""},{""value"":""comfortable"",""titleKey"":""display.comfortable""}]}},{""id"":""notifications"",""type"":""multichoice"",""titleKey"":""setting.notifications"",""defaultValue"":[""email""],""options"":{""items"":[{""value"":""email"",""titleKey"":""notification.email""},{""value"":""push"",""titleKey"":""notification.push""},{""value"":""weekly"",""titleKey"":""notification.weekly""}]}},{""id"":""font_scale"",""type"":""slider"",""titleKey"":""setting.font_scale"",""defaultValue"":1.0,""options"":{""min"":0.8,""max"":1.4}},{""id"":""company_logo"",""type"":""file"",""titleKey"":""setting.company_logo"",""defaultValue"":"""",""options"":{""extensions"":[""png"",""jpg"",""jpeg"",""webp""],""allowClear"":true,""copyToAppStorage"":true}},{""id"":""account_note"",""type"":""label"",""titleKey"":""setting.account_note"",""descriptionKey"":""setting.account_note_description""},{""id"":""clear_cache"",""type"":""action"",""titleKey"":""setting.clear_cache""}]}]}"
+	Return "{""schemaVersion"":1,""id"":""demo.settings"",""titleKey"":""settings.title"",""sections"":[{""id"":""general"",""titleKey"":""section.general"",""preferences"":[{""id"":""username"",""type"":""text"",""titleKey"":""setting.username"",""defaultValue"":""Guest"",""required"":true,""minLength"":3,""maxLength"":32},{""id"":""about"",""type"":""multiline"",""titleKey"":""setting.about"",""defaultValue"":"""",""maxLength"":120},{""id"":""api_key"",""type"":""password"",""titleKey"":""setting.api_key"",""defaultValue"":""""},{""id"":""items_per_page"",""type"":""number"",""titleKey"":""setting.items_per_page"",""defaultValue"":20,""options"":{""min"":5,""max"":200}},{""id"":""dark_mode"",""type"":""switch"",""titleKey"":""setting.dark_mode"",""defaultValue"":false},{""id"":""show_tips"",""type"":""checkbox"",""titleKey"":""setting.show_tips"",""defaultValue"":true},{""id"":""display_mode"",""type"":""choice"",""titleKey"":""setting.display_mode"",""defaultValue"":""compact"",""options"":{""items"":[{""value"":""compact"",""titleKey"":""display.compact""},{""value"":""comfortable"",""titleKey"":""display.comfortable""}]}},{""id"":""notifications"",""type"":""multichoice"",""titleKey"":""setting.notifications"",""defaultValue"":[""email""],""options"":{""items"":[{""value"":""email"",""titleKey"":""notification.email""},{""value"":""push"",""titleKey"":""notification.push""},{""value"":""weekly"",""titleKey"":""notification.weekly""}]}},{""id"":""font_scale"",""type"":""slider"",""titleKey"":""setting.font_scale"",""defaultValue"":1.0,""options"":{""min"":0.8,""max"":1.4}},{""id"":""company_logo"",""type"":""file"",""titleKey"":""setting.company_logo"",""defaultValue"":"""",""options"":{""extensions"":[""png"",""jpg"",""jpeg"",""webp""],""allowClear"":true,""copyToAppStorage"":true}},{""id"":""export_folder"",""type"":""directory"",""titleKey"":""setting.export_folder"",""defaultValue"":"""",""options"":{""allowClear"":true}},{""id"":""account_note"",""type"":""label"",""titleKey"":""setting.account_note"",""descriptionKey"":""setting.account_note_description""},{""id"":""clear_cache"",""type"":""action"",""titleKey"":""setting.clear_cache""}]}]}"
 End Sub
 
 Sub OpenButton_Click
@@ -179,4 +184,14 @@ End Sub
 
 Sub Prefs_Action(PreferenceId As String)
 	Log("Action: " & PreferenceId)
+End Sub
+
+Sub Prefs_BrowseDirectory(Id As String)
+	DirStorage.SelectDir(True)
+End Sub
+
+Sub DirStorage_ExternalFolderAvailable
+	Dim Uri As String = File.ReadString(File.DirInternal, DirStorage.PreviousUriFileName)
+	Log("Picked directory: " & Uri)
+	Renderer.SetDirectoryValue(Uri)
 End Sub
