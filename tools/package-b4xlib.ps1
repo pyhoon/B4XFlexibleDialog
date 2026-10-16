@@ -70,7 +70,7 @@ try {
     if (-not (Test-Path -LiteralPath $css)) { throw "Missing asset: $css" }
     Copy-Item -LiteralPath $css -Destination (Join-Path $stage 'Files') -Force
 
-    $manifest = "Version=$Version`r`nB4J.DependsOn=jFX, Json, jXUI`r`nB4A.DependsOn=Core, Phone, XUI, JavaObject`r`n"
+    $manifest = "Version=$Version`r`nB4J.DependsOn=Json, jXUI`r`nB4A.DependsOn=Phone, XUI, JavaObject`r`n"
     Set-Content -LiteralPath (Join-Path $stage 'manifest.txt') -Value $manifest -NoNewline -Encoding Ascii
 
     if (-not (Test-Path -LiteralPath $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir | Out-Null }
