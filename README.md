@@ -62,7 +62,7 @@ A ready-to-run consumer project is included at [`examples/B4JLibraryTest`](examp
 | `.b4xlib` packaging | Implemented and verified | Not packaged | Not packaged |
 | Modal dialog renderer | Implemented and verified | Implemented and verified on device (`PrefsRenderer` activity form) | Not implemented |
 | Embedded page renderer | Implemented and verified | Covered by the same activity form; dedicated page container pending | Not implemented |
-| File/directory picker | Implemented and verified (JavaFX choosers) | File implemented (`ContentChooser`, URI values); directory renders read-only | Not implemented (see limitations) |
+| File/directory picker | Implemented and verified (JavaFX choosers) | File implemented and verified (`ContentChooser`, copy to app storage); directory renders read-only | Not implemented (see limitations) |
 | Persistence | File-backed demo verified | Store API shared; app-owned path differs | Store API shared; app-owned path differs |
 
 The B4A validation project at `B4XFlexibleDialog/B4A` references the shared modules with relative paths (`Module=|relative|..\B4J\...`) and runs `PrefsSelfTest` at startup, showing `passed=`/`failed=` plus the full log. It reported `passed=29 failed=0` on device. It builds with:

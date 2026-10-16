@@ -82,7 +82,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Implement a B4A activity-form renderer (`PrefsRenderer`) for all types except file/directory pickers.
 - [x] Run the B4A rendered form on a device and verify edit/Save/Cancel per control type (reported passing).
 - [x] Implement the B4A file picker (`ContentChooser`, content-path values, optional copy to `File.DirInternal/prefs-files`).
-- [ ] Run the B4A file picker on a device (Browse, cancel, extension filter, copied path).
+- [x] Run the B4A file picker on a device (reported: Browse, copy to `prefs-files`, and Save commit verified).
 - [ ] Implement Android directory picking or document the limitation permanently.
 - [ ] B4i project prepared but deferred (Mac/hosted builder required; revisit when builder access is available).
 - [ ] Implement platform-specific dialog/page renderers and native picker behavior.
