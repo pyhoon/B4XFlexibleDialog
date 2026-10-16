@@ -84,7 +84,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Implement the B4A file picker (`ContentChooser`, content-path values, optional copy to `File.DirInternal/prefs-files`).
 - [x] Run the B4A file picker on a device (reported: Browse, copy to `prefs-files`, and Save commit verified).
 - [x] Implement Android directory picking via `ExternalStorage` (persistable tree URIs, host-mediated callback).
-- [ ] Run the B4A directory picker on a device (Browse, grant persistence, Save, relaunch restore).
+- [x] Run the B4A directory picker on a device (reported: folder switching, tree-URI Save commit verified).
 - [ ] B4i project prepared but deferred (Mac/hosted builder required; revisit when builder access is available).
 - [ ] Implement platform-specific dialog/page renderers and native picker behavior.
 - [x] Start a capability matrix in the README; keep extending it as platforms are verified.
