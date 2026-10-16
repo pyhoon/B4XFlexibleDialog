@@ -17,6 +17,7 @@ Sub Class_Globals
 	Private PageActive As Boolean
 	Private PageStylesheetAdded As Boolean
 	Private FileProvider As PrefsFileProvider
+	Private CustomRenderers As Map
 	Private Ready As Boolean
 	Public LastError As String
 End Sub
@@ -30,6 +31,7 @@ Public Sub Initialize(EventTarget As Object, EventName As String, Owner As Form)
 	Localization.Initialize
 	CurrentTheme.Initialize(False)
 	FileProvider.Initialize(OwnerForm)
+	CustomRenderers.Initialize
 	Ready = False
 	LastError = ""
 End Sub
@@ -40,6 +42,28 @@ End Sub
 
 Public Sub GetFileProvider As PrefsFileProvider
 	Return FileProvider
+End Sub
+
+' Registers a custom renderer for "custom" preferences. Name must match the
+' options.renderer value in the definition. Target is the module hosting the
+' lifecycle subs (class instances are not supported as the target); EventName
+' is their prefix. Required lifecycle subs, where <E> is the event name:
+'   <E>_Create(Args As Map) As Object
+'   <E>_Read(Handle As Object, Definition As Map) As Object
+'   <E>_Validate(Value As Object, Definition As Map) As String
+'   <E>_Refresh(Handle As Object, Args As Map)
+'   <E>_Dispose(Handle As Object)
+Public Sub RegisterCustomRenderer(Name As String, Target As Object, EventName As String)
+	Dim Entry As Map
+	Entry.Initialize
+	Entry.Put("target", Target)
+	Entry.Put("event", EventName)
+	CustomRenderers.Put(Name, Entry)
+End Sub
+
+Public Sub GetCustomRenderer(Name As String) As Map
+	If CustomRenderers.ContainsKey(Name) Then Return CustomRenderers.Get(Name)
+	Return Null
 End Sub
 
 Public Sub LoadDefinition(DefinitionJson As String) As Boolean
@@ -183,7 +207,7 @@ Public Sub Show
 	End If
 	If PageActive Then ActivePage.RefreshValues
 	Dim Dialog As PrefsDialog
-	Dialog.Initialize(OwnerForm, Controller, Model, Localization, CurrentTheme, FileProvider, Callback, EventPrefix)
+	Dialog.Initialize(OwnerForm, Controller, Model, Localization, CurrentTheme, FileProvider, CustomRenderers, Callback, EventPrefix)
 	Dim WasSaved As Boolean = Dialog.Show
 	If PageActive Then ActivePage.RefreshValues
 	CallSub2(Callback, EventPrefix & "_DialogClosed", WasSaved)
@@ -200,7 +224,7 @@ Public Sub CreatePage(Container As AnchorPane)
 		If OwnerForm.Stylesheets.IndexOf(CssUri) = -1 Then OwnerForm.Stylesheets.Add(CssUri)
 		PageStylesheetAdded = True
 	End If
-	ActivePage.Initialize(Container, Controller, Model, Localization, CurrentTheme, FileProvider, Callback, EventPrefix)
+	ActivePage.Initialize(Container, Controller, Model, Localization, CurrentTheme, FileProvider, CustomRenderers, Callback, EventPrefix)
 	PageActive = True
 End Sub
 

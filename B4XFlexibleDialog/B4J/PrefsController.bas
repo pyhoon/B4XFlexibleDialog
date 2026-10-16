@@ -157,6 +157,9 @@ Public Sub ValidateValue(Id As String, Value As Object) As String
 	Select TypeName
 		Case "label", "action"
 			Return "Preference " & Id & " does not store a value."
+		Case "custom"
+			' Custom values are opaque to the controller; the registered
+			' renderer validates them at Save time. Anything goes here.
 		Case "text", "multiline", "password"
 			If IsStringObject(Value) = False Then Return "Preference " & Id & " must be text."
 			Dim TextValue As String = Value
@@ -276,9 +279,18 @@ Private Sub CopyValue(Value As Object) As Object
 		Dim ResultList As List
 		ResultList.Initialize
 		For Each Item As Object In SourceList
-			ResultList.Add(Item)
+			ResultList.Add(CopyValue(Item))
 		Next
 		Return ResultList
+	End If
+	If IsMapObject(Value) Then
+		Dim SourceMap As Map = Value
+		Dim ResultMap As Map
+		ResultMap.Initialize
+		For Each Key As String In SourceMap.Keys
+			ResultMap.Put(Key, CopyValue(SourceMap.Get(Key)))
+		Next
+		Return ResultMap
 	End If
 	Return Value
 End Sub
@@ -303,6 +315,11 @@ End Sub
 
 Private Sub IsListObject(Value As Object) As Boolean
 	If Value Is List Then Return True
+	Return False
+End Sub
+
+Private Sub IsMapObject(Value As Object) As Boolean
+	If Value Is Map Then Return True
 	Return False
 End Sub
 

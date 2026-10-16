@@ -79,7 +79,7 @@ Private Sub ValidatePreference(Pref As Map) As Boolean
 	If Pref.ContainsKey("defaultValue") = False Then
 		Select TypeName
 			Case "text", "multiline", "password": Pref.Put("defaultValue", "")
-			Case "date", "time", "datetime", "file", "directory": Pref.Put("defaultValue", "")
+			Case "date", "time", "datetime", "file", "directory", "custom": Pref.Put("defaultValue", "")
 			Case "number": Pref.Put("defaultValue", 0)
 			Case "slider"
 				Dim SliderDefault As Double = 0
@@ -116,6 +116,12 @@ Private Sub ValidatePreference(Pref As Map) As Boolean
 			Dim DateTimeValue As String = Value
 			If ValidateRequired(Pref, DateTimeValue) = False Then Return False
 			If DateTimeValue <> "" And IsValidDateTime(DateTimeValue) = False Then Return Fail("Preference " & Id & ": datetime defaultValue must be valid yyyy-MM-dd'T'HH:mm.")
+		Case "custom"
+			If Pref.ContainsKey("options") = False Or IsMapObject(Pref.Get("options")) = False Then Return Fail("Preference " & Id & ": custom preferences require an options object.")
+			Dim CustomOptions As Map = Pref.Get("options")
+			If CustomOptions.ContainsKey("renderer") = False Or IsStringObject(CustomOptions.Get("renderer")) = False Then Return Fail("Preference " & Id & ": custom options.renderer must be a string.")
+			Dim RendererName As String = CustomOptions.Get("renderer")
+			If RendererName.Trim.Length = 0 Then Return Fail("Preference " & Id & ": custom options.renderer cannot be empty.")
 		Case "file", "directory"
 			If IsStringObject(Value) = False Then Return Fail("Preference " & Id & ": defaultValue must be a path or URI string.")
 			If ValidateRequired(Pref, Value) = False Then Return False
@@ -353,7 +359,7 @@ End Sub
 Private Sub IsSupportedType(Value As Object) As Boolean
 	If IsStringObject(Value) = False Then Return False
 	Dim T As String = Value
-	Return T = "text" Or T = "multiline" Or T = "password" Or T = "number" Or T = "switch" Or T = "checkbox" Or T = "choice" Or T = "multichoice" Or T = "date" Or T = "slider" Or T = "time" Or T = "datetime" Or T = "file" Or T = "directory" Or T = "label" Or T = "action"
+	Return T = "text" Or T = "multiline" Or T = "password" Or T = "number" Or T = "switch" Or T = "checkbox" Or T = "choice" Or T = "multichoice" Or T = "date" Or T = "slider" Or T = "time" Or T = "datetime" Or T = "file" Or T = "directory" Or T = "label" Or T = "action" Or T = "custom"
 End Sub
 
 Private Sub IsStringObject(Value As Object) As Boolean

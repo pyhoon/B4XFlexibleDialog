@@ -15,6 +15,7 @@
   "setting.meeting_at": "Meeting date and time",
   "setting.company_logo": "Company logo",
   "setting.export_folder": "Export folder",
+  "setting.satisfaction": "Satisfaction",
   "setting.account_note": "Account information",
   "setting.account_note_description": "Changes are kept in this session only.",
   "setting.clear_cache": "Clear temporary cache",
@@ -36,5 +37,6 @@
   "ui.saved": "Changes saved",
   "ui.cancelled": "Edits discarded",
   "validation.number": "Enter a valid number",
-  "validation.choice": "Select an option"
+  "validation.choice": "Select an option",
+  "validation.rating": "Rating must be between 1 and 5"
 }

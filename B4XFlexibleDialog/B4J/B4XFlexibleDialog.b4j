@@ -64,6 +64,7 @@ Sub AppStart (Form1 As Form, Args() As String)
 		fx.Msgbox(MainForm, Prefs.LastError, "Definition error")
 		Return
 	End If
+	Prefs.RegisterCustomRenderer("RatingStars", Me, "Rating")
 	Store.Initialize
 	Prefs.SetStore(Store)
 	If File.Exists(File.DirApp, StoreFileName) Then
@@ -206,6 +207,89 @@ Private Sub Prefs_Action(PreferenceId As String)
 	Log("Action preference activated: " & PreferenceId)
 End Sub
 
+' Sample custom renderer: a 1-5 rating row. Demonstrates the full lifecycle
+' contract documented on RegisterCustomRenderer.
+Private Sub Rating_Create(Args As Map) As Object
+	Dim Parent As Pane = Args.Get("parent")
+	Dim Left As Double = Args.Get("left")
+	Dim Top As Double = Args.Get("top")
+	Dim Width As Double = Args.Get("width")
+	Dim Height As Double = Args.Get("height")
+	Dim Value As Int = Args.Get("value")
+	Dim Buttons As List
+	Buttons.Initialize
+	Dim Handle As Map
+	Handle.Initialize
+	Handle.Put("buttons", Buttons)
+	Handle.Put("value", Value)
+	Dim ButtonWidth As Double = Width / 5
+	For I = 1 To 5
+		Dim B As Button
+		B.Initialize("ratingStar")
+		Dim Tag As Map
+		Tag.Initialize
+		Tag.Put("handle", Handle)
+		Tag.Put("index", I)
+		B.Tag = Tag
+		B.Text = I
+		B.TextSize = 16
+		Parent.AddNode(B, Left + (I - 1) * ButtonWidth, Top, ButtonWidth - 4, Height)
+		Buttons.Add(B)
+	Next
+	Rating_Paint(Handle)
+	Return Handle
+End Sub
+
+Private Sub Rating_Read(Handle As Object, Definition As Map) As Object
+	Dim H As Map = Handle
+	Return H.Get("value")
+End Sub
+
+Private Sub Rating_Validate(Value As Object, Definition As Map) As String
+	Try
+		Dim RatingValue As Int = Value
+		If RatingValue >= 1 And RatingValue <= 5 Then Return ""
+	Catch
+	End Try
+	If Prefs.GetLanguage = "ms" Then Return Ms.Get("validation.rating")
+	Return En.Get("validation.rating")
+End Sub
+
+Private Sub Rating_Refresh(Handle As Object, Args As Map)
+	Dim H As Map = Handle
+	H.Put("value", Args.Get("value"))
+	Rating_Paint(H)
+End Sub
+
+Private Sub Rating_Dispose(Handle As Object)
+	Dim H As Map = Handle
+	Dim Buttons As List = H.Get("buttons")
+	For Each B As Button In Buttons
+		B.RemoveNodeFromParent
+	Next
+End Sub
+
+Private Sub Rating_Paint(Handle As Map)
+	Dim Buttons As List = Handle.Get("buttons")
+	Dim Value As Int = Handle.Get("value")
+	For I = 0 To Buttons.Size - 1
+		Dim B As Button = Buttons.Get(I)
+		If I < Value Then
+			B.Style = "-fx-background-color: #1d4ed8; -fx-text-fill: white; -fx-font-weight: bold;"
+		Else
+			B.Style = ""
+		End If
+	Next
+End Sub
+
+Private Sub ratingStar_Click
+	Dim B As Button = Sender
+	Dim Tag As Map = B.Tag
+	Dim Handle As Map = Tag.Get("handle")
+	Handle.Put("value", Tag.Get("index"))
+	Rating_Paint(Handle)
+End Sub
+
 Private Sub RunCoreChecks(Definition As String)
 	Dim TestModel As PrefsModel
 	TestModel.Initialize
@@ -256,6 +340,12 @@ Private Sub RunCoreChecks(Definition As String)
 	Assert("invalid datetime rejected", Values.SetValue("meeting_at", "2026-02-30T17:30") = False)
 	Assert("action preference stores no value", Values.SetValue("clear_cache", "x") = False)
 	Assert("label preference stores no value", Values.SetValue("account_note", "x") = False)
+	BadModel.Initialize
+	Assert("custom without options rejected", BadModel.LoadFromJson("{""schemaVersion"":1,""id"":""x"",""sections"":[{""id"":""s"",""preferences"":[{""id"":""c"",""type"":""custom"",""titleKey"":""c""}]}]}") = False)
+	BadModel.Initialize
+	Assert("custom without renderer rejected", BadModel.LoadFromJson("{""schemaVersion"":1,""id"":""x"",""sections"":[{""id"":""s"",""preferences"":[{""id"":""c"",""type"":""custom"",""titleKey"":""c"",""options"":{}}]}]}") = False)
+	Assert("custom default loaded", Values.GetValue("satisfaction") = 3)
+	Assert("custom accepts any value shape", Values.SetValue("satisfaction", 5) And Values.GetValue("satisfaction") = 5)
 	Assert("file accepts empty optional value", Values.SetValue("company_logo", ""))
 	Assert("file accepts allowed extension", Values.SetValue("company_logo", "C:\pics\logo.png"))
 	Assert("file rejects disallowed extension", Values.SetValue("company_logo", "C:\pics\notes.txt") = False)

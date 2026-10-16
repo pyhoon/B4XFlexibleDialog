@@ -15,6 +15,7 @@
   "setting.meeting_at": "Tarikh dan masa mesyuarat",
   "setting.company_logo": "Logo syarikat",
   "setting.export_folder": "Folder eksport",
+  "setting.satisfaction": "Kepuasan",
   "setting.account_note": "Maklumat akaun",
   "setting.account_note_description": "Perubahan disimpan untuk sesi ini sahaja.",
   "setting.clear_cache": "Kosongkan cache sementara",
@@ -36,5 +37,6 @@
   "ui.saved": "Perubahan disimpan",
   "ui.cancelled": "Suntingan dibatalkan",
   "validation.number": "Masukkan nombor yang sah",
-  "validation.choice": "Pilih satu pilihan"
+  "validation.choice": "Pilih satu pilihan",
+  "validation.rating": "Penarafan mestilah antara 1 dan 5"
 }

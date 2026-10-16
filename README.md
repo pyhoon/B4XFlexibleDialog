@@ -1,6 +1,6 @@
 # B4XFlexibleDialog
 
-Milestone 1 provides a B4J JSON-driven modal preferences dialog; Milestone 2 adds an embedded B4J page using the same model/controller. Milestone 3 is adding preference types and validation incrementally. Definitions and values remain independent of JavaFX controls. Current source supports `text`, `multiline`, `password`, `number`, `switch`, `checkbox`, `choice`, `multichoice`, `date`, `time`, `datetime`, `slider`, `label`, and `action` in both B4J presentations.
+Milestone 1 provides a B4J JSON-driven modal preferences dialog; Milestone 2 adds an embedded B4J page using the same model/controller. Milestone 3 is adding preference types and validation incrementally. Definitions and values remain independent of JavaFX controls. Current source supports `text`, `multiline`, `password`, `number`, `switch`, `checkbox`, `choice`, `multichoice`, `date`, `time`, `datetime`, `slider`, `file`, `directory`, `label`, `action`, and `custom` in both B4J presentations.
 
 ## Demo and build
 
@@ -110,6 +110,7 @@ Supported preference contracts:
 | `directory` | String path or URI; omitted default becomes `""` | Browse button uses the directory picker. Options: `allowClear`, `copyToAppStorage` (reserved), `title`, `initialDirectory`. |
 | `label` | No stored value | Display-only text. Uses `descriptionKey` when present, otherwise `titleKey`. It is excluded from value maps. |
 | `action` | No stored value | Renders a button; activation calls the `<prefix>_Action(PreferenceId)` callback. It is excluded from value maps. |
+| `custom` | Any JSON value; omitted default becomes `""` | Rendered by an application-registered renderer named in `options.renderer` (required). Values pass through the controller untouched; the renderer validates at Save. |
 
 `file`/`directory` values are stored as strings. On B4J the default provider returns an absolute filesystem path and a `file://` URI; other platforms must not assume a permanent path, so the normalized `PrefsFileResult` carries path, URI, display name, MIME type, and an access descriptor. Cancelling the picker preserves the existing value. `SetFileProvider` lets an application supply its own picker via `SetCustomHandler(Target, FileSub, DirectorySub)`, where each sub takes the options `Map` and returns a `PrefsFileResult`; `CopyToAppStorage` copies a selection into `File.DirApp\prefs-files`.
 
@@ -144,7 +145,27 @@ Prefs.RefreshPage ' Rebuilds visible values from committed state
 Prefs.DisposePage ' Removes only the library-owned page node
 ```
 
-`SetValue` validates IDs, types, choice membership, string constraints, and number bounds; failed sets do not modify values. `GetValues` returns a copied map and clones list-valued multichoice values. `ResetToDefaults` and `ResetPreference` operate on committed values for value preferences and are excluded from change events (no change event exists in this milestone).
+`SetValue` validates IDs, types, choice membership, string constraints, and number bounds; failed sets do not modify values. `GetValues` returns a copied map and deep-clones list/map values. `ResetToDefaults` and `ResetPreference` operate on committed values for value preferences and are excluded from change events (no change event exists in this milestone). `custom` values pass controller validation untouched; the registered renderer validates them at Save.
+
+## Custom preference renderers (Milestone 7)
+
+Register a renderer for each `options.renderer` name used by `custom` preferences:
+
+```vb
+Prefs.RegisterCustomRenderer("RatingStars", Me, "Rating")
+```
+
+The target must be a module (the app); class instances are not supported as the target. The library calls these lifecycle subs, where `<E>` is the event name:
+
+- `<E>_Create(Args As Map) As Object` — `Args` holds `parent` (the content pane), `left`, `top`, `width`, `height`, `definition` (the preference map), and `value` (the current value). Build the control inside the given rectangle and return a handle (any object) that is passed back to the other callbacks.
+- `<E>_Read(Handle As Object, Definition As Map) As Object` — return the current value from the control.
+- `<E>_Validate(Value As Object, Definition As Map) As String` — return `""` when valid, otherwise an error message shown next to the preference id. Runs at Save before the draft is committed.
+- `<E>_Refresh(Handle As Object, Args As Map)` — update the control from `Args` (`definition`, `value`). Called on language/theme change and on Reset.
+- `<E>_Dispose(Handle As Object)` — release resources when the dialog closes or the page is disposed. Views owned by the content pane die with it, so removing them is optional but harmless.
+
+Showing a dialog or page with an unregistered renderer name fails fast: Save is blocked with `No custom renderer registered for preference <id>`, and the message is logged. The demo registers a 1–5 star rating renderer (`Rating_*` subs in the demo Main) used by the `satisfaction` preference in both presentations.
+
+The B4A renderer does not implement the custom lifecycle yet: `custom` preferences render title-only there and keep their default values. Porting the contract to B4A is open work.
 
 ## Persistence (Milestone 4)
 
@@ -197,6 +218,8 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Copy-to-app-storage | Implemented; not exercised (disabled in demo definition) |
 | Values restored after application restart | **PASS** (B4J reported `Restored 12 value(s)`; B4A reported `Restored 11 value(s)` after relaunch) |
 | Packaged `.b4xlib` compiles and runs from a fresh B4J project | **PASS** (reported) |
+| `custom` definition validation (missing options/renderer rejected) | **Included; run in demo on startup** |
+| Custom renderer lifecycle (create/read/validate/refresh/dispose) in dialog and page | **B4J build verified; GUI test pending** |
 | Reopen after Save preserves values in memory | **PASS** (reported GUI test) |
 | B4J page renderer compiles and shares the model/controller API | **PASS** (build verified) |
 | Page mounting/resizing, Save/Cancel, repeated dispose/remount, localization/theme refresh | **PASS** (reported GUI test) |

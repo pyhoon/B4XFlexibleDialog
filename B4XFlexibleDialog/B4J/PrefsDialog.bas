@@ -16,6 +16,9 @@ Sub Class_Globals
 	Private Localization As PrefsLocalization
 	Private Theme As PrefsTheme
 	Private FileProvider As PrefsFileProvider
+	Private CustomRenderers As Map
+	Private CustomHandles As Map
+	Private BuildError As String
 	Private Callback As Object
 	Private EventPrefix As String
 	Private Controls As Map
@@ -38,13 +41,14 @@ Sub Class_Globals
 	Private InputLeft As Int
 End Sub
 
-Public Sub Initialize(Owner As Form, ValueController As PrefsController, Definition As PrefsModel, L10n As PrefsLocalization, UiTheme As PrefsTheme, Provider As PrefsFileProvider, Target As Object, TargetEvent As String)
+Public Sub Initialize(Owner As Form, ValueController As PrefsController, Definition As PrefsModel, L10n As PrefsLocalization, UiTheme As PrefsTheme, Provider As PrefsFileProvider, Renderers As Map, Target As Object, TargetEvent As String)
 	OwnerForm = Owner
 	Controller = ValueController
 	Model = Definition
 	Localization = L10n
 	Theme = UiTheme
 	FileProvider = Provider
+	CustomRenderers = Renderers
 	Callback = Target
 	EventPrefix = TargetEvent
 End Sub
@@ -59,6 +63,8 @@ Public Sub Show As Boolean
 	ActionButtons.Initialize
 	BrowseButtons.Initialize
 	ClearButtons.Initialize
+	CustomHandles.Initialize
+	BuildError = ""
 	Saved = False
 	RowTop = 18
 	Dim PreferenceCount As Int = Model.GetPreferenceIds.Size
@@ -131,8 +137,13 @@ Public Sub Show As Boolean
 	DialogForm.RootPane.AddNode(SaveButton, 610, Height - 60, 110, 34)
 	DialogForm.RootPane.SetAnchors(SaveButton, 610, -1, -1, 26)
 	RefreshButtons
+	If BuildError <> "" Then
+		StatusLabel.Text = BuildError
+		StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
+	End If
 	DialogForm.ShowAndWait
 	If Saved = False Then Controller.CancelDraft
+	DisposeCustomHandles
 	Return Saved
 End Sub
 
@@ -283,10 +294,90 @@ Private Sub AddPreference(Pref As Map)
 				ContentPane.AddNode(ClearButton, ContentWidth - 40 - 84, RowTop, 84, 34)
 				ClearButtons.Put(Id, ClearButton)
 			End If
+		Else If TypeName = "custom" Then
+			AddCustomPreference(Pref)
 		End If
 	End If
 	ControlTypes.Put(Id, TypeName)
 	RowTop = RowTop + Theme.RowSpacing + 30
+End Sub
+
+' Builds a custom preference through its registered renderer. The renderer
+' name comes from options.renderer and must be registered with
+' RegisterCustomRenderer. The Create handler receives an Args map with
+' parent/left/top/width/height/definition/value and returns a handle that is
+' passed back to Read/Refresh/Dispose.
+Private Sub AddCustomPreference(Pref As Map)
+	Dim Id As String = Pref.Get("id")
+	Dim Entry As Map = CustomEntry(Pref)
+	If Entry = Null Then
+		BuildError = "No custom renderer registered for preference " & Id
+		LogError(BuildError)
+		Dim ErrorLabel As Label
+		ErrorLabel.Initialize("")
+		ErrorLabel.Text = BuildError
+		ErrorLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
+		ContentPane.AddNode(ErrorLabel, InputLeft, RowTop, ContentWidth - 40 - InputLeft, 34)
+		Return
+	End If
+	Dim CustomHeight As Int = 56
+	If Pref.ContainsKey("options") Then
+		Dim CustomOptions As Map = Pref.Get("options")
+		If CustomOptions.ContainsKey("height") Then CustomHeight = CustomOptions.Get("height")
+	End If
+	If CustomHeight < 34 Then CustomHeight = 34
+	Dim Args As Map
+	Args.Initialize
+	Args.Put("parent", ContentPane)
+	Args.Put("left", InputLeft)
+	Args.Put("top", RowTop)
+	Args.Put("width", ContentWidth - 40 - InputLeft)
+	Args.Put("height", CustomHeight)
+	Args.Put("definition", Pref)
+	Args.Put("value", Controller.GetValue(Id))
+	Dim Target As Object = Entry.Get("target")
+	Dim EventName As String = Entry.Get("event")
+	Dim Handle As Object = CallSub2(Target, EventName & "_Create", Args)
+	CustomHandles.Put(Id, Handle)
+	Controls.Put(Id, Handle)
+	RowTop = RowTop + CustomHeight - 34
+End Sub
+
+Private Sub CustomEntry(Pref As Map) As Map
+	If Pref.ContainsKey("options") = False Then Return Null
+	Dim Options As Map = Pref.Get("options")
+	If Options.ContainsKey("renderer") = False Then Return Null
+	Dim Name As String = Options.Get("renderer")
+	If CustomRenderers.ContainsKey(Name) = False Then Return Null
+	Return CustomRenderers.Get(Name)
+End Sub
+
+Private Sub DisposeCustomHandles
+	For Each Id As String In CustomHandles.Keys
+		Dim Pref As Map = Model.GetPreference(Id)
+		Dim Entry As Map = CustomEntry(Pref)
+		If Entry <> Null Then
+			CallSub2(Entry.Get("target"), Entry.Get("event") & "_Dispose", CustomHandles.Get(Id))
+		End If
+	Next
+	CustomHandles.Clear
+End Sub
+
+Private Sub ReadCustom(Id As String) As Object
+	Dim Pref As Map = Model.GetPreference(Id)
+	Dim Entry As Map = CustomEntry(Pref)
+	Return CallSub3(Entry.Get("target"), Entry.Get("event") & "_Read", CustomHandles.Get(Id), Pref)
+End Sub
+
+Private Sub RefreshCustom(Id As String, Value As Object)
+	Dim Pref As Map = Model.GetPreference(Id)
+	Dim Entry As Map = CustomEntry(Pref)
+	If Entry = Null Then Return
+	Dim Args As Map
+	Args.Initialize
+	Args.Put("definition", Pref)
+	Args.Put("value", Value)
+	CallSub3(Entry.Get("target"), Entry.Get("event") & "_Refresh", CustomHandles.Get(Id), Args)
 End Sub
 
 Private Sub dlg_Click
@@ -382,6 +473,11 @@ Private Sub Reset_Click
 End Sub
 
 Private Sub Save_Click
+	If BuildError <> "" Then
+		StatusLabel.Text = BuildError
+		StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
+		Return
+	End If
 	For Each Id As String In Controls.Keys
 		Dim TypeName As String = ControlTypes.Get(Id)
 		Dim Value As Object
@@ -439,6 +535,16 @@ Private Sub Save_Click
 				Dim Items As List = PrefOptions.Get("items")
 				Dim SelectedItem As Map = Items.Get(Choice.SelectedIndex)
 				Value = SelectedItem.Get("value")
+			Case "custom"
+				Value = ReadCustom(Id)
+				Dim CustomPref As Map = Model.GetPreference(Id)
+				Dim Entry As Map = CustomEntry(CustomPref)
+				Dim ValidationError As String = CallSub3(Entry.Get("target"), Entry.Get("event") & "_Validate", Value, CustomPref)
+				If ValidationError <> "" Then
+					StatusLabel.Text = ValidationError & " (" & Id & ")"
+					StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
+					Return
+				End If
 		End Select
 		If Controller.SetDraftValue(Id, Value) = False Then
 			StatusLabel.Text = Controller.LastError
@@ -487,7 +593,9 @@ Private Sub Language_Click
 				Dim Title As Label = TitleLabels.Get(Id)
 				Title.Text = Localization.Text(Pref.Get("titleKey"))
 			End If
-			If Pref.Get("type") = "choice" Then
+			If Pref.Get("type") = "custom" Then
+				RefreshCustom(Id, ReadCustom(Id))
+			Else If Pref.Get("type") = "choice" Then
 				Dim Choice As ComboBox = Controls.Get(Id)
 				Dim SelectedIndex As Int = Choice.SelectedIndex
 				Choice.Items.Clear
@@ -570,6 +678,8 @@ Private Sub Theme_Click
 			ValueSlider.Style = "-fx-accent: " & ColorCss(Theme.AccentColor) & ";"
 			Dim SliderValueLabel As Label = SliderLabels.Get(Id)
 			SliderValueLabel.TextColor = fx.Colors.From32Bit(Theme.TextColor)
+		Else If TypeName = "custom" Then
+			RefreshCustom(Id, ReadCustom(Id))
 		End If
 	Next
 	For Each Id As String In ActionButtons.Keys
@@ -703,5 +813,7 @@ Private Sub SetControlValue(Id As String, TypeName As String, Value As Object)
 				Next
 			Next
 			Multi.SetSelectedIndices(SelectedIndices)
+		Case "custom"
+			RefreshCustom(Id, Value)
 	End Select
 End Sub

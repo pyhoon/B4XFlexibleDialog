@@ -105,9 +105,18 @@ Private Sub CopyValue(Value As Object) As Object
 		Dim ResultList As List
 		ResultList.Initialize
 		For Each Item As Object In SourceList
-			ResultList.Add(Item)
+			ResultList.Add(CopyValue(Item))
 		Next
 		Return ResultList
+	End If
+	If Value Is Map Then
+		Dim SourceMap As Map = Value
+		Dim ResultMap As Map
+		ResultMap.Initialize
+		For Each Key As String In SourceMap.Keys
+			ResultMap.Put(Key, CopyValue(SourceMap.Get(Key)))
+		Next
+		Return ResultMap
 	End If
 	Return Value
 End Sub

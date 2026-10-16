@@ -90,9 +90,14 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Implement B4A platform-specific form renderer and native picker behavior (dialog/page containers remain B4J-only).
 - [x] Start a capability matrix in the README; keep extending it as platforms are verified.
 
-## M7 — Extensibility and release
+## M7 — Extensibility and release — IN PROGRESS
 
-- [ ] Define custom-renderer registration and lifecycle.
+- [x] Add the `custom` type to the schema, model (renderer name required), and controller (pass-through values, deep-cloned snapshots).
+- [x] Add `RegisterCustomRenderer` with fail-fast handling of unregistered renderer names.
+- [x] Implement the create/read/validate/refresh/dispose lifecycle in the B4J dialog renderer.
+- [x] Implement the create/read/validate/refresh/dispose lifecycle in the B4J page renderer.
+- [x] Demonstrate a custom rating renderer in the B4J demo and library-test example.
+- [ ] Verify the custom renderer GUI behavior (create, edit, invalid value, Save, Reset, language/theme refresh, dispose) in both presentations.
 - [ ] Finalize public APIs and callback contracts against each target compiler.
-- [ ] Package a distributable `.b4xlib` and verify integration from a fresh project.
+- [x] Package a distributable `.b4xlib` and verify integration from a fresh project.
 - [ ] Complete automated/repeatable tests, platform examples, and release documentation.
