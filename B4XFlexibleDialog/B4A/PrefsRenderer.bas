@@ -280,15 +280,59 @@ Private Sub prefscc_Result(Success As Boolean, Dir As String, FileName As String
 	Dim Id As String = PendingFileId
 	PendingFileId = ""
 	If Success = False Then Return
-	Dim Stored As String = File.Combine(Dir, FileName)
-	If PendingCopy Then
-		Dim TargetDir As String = File.Combine(File.DirInternal, "prefs-files")
-		If File.Exists(File.DirInternal, "prefs-files") = False Then File.MakeDir(File.DirInternal, "prefs-files")
-		File.Copy(Dir, FileName, TargetDir, FileName)
-		Stored = File.Combine(TargetDir, FileName)
+	Try
+		Dim Stored As String = Dir
+		If FileName <> "" Then Stored = File.Combine(Dir, FileName)
+		If PendingCopy Then
+			If File.Exists(File.DirInternal, "prefs-files") = False Then File.MakeDir(File.DirInternal, "prefs-files")
+			Dim TargetDir As String = File.Combine(File.DirInternal, "prefs-files")
+			Dim TargetName As String = TargetFileName(FileName, Id)
+			Dim In As InputStream = File.OpenInput(Dir, FileName)
+			Dim Out As OutputStream = File.OpenOutput(TargetDir, TargetName, False)
+			File.Copy2(In, Out)
+			In.Close
+			Out.Close
+			Stored = File.Combine(TargetDir, TargetName)
+		End If
+		Dim Field As EditText = Controls.Get(Id)
+		Field.Text = Stored
+		StatusLabel.Text = ""
+	Catch
+		Log("File copy failed: " & LastException.Message)
+		ShowError("Could not store the selected file.")
+	End Try
+End Sub
+
+' Builds a filesystem-safe target name. Content URIs carry no usable file
+' name, so fall back to the preference id. When the name has no extension,
+' append the first allowed extension (the picker was already MIME-filtered)
+' so extension validation stays meaningful.
+Private Sub TargetFileName(FileName As String, Id As String) As String
+	Dim Name As String = FileName
+	Dim Slash As Int = Name.LastIndexOf("/")
+	If Slash > -1 Then Name = Name.SubString(Slash + 1)
+	Name = Name.Replace(":", "_")
+	If Name = "" Then Name = Id
+	If Name.IndexOf(".") = -1 Then
+		Dim Extension As String = FirstAllowedExtension(Id)
+		If Extension <> "" Then
+			Name = Name & "." & Extension
+		Else
+			Name = Name & ".bin"
+		End If
 	End If
-	Dim Field As EditText = Controls.Get(Id)
-	Field.Text = Stored
+	Return Name
+End Sub
+
+Private Sub FirstAllowedExtension(Id As String) As String
+	Dim Pref As Map = Model.GetPreference(Id)
+	If Pref.ContainsKey("options") = False Then Return ""
+	Dim Options As Map = Pref.Get("options")
+	If Options.ContainsKey("extensions") = False Then Return ""
+	Dim Extensions As List = Options.Get("extensions")
+	If Extensions.Size = 0 Then Return ""
+	Dim First As String = Extensions.Get(0)
+	Return First.ToLowerCase
 End Sub
 
 ' Maps options.extensions to an Android MIME filter. Defaults to */* when
