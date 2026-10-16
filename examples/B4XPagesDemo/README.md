@@ -1,25 +1,26 @@
 # B4XPages demo
 
-A B4XPages demo that consumes the packaged **B4XFlexibleDialog.b4xlib** on B4J
-and B4A from a single shared page. The shared `B4XMainPage` mounts the settings
-form next to the platform's entry points: on B4J a button opens the modal dialog
-(`Prefs.Show`) alongside the embedded page (`Prefs.CreatePage`); on B4A the
-renderer has no built-in chrome, so the page provides Save/Cancel and renders
-the form into a host panel. Values persist locally and are restored on launch.
+A B4XPages demo that consumes the packaged **B4XFlexibleDialog.b4xlib** on B4J,
+B4A and B4i from a single shared page. The shared `B4XMainPage` owns the whole
+demo: it builds its UI with cross-platform views, wires up the library (the B4J
+facade in-process, or the B4A/B4i `PrefsRenderer`), persists values and hosts the
+sample `RatingStars` custom renderer. On B4J a button opens the modal dialog
+(`Prefs.Show`) alongside the embedded page (`Prefs.CreatePage`); on B4A/B4i the
+renderer has no built-in chrome, so the page provides Save/Cancel and renders the
+form into a host panel. Values persist locally and are restored on launch.
 
-The page talks to each platform only through a small, identical surface — the
-shared `AppHost` code module, which forwards to a per-platform `PrefsHost` class.
-That keeps `B4XMainPage.bas` free of platform modules (B4A forbids a page class
-from accessing Activity-module members) and the platform code out of
-`Process_Globals` (B4A forbids view-typed class fields there).
+The page is the only module in the project (`B4XMainPage.bas`), so a page class
+never reaches into an Activity module (B4A forbids that), and no view-typed class
+fields live in `Process_Globals` (B4A forbids that too). Platform differences are
+handled with `#If B4J`/`#If B4A`/`#If B4i` blocks inside the one file.
 
-B4i is a placeholder for now (`B4i/README.md`): the library's public view API is
-`B4XView`-based and the shared page is platform-neutral, so only a B4i renderer
-and `PrefsHost` need to be added.
+B4i is wired up as stubs for now (`B4i/README.md`): the library ships a B4i
+`PrefsRenderer`/`PrefsDirPicker` with the same public surface but no-op bodies, so
+the shared page compiles on B4i while the real renderer is pending.
 
 ## Setup
 
-1. Install the library: copy `dist\B4XFlexibleDialog.b4xlib` into your B4J/B4A
+1. Install the library: copy `dist\B4XFlexibleDialog.b4xlib` into your B4J/B4A/B4i
    Libraries folder (the standard `Libraries` folder or your configured
    Additional Libraries folder).
 2. Open `B4J/B4XPagesDemo.b4j` or `B4A/B4XPagesDemo.b4a` in the matching IDE and
@@ -32,10 +33,13 @@ and `PrefsHost` need to be added.
      -ShowWarnings=True
 
    & 'C:\Program Files\B4X\B4A\B4ABuilder.exe' -Task=Build `
-     -BaseFolder='examples\B4XPagesDemo\B4A' `
-     -Project='examples\B4XPagesDemo\B4A\B4XPagesDemo.b4a' `
+     -BaseFolder='C:\Projects\B4XFlexibleDialog\examples\B4XPagesDemo\B4A' `
+     -Project='C:\Projects\B4XFlexibleDialog\examples\B4XPagesDemo\B4A\B4XPagesDemo.b4a' `
      -ShowWarnings=True -NoSign=True
    ```
+
+   The B4A builder needs an absolute `-BaseFolder` (its D8 dex step fails to
+   resolve a relative one). B4i builds require a Mac builder.
 
 ## What to look for
 
@@ -43,13 +47,12 @@ and `PrefsHost` need to be added.
 - B4A: the page hosts the same form with Save/Cancel buttons above it.
 - Both presentations share committed values: Save in one and the other reflects it.
 - Edit values and Save; close and relaunch: values are restored from the local store file.
-- The `satisfaction` row is a custom star-rating renderer (`Rating_*` subs in `PrefsHost`).
+- The `satisfaction` row is a custom star-rating renderer (`Rating_*` subs in `B4XMainPage`).
 
 ## Files
 
-- `B4XMainPage.bas` — shared launcher page (title, platform entry points, embedded page host).
-- `AppHost.bas` — shared dispatcher the page calls; forwards to `AppHost.Target`.
-- `B4J/B4XPagesDemo.b4j` — B4J project; `PrefsHost.bas` owns the facade, store and rating renderer.
-- `B4A/B4XPagesDemo.b4a` — B4A project; `PrefsHost.bas` owns the renderer, directory picker, store and rating renderer.
-- `B4J/Files/` and `B4A/Files/` — `settings.json`, `en.json`, `ms.json`, `b4x_materialicons.ttf` (B4J also `prefs.css`).
-- `B4i/` — placeholder for the B4i port.
+- `B4XMainPage.bas` — the shared page: UI, library wiring, persistence and the rating renderer (platform branches via `#If`).
+- `B4J/B4XPagesDemo.b4j` — B4J project. `Main` hands the owner form to the page with `B4XPages.MainPage.SetHostForm`.
+- `B4A/B4XPagesDemo.b4a` — B4A project. `Main` just initializes `B4XPagesManager`; the page does the rest.
+- `B4i/B4XPagesDemo.b4i` — B4i project (unverified; needs a Mac builder).
+- `B4J/Files/` and `B4A/Files/` and `B4i/Files/` — `settings.json`, `en.json`, `ms.json` (B4J also `prefs.css`). The rating sample uses the built-in MaterialIcons font.

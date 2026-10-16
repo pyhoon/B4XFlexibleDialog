@@ -1,12 +1,10 @@
-Build1=Default,b4a.example
-File1=b4x_materialicons.ttf
-File2=en.json
-File3=ms.json
-File4=settings.json
+﻿Build1=Default,b4a.example
+File1=en.json
+File2=ms.json
+File3=settings.json
 FileGroup1=Default Group
 FileGroup2=Default Group
 FileGroup3=Default Group
-FileGroup4=Default Group
 Group=Default Group
 Library1=core
 Library2=b4xpages
@@ -17,19 +15,16 @@ Library6=b4xflexibledialog
 Library7=json
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
 Module1=|relative|..\B4XMainPage
-Module2=|relative|..\AppHost
-Module3=PrefsHost
-NumberOfFiles=4
+NumberOfFiles=3
 NumberOfLibraries=7
-NumberOfModules=3
+NumberOfModules=1
 Version=14.2
 @EndOfDesignText@
 #Region Project Attributes
 	#ApplicationLabel: B4XFlexibleDialog demo
 	#VersionCode: 1
 	#VersionName:
-	'SupportedOrientations possible values: unspecified, landscape or portrait.
-	#SupportedOrientations: unspecified
+	#SupportedOrientations: landscape
 	#CanInstallToExternalStorage: False
 	#BridgeLogger: True
 #End Region
@@ -39,22 +34,18 @@ Version=14.2
 	#IncludeTitle: True
 #End Region
 
-' B4A side of the B4XPages demo. The shared B4XMainPage mounts the form built by
-' the library's PrefsRenderer into a host panel and provides Save/Cancel; the
-' AppHost code module owns the model/controller wiring, persistence and the
-' sample rating custom renderer.
+' B4A side of the B4XPages demo. The shared B4XMainPage owns everything: it wires
+' up the model/controller, mounts the form built by the library's PrefsRenderer
+' into a host panel, provides Save/Cancel and the sample rating custom renderer.
 
 Sub Process_Globals
 	Public ActionBarHomeClicked As Boolean
 End Sub
 
 Sub Globals
-	Private Host As PrefsHost
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
-	Host.Initialize
-	AppHost.Target = Host
 	Dim PagesManager As B4XPagesManager
 	PagesManager.Initialize(Activity)
 End Sub

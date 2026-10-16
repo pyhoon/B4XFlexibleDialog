@@ -1,50 +1,45 @@
-AppType=JavaFX
+﻿AppType=JavaFX
 Build1=Default,b4j.example
-File1=b4x_materialicons.ttf
-File2=en.json
-File3=ms.json
-File4=prefs.css
-File5=settings.json
+File1=en.json
+File2=ms.json
+File3=prefs.css
+File4=settings.json
 FileGroup1=Default Group
 FileGroup2=Default Group
 FileGroup3=Default Group
 FileGroup4=Default Group
-FileGroup5=Default Group
 Group=Default Group
 Library1=jcore
 Library2=jfx
 Library3=json
-Library4=b4xpages
-Library5=b4xflexibledialog
+Library4=jxui
+Library5=b4xpages
+Library6=b4xflexibledialog
 Module1=|relative|..\B4XMainPage
-Module2=|relative|..\AppHost
-Module3=PrefsHost
-NumberOfFiles=5
-NumberOfLibraries=5
-NumberOfModules=3
+NumberOfFiles=4
+NumberOfLibraries=6
+NumberOfModules=1
 Version=10.7
 @EndOfDesignText@
 #Region Project Attributes
 	#MainFormWidth: 1100
-	#MainFormHeight: 700
+	#MainFormHeight: 600
 #End Region
 
-' B4J side of the B4XPages demo. The shared B4XMainPage mounts the facade page
-' or opens the modal dialog through the AppHost code module; PrefsHost owns the
-' facade, persistence and the sample rating renderer.
+' B4J side of the B4XPages demo. The shared B4XMainPage owns the library facade
+' (page + modal dialog), persistence and the sample rating renderer. The facade
+' needs the owner Form, so Main hands it to the page after B4XPages is ready.
 
 Sub Process_Globals
 	Private MainForm As Form
-	Private Host As PrefsHost
 End Sub
 
 Sub AppStart (Form1 As Form, Args() As String)
 	MainForm = Form1
 	MainForm.Title = "B4XFlexibleDialog B4XPages demo"
-	Host.Initialize(MainForm)
-	AppHost.Target = Host
 	Dim PagesManager As B4XPagesManager
 	PagesManager.Initialize(MainForm)
+	B4XPages.MainPage.SetHostForm(MainForm)
 	MainForm.Show
 End Sub
 

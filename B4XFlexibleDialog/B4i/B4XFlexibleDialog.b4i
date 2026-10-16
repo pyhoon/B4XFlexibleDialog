@@ -1,17 +1,21 @@
 Build1=Default,b4i.example
-Group=Default Group
+Group=App
 Library1=icore
 Library2=ijson
-Module1=|relative|..\B4J\PrefsModel
-Module2=|relative|..\B4J\PrefsController
-Module3=|relative|..\B4J\PrefsLocalization
-Module4=|relative|..\B4J\PrefsTheme
-Module5=|relative|..\B4J\PrefsStore
-Module6=|relative|..\B4J\PrefsFileResult
-Module7=|relative|..\B4J\PrefsSelfTest
+Library3=ixui
+Library4=iphone
+Module1=|relative|..\PrefsController
+Module2=PrefsDirPicker
+Module3=|relative|..\PrefsFileResult
+Module4=|relative|..\PrefsLocalization
+Module5=|relative|..\PrefsModel
+Module6=PrefsRenderer
+Module7=|relative|..\PrefsSelfTest
+Module8=|relative|..\PrefsStore
+Module9=|relative|..\PrefsTheme
 NumberOfFiles=0
-NumberOfLibraries=2
-NumberOfModules=7
+NumberOfLibraries=4
+NumberOfModules=9
 Version=8.8
 @EndOfDesignText@
 'Code module
@@ -25,26 +29,31 @@ Version=8.8
 	#MinVersion: 8
 #End Region
 
-' Shared-module validation for B4XFlexibleDialog.
+' B4i validation harness for B4XFlexibleDialog.
 ' Runs the platform-independent PrefsSelfTest at startup and shows the results.
-' No UI renderer is implemented on B4i yet.
+' The B4i renderer/directory picker are stubs (see B4i/PrefsRenderer.bas and
+' B4i/PrefsDirPicker.bas), so no preferences form is shown.
 ' NOTE: B4i compilation requires a Mac builder and has not been verified locally.
 
 Sub Process_Globals
 	Public App As Application
 	Public NavControl As NavigationController
-	Private MainPage As Page
+	Private Page1 As Page
+	Private ResultsLabel As Label
+	Private Model As PrefsModel
+	Private Controller As PrefsController
+	Private Localization As PrefsLocalization
+	Private DirPicker As PrefsDirPicker
+	Private Store As PrefsStore
+	Private StoreFileName As String = "prefs-values.json"
 End Sub
 
 Private Sub Application_Start (Nav As NavigationController)
 	NavControl = Nav
-	MainPage.Initialize("MainPage")
-	MainPage.Title = "B4XFlexibleDialog"
-	NavControl.ShowPage(MainPage)
-	Dim ResultsLabel As Label
-	ResultsLabel.Initialize("Results")
-	ResultsLabel.Multiline = True
-	MainPage.RootPanel.AddView(ResultsLabel, 10, 10, 100%x - 20, 100%y - 20)
+	Page1.Initialize("Page1")
+	NavControl.ShowPage(Page1)
+	ResultsLabel.Initialize("")
+	Page1.RootPanel.AddView(ResultsLabel, 10dip, 10dip, 100%x - 20dip, 100%y - 20dip)
 	Dim SelfTest As PrefsSelfTest
 	SelfTest.Initialize
 	Dim Outcome As Map = SelfTest.RunAll
@@ -53,7 +62,85 @@ Private Sub Application_Start (Nav As NavigationController)
 	Dim Report As String = "passed=" & Passed & " failed=" & Failed & CRLF & CRLF & Outcome.Get("log")
 	ResultsLabel.Text = Report
 	Log(Report)
+	LoadDefinition
 End Sub
 
-Private Sub MainPage_Resize (Width As Int, Height As Int)
+Private Sub Page1_Resize(Width As Int, Height As Int)
+End Sub
+
+Private Sub LoadDefinition
+	Dim EnDict As Map
+	EnDict.Initialize
+	EnDict.Put("settings.title", "Settings")
+	EnDict.Put("section.general", "General")
+	EnDict.Put("setting.username", "Username")
+	EnDict.Put("setting.items_per_page", "Items per page")
+	EnDict.Put("setting.dark_mode", "Dark mode")
+	EnDict.Put("setting.show_tips", "Show tips")
+	EnDict.Put("setting.display_mode", "Display mode")
+	EnDict.Put("display.compact", "Compact")
+	EnDict.Put("display.comfortable", "Comfortable")
+	EnDict.Put("setting.about", "About")
+	EnDict.Put("setting.api_key", "API key")
+	EnDict.Put("setting.notifications", "Notifications")
+	EnDict.Put("notification.email", "Email")
+	EnDict.Put("notification.push", "Push")
+	EnDict.Put("notification.weekly", "Weekly summary")
+	EnDict.Put("setting.font_scale", "Font scale")
+	EnDict.Put("setting.company_logo", "Company logo")
+	EnDict.Put("setting.satisfaction", "Satisfaction")
+	EnDict.Put("setting.export_folder", "Export folder")
+	EnDict.Put("ui.browse", "Browse")
+	EnDict.Put("setting.account_note", "Account information")
+	EnDict.Put("setting.account_note_description", "Changes are kept in memory only.")
+	EnDict.Put("setting.clear_cache", "Clear temporary cache")
+	Localization.Initialize
+	Localization.SetDictionary("en", EnDict)
+	Localization.SetLanguage("en")
+	Model.Initialize
+	If Model.LoadFromJson(DemoDefinition) = False Then
+		Log("Definition error: " & Model.LastError)
+		Return
+	End If
+	Controller.Initialize(Model)
+	DirPicker.Initialize(Me, "DirPicker")
+	Store.Initialize
+	If File.Exists(File.DirDocuments, StoreFileName) Then
+		If Store.FromJson(File.ReadString(File.DirDocuments, StoreFileName)) Then
+			Dim Restored As Int = Controller.ApplyValues(Store.Load)
+			Log("Restored " & Restored & " value(s) from " & StoreFileName)
+		Else
+			Log("Stored values file could not be parsed: " & StoreFileName)
+		End If
+	End If
+End Sub
+
+Private Sub DemoDefinition As String
+	Return "{""schemaVersion"":1,""id"":""demo.settings"",""titleKey"":""settings.title"",""sections"":[{""id"":""general"",""titleKey"":""section.general"",""preferences"":[{""id"":""username"",""type"":""text"",""titleKey"":""setting.username"",""defaultValue"":""Guest"",""required"":true,""minLength"":3,""maxLength"":32},{""id"":""about"",""type"":""multiline"",""titleKey"":""setting.about"",""defaultValue"":"""",""maxLength"":120},{""id"":""api_key"",""type"":""password"",""titleKey"":""setting.api_key"",""defaultValue"":""""},{""id"":""items_per_page"",""type"":""number"",""titleKey"":""setting.items_per_page"",""defaultValue"":20,""options"":{""min"":5,""max"":200}},{""id"":""dark_mode"",""type"":""switch"",""titleKey"":""setting.dark_mode"",""defaultValue"":false},{""id"":""show_tips"",""type"":""checkbox"",""titleKey"":""setting.show_tips"",""defaultValue"":true},{""id"":""display_mode"",""type"":""choice"",""titleKey"":""setting.display_mode"",""defaultValue"":""compact"",""options"":{""items"":[{""value"":""compact"",""titleKey"":""display.compact""},{""value"":""comfortable"",""titleKey"":""display.comfortable""}]}},{""id"":""notifications"",""type"":""multichoice"",""titleKey"":""setting.notifications"",""defaultValue"":[""email""],""options"":{""items"":[{""value"":""email"",""titleKey"":""notification.email""},{""value"":""push"",""titleKey"":""notification.push""},{""value"":""weekly"",""titleKey"":""notification.weekly""}]}},{""id"":""font_scale"",""type"":""slider"",""titleKey"":""setting.font_scale"",""defaultValue"":1.0,""options"":{""min"":0.8,""max"":1.4}},{""id"":""company_logo"",""type"":""file"",""titleKey"":""setting.company_logo"",""defaultValue"":"""",""options"":{""extensions"":[""png"",""jpg"",""jpeg"",""webp""],""allowClear"":true,""copyToAppStorage"":true}},{""id"":""export_folder"",""type"":""directory"",""titleKey"":""setting.export_folder"",""defaultValue"":"""",""options"":{""allowClear"":true}},{""id"":""satisfaction"",""type"":""custom"",""titleKey"":""setting.satisfaction"",""defaultValue"":3,""options"":{""renderer"":""RatingStars"",""height"":56}},{""id"":""account_note"",""type"":""label"",""titleKey"":""setting.account_note"",""descriptionKey"":""setting.account_note_description""},{""id"":""clear_cache"",""type"":""action"",""titleKey"":""setting.clear_cache""}]}]}"
+End Sub
+
+Sub Prefs_BeforeSave(Values As Map) As Boolean
+	Return True
+End Sub
+
+Sub Prefs_AfterSave(Values As Map)
+	Log("Saved values: " & Values)
+	Store.Save(Values)
+	File.WriteString(File.DirDocuments, StoreFileName, Store.ToJson)
+End Sub
+
+Sub Prefs_Action(PreferenceId As String)
+	Log("Action: " & PreferenceId)
+End Sub
+
+Sub Prefs_BrowseDirectory(Id As String)
+	DirPicker.SelectDir(False)
+End Sub
+
+Sub DirPicker_DirectoryPicked(Uri As String)
+	Log("Picked directory: " & Uri)
+End Sub
+
+Sub DirPicker_DirectoryCancelled
+	Log("Directory pick cancelled")
 End Sub

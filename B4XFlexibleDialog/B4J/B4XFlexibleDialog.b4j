@@ -1,32 +1,30 @@
 ﻿AppType=JavaFX
 Build1=Default,b4j.example
-File1=b4x_materialicons.ttf
-File2=en.json
-File3=ms.json
-File4=prefs.css
-File5=settings.json
+File1=en.json
+File2=ms.json
+File3=prefs.css
+File4=settings.json
 FileGroup1=Default Group
 FileGroup2=Default Group
 FileGroup3=Default Group
 FileGroup4=Default Group
-FileGroup5=Default Group
-Group=Default Group
+Group=App
 Library1=jcore
 Library2=jfx
 Library3=json
 Library4=jxui
-Module1=B4XFlexibleDialog
-Module10=PrefsStore
-Module11=PrefsTheme
-Module2=PrefsController
-Module3=PrefsDialog
-Module4=PrefsFileProvider
-Module5=PrefsFileResult
-Module6=PrefsLocalization
-Module7=PrefsModel
-Module8=PrefsPage
-Module9=PrefsSelfTest
-NumberOfFiles=5
+Module1=|relative|..\B4XFlexibleDialog
+Module10=|relative|..\PrefsStore
+Module11=|relative|..\PrefsTheme
+Module2=|relative|..\PrefsController
+Module3=|relative|..\PrefsDialog
+Module4=|relative|..\PrefsFileProvider
+Module5=|relative|..\PrefsFileResult
+Module6=|relative|..\PrefsLocalization
+Module7=|relative|..\PrefsModel
+Module8=|relative|..\PrefsPage
+Module9=|relative|..\PrefsSelfTest
+NumberOfFiles=4
 NumberOfLibraries=4
 NumberOfModules=11
 Version=10.7
@@ -38,6 +36,7 @@ Version=10.7
 
 Sub Process_Globals
 	Private fx As JFX
+	Private xui As XUI
 	Private MainForm As Form
 	Private Prefs As B4XFlexibleDialog
 	Private En As Map
@@ -51,7 +50,6 @@ Sub Process_Globals
 	Private PageShown As Boolean
 	Private Store As PrefsStore
 	Private StoreFileName As String = "prefs-store.json"
-	Private StarFont As Font
 End Sub
 
 Sub AppStart (Form1 As Form, Args() As String)
@@ -220,7 +218,6 @@ Private Sub Rating_Create(Args As Map) As Object
 	Dim Width As Double = Args.Get("width")
 	Dim Height As Double = Args.Get("height")
 	Dim Value As Int = Args.Get("value")
-	If StarFont.IsInitialized = False Then StarFont = fx.LoadFont(File.DirAssets, "b4x_materialicons.ttf", 24)
 	Dim Buttons As List
 	Buttons.Initialize
 	Dim Handle As Map
@@ -236,7 +233,7 @@ Private Sub Rating_Create(Args As Map) As Object
 		Tag.Put("handle", Handle)
 		Tag.Put("index", I)
 		Star.Tag = Tag
-		Star.Font = StarFont
+		Star.Font = xui.CreateMaterialIcons(24)
 		Parent.AddView(Star, Left + (I - 1) * StarWidth, Top, StarWidth, Height)
 		Buttons.Add(Star)
 	Next

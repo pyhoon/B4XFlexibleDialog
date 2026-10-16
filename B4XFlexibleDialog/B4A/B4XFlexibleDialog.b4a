@@ -1,24 +1,22 @@
 ﻿Build1=Default,b4a.example
-File1=b4x_materialicons.ttf
-FileGroup1=Default Group
-Group=Default Group
+Group=App
 Library1=core
 Library2=json
 Library3=phone
 Library4=javaobject
 Library5=xui
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
-Module1=|relative|..\B4J\PrefsController
+Module1=|relative|..\PrefsController
 Module10=Starter
 Module2=PrefsDirPicker
-Module3=|relative|..\B4J\PrefsFileResult
-Module4=|relative|..\B4J\PrefsLocalization
-Module5=|relative|..\B4J\PrefsModel
+Module3=|relative|..\PrefsFileResult
+Module4=|relative|..\PrefsLocalization
+Module5=|relative|..\PrefsModel
 Module6=PrefsRenderer
-Module7=|relative|..\B4J\PrefsSelfTest
-Module8=|relative|..\B4J\PrefsStore
-Module9=|relative|..\B4J\PrefsTheme
-NumberOfFiles=1
+Module7=|relative|..\PrefsSelfTest
+Module8=|relative|..\PrefsStore
+Module9=|relative|..\PrefsTheme
+NumberOfFiles=0
 NumberOfLibraries=5
 NumberOfModules=10
 Version=14.2
@@ -56,6 +54,7 @@ Version=14.2
 ' Save/Cancel backed by the shared PrefsController.
 
 Sub Process_Globals
+	Private xui As XUI
 	Private FormOpen As Boolean
 End Sub
 
@@ -67,7 +66,6 @@ Sub Globals
 	Private Localization As PrefsLocalization
 	Private Renderer As PrefsRenderer
 	Private DirPicker As PrefsDirPicker
-	Private StarFont As Typeface
 	Private Store As PrefsStore
 	Private StoreFileName As String = "prefs-values.json"
 	Private HostPanel As Panel
@@ -235,7 +233,6 @@ Private Sub Rating_Create(Args As Map) As Object
 	Handle.Initialize
 	Handle.Put("buttons", Buttons)
 	Handle.Put("value", Value)
-	If StarFont.IsInitialized = False Then StarFont = Typeface.LoadFromAssets("b4x_materialicons.ttf")
 	Dim StarWidth As Int = Width / 5
 	For I = 1 To 5
 		Dim Star As Label
@@ -245,7 +242,7 @@ Private Sub Rating_Create(Args As Map) As Object
 		Tag.Put("handle", Handle)
 		Tag.Put("index", I)
 		Star.Tag = Tag
-		Star.Typeface = StarFont
+		Star.Typeface = Typeface.MATERIALICONS
 		Star.TextSize = 30
 		Star.Gravity = Gravity.CENTER
 		Parent.AddView(Star, Left + (I - 1) * StarWidth, Top, StarWidth, Height)

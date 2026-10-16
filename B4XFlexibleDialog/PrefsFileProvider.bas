@@ -1,5 +1,5 @@
 ﻿B4J=true
-Group=Default Group
+Group=App
 ModulesStructureVersion=1
 Type=Class
 Version=10.7

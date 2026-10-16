@@ -21,6 +21,9 @@
 - Replaced the B4A directory flow with a dependency-free `PrefsDirPicker` (SAF tree URIs, no `DocumentFile` requirement) after `ExternalStorage` crashed on a missing legacy class.
 - Added a `.b4xlib` packaging script and generated `dist/B4XFlexibleDialog.b4xlib` (shared modules at root, B4J modules under `B4J/`).
 - Added startup assertions for the new value types and validation cases.
+- Cast the public view API to `B4XView` and added a B4A B4XPages example; later collapsed the example's `AppHost` dispatcher and per-platform `PrefsHost` classes into the single shared `B4XMainPage`.
+- Set the B4J manifest dependency to `Json, jXUI` and the B4A one to `Phone, XUI, JavaObject` (dropped `jFX`/`Core`).
+- Added documented B4i stubs (`B4i/PrefsRenderer`, `B4i/PrefsDirPicker`), shipped them in the `.b4xlib` under `B4i/`, and made the B4i project a self-consistent self-test harness.
 
 ## 0.1.0 — Milestone 1 foundation
 
