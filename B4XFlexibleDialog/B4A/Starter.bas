@@ -1,4 +1,4 @@
-B4A=true
+﻿B4A=true
 Group=Services
 ModulesStructureVersion=1
 Type=Service

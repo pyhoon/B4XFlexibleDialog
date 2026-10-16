@@ -1,15 +1,15 @@
-Build1=Default,b4a.example
+﻿Build1=Default,b4a.example
 Group=Default Group
 Library1=core
-Library2=JSON
-ManifestCode='This code will be applied to the manifest file during compilation.~'You do not need to modify it in most cases.~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~AddManifestText(~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35"/>~<supports-screens android:largeScreens="true" ~    android:normalScreens="true" ~    android:smallScreens="true" ~    android:anyDensity="true"/>)~SetApplicationAttribute(android:icon, "@drawable/icon")~SetApplicationAttribute(android:label, "$LABEL$")~CreateResourceFromFile(Macro, Themes.LightTheme)~'End of default text.~'~
-Module1=|relative|..\B4J\PrefsModel
-Module2=|relative|..\B4J\PrefsController
+Library2=json
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
+Module1=|relative|..\B4J\PrefsController
+Module2=|relative|..\B4J\PrefsFileResult
 Module3=|relative|..\B4J\PrefsLocalization
-Module4=|relative|..\B4J\PrefsTheme
-Module5=|relative|..\B4J\PrefsStore
-Module6=|relative|..\B4J\PrefsFileResult
-Module7=|relative|..\B4J\PrefsSelfTest
+Module4=|relative|..\B4J\PrefsModel
+Module5=|relative|..\B4J\PrefsSelfTest
+Module6=|relative|..\B4J\PrefsStore
+Module7=|relative|..\B4J\PrefsTheme
 Module8=Starter
 NumberOfFiles=0
 NumberOfLibraries=2
@@ -23,6 +23,8 @@ Version=14.2
 	'SupportedOrientations possible values: unspecified, landscape or portrait.
 	#SupportedOrientations: unspecified
 	#CanInstallToExternalStorage: False
+	'#EdgeToEdgeOldDevices: True
+	#BridgeLogger: True
 #End Region
 
 #Region Activity Attributes 
@@ -30,11 +32,23 @@ Version=14.2
 	#IncludeTitle: True
 #End Region
 
+#Region Macros
+'#Macro: Title, Export, ide://run?File=%B4X%\Zipper.jar&Args=%PROJECT_NAME%.zip
+'#Macro: Title, GitHub, ide://run?File=%WINDIR%\System32\cmd.exe&Args=/c&Args=github&Args=..\..\
+#Macro: Title, JsonLayouts folder, ide://run?File=%WINDIR%\explorer.exe&Args=%PROJECT%\JsonLayouts
+#Macro: After Save, Sync Layouts, ide://run?File=%ADDITIONAL%\..\B4X\JsonLayouts.jar&Args=%PROJECT%&Args=%PROJECT_NAME%
+#End Region
+
+#if AAB
+#R8Optimizer: True
+#End If
+	
 ' Shared-module validation for B4XFlexibleDialog.
 ' Runs the platform-independent PrefsSelfTest at startup and shows the results.
 ' No UI renderer is implemented on B4A yet.
 
 Sub Process_Globals
+
 End Sub
 
 Sub Globals
@@ -55,7 +69,9 @@ Sub Activity_Create(FirstTime As Boolean)
 End Sub
 
 Sub Activity_Resume
+
 End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)
+	
 End Sub
