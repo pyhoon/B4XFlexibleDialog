@@ -166,7 +166,7 @@ The target must be a module (the app); class instances are not supported as the 
 
 Showing a dialog or page with an unregistered renderer name fails fast: Save is blocked with `No custom renderer registered for preference <id>`, and the message is logged. The demo registers a 1–5 star rating renderer (`Rating_*` subs in the demo Main) used by the `satisfaction` preference in both presentations. The sample paints its buttons from `Prefs.GetTheme` colors, so it follows light/dark switches including the in-dialog theme toggle.
 
-The B4A renderer does not implement the custom lifecycle yet: `custom` preferences render title-only there and keep their default values. Porting the contract to B4A is open work.
+The B4A renderer implements the custom lifecycle (create/read/validate/dispose with fail-fast on unregistered names) through `Renderer.RegisterCustomRenderer`; the B4A demo registers the same 1–5 rating sample. Refresh has no trigger on B4A — hosts re-render, which disposes and recreates custom controls. On-device verification is pending.
 
 ## Persistence (Milestone 4)
 

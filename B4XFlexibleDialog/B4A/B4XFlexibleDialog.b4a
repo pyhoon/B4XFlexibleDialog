@@ -117,6 +117,7 @@ Private Sub LoadDefinition
 	EnDict.Put("notification.weekly", "Weekly summary")
 	EnDict.Put("setting.font_scale", "Font scale")
 	EnDict.Put("setting.company_logo", "Company logo")
+	EnDict.Put("setting.satisfaction", "Satisfaction")
 	EnDict.Put("setting.export_folder", "Export folder")
 	EnDict.Put("ui.browse", "Browse")
 	EnDict.Put("setting.account_note", "Account information")
@@ -132,6 +133,7 @@ Private Sub LoadDefinition
 	End If
 	Controller.Initialize(Model)
 	Renderer.Initialize(Me, "Prefs", Model, Controller, Localization)
+	Renderer.RegisterCustomRenderer("RatingStars", Me, "Rating")
 	DirPicker.Initialize(Me, "DirPicker")
 	Store.Initialize
 	If File.Exists(File.DirInternal, StoreFileName) Then
@@ -145,7 +147,7 @@ Private Sub LoadDefinition
 End Sub
 
 Private Sub DemoDefinition As String
-	Return "{""schemaVersion"":1,""id"":""demo.settings"",""titleKey"":""settings.title"",""sections"":[{""id"":""general"",""titleKey"":""section.general"",""preferences"":[{""id"":""username"",""type"":""text"",""titleKey"":""setting.username"",""defaultValue"":""Guest"",""required"":true,""minLength"":3,""maxLength"":32},{""id"":""about"",""type"":""multiline"",""titleKey"":""setting.about"",""defaultValue"":"""",""maxLength"":120},{""id"":""api_key"",""type"":""password"",""titleKey"":""setting.api_key"",""defaultValue"":""""},{""id"":""items_per_page"",""type"":""number"",""titleKey"":""setting.items_per_page"",""defaultValue"":20,""options"":{""min"":5,""max"":200}},{""id"":""dark_mode"",""type"":""switch"",""titleKey"":""setting.dark_mode"",""defaultValue"":false},{""id"":""show_tips"",""type"":""checkbox"",""titleKey"":""setting.show_tips"",""defaultValue"":true},{""id"":""display_mode"",""type"":""choice"",""titleKey"":""setting.display_mode"",""defaultValue"":""compact"",""options"":{""items"":[{""value"":""compact"",""titleKey"":""display.compact""},{""value"":""comfortable"",""titleKey"":""display.comfortable""}]}},{""id"":""notifications"",""type"":""multichoice"",""titleKey"":""setting.notifications"",""defaultValue"":[""email""],""options"":{""items"":[{""value"":""email"",""titleKey"":""notification.email""},{""value"":""push"",""titleKey"":""notification.push""},{""value"":""weekly"",""titleKey"":""notification.weekly""}]}},{""id"":""font_scale"",""type"":""slider"",""titleKey"":""setting.font_scale"",""defaultValue"":1.0,""options"":{""min"":0.8,""max"":1.4}},{""id"":""company_logo"",""type"":""file"",""titleKey"":""setting.company_logo"",""defaultValue"":"""",""options"":{""extensions"":[""png"",""jpg"",""jpeg"",""webp""],""allowClear"":true,""copyToAppStorage"":true}},{""id"":""export_folder"",""type"":""directory"",""titleKey"":""setting.export_folder"",""defaultValue"":"""",""options"":{""allowClear"":true}},{""id"":""account_note"",""type"":""label"",""titleKey"":""setting.account_note"",""descriptionKey"":""setting.account_note_description""},{""id"":""clear_cache"",""type"":""action"",""titleKey"":""setting.clear_cache""}]}]}"
+	Return "{""schemaVersion"":1,""id"":""demo.settings"",""titleKey"":""settings.title"",""sections"":[{""id"":""general"",""titleKey"":""section.general"",""preferences"":[{""id"":""username"",""type"":""text"",""titleKey"":""setting.username"",""defaultValue"":""Guest"",""required"":true,""minLength"":3,""maxLength"":32},{""id"":""about"",""type"":""multiline"",""titleKey"":""setting.about"",""defaultValue"":"""",""maxLength"":120},{""id"":""api_key"",""type"":""password"",""titleKey"":""setting.api_key"",""defaultValue"":""""},{""id"":""items_per_page"",""type"":""number"",""titleKey"":""setting.items_per_page"",""defaultValue"":20,""options"":{""min"":5,""max"":200}},{""id"":""dark_mode"",""type"":""switch"",""titleKey"":""setting.dark_mode"",""defaultValue"":false},{""id"":""show_tips"",""type"":""checkbox"",""titleKey"":""setting.show_tips"",""defaultValue"":true},{""id"":""display_mode"",""type"":""choice"",""titleKey"":""setting.display_mode"",""defaultValue"":""compact"",""options"":{""items"":[{""value"":""compact"",""titleKey"":""display.compact""},{""value"":""comfortable"",""titleKey"":""display.comfortable""}]}},{""id"":""notifications"",""type"":""multichoice"",""titleKey"":""setting.notifications"",""defaultValue"":[""email""],""options"":{""items"":[{""value"":""email"",""titleKey"":""notification.email""},{""value"":""push"",""titleKey"":""notification.push""},{""value"":""weekly"",""titleKey"":""notification.weekly""}]}},{""id"":""font_scale"",""type"":""slider"",""titleKey"":""setting.font_scale"",""defaultValue"":1.0,""options"":{""min"":0.8,""max"":1.4}},{""id"":""company_logo"",""type"":""file"",""titleKey"":""setting.company_logo"",""defaultValue"":"""",""options"":{""extensions"":[""png"",""jpg"",""jpeg"",""webp""],""allowClear"":true,""copyToAppStorage"":true}},{""id"":""export_folder"",""type"":""directory"",""titleKey"":""setting.export_folder"",""defaultValue"":"""",""options"":{""allowClear"":true}},{""id"":""satisfaction"",""type"":""custom"",""titleKey"":""setting.satisfaction"",""defaultValue"":3,""options"":{""renderer"":""RatingStars"",""height"":56}},{""id"":""account_note"",""type"":""label"",""titleKey"":""setting.account_note"",""descriptionKey"":""setting.account_note_description""},{""id"":""clear_cache"",""type"":""action"",""titleKey"":""setting.clear_cache""}]}]}"
 End Sub
 
 Sub OpenButton_Click
@@ -179,6 +181,7 @@ End Sub
 
 Private Sub CloseForm
 	FormOpen = False
+	Renderer.Dispose
 	HostPanel.RemoveView
 	SaveButton.RemoveView
 	CancelButton.RemoveView
@@ -210,4 +213,90 @@ End Sub
 
 Sub DirPicker_DirectoryCancelled
 	Log("Directory pick cancelled")
+End Sub
+
+' Sample custom renderer: a 1-5 rating row. Follows the same lifecycle
+' contract as B4J (create/read/validate/refresh/dispose); B4A invokes
+' create/read/validate/dispose, and re-render replaces refresh.
+Private Sub Rating_Create(Args As Map) As Object
+	Dim Parent As Panel = Args.Get("parent")
+	Dim Left As Int = Args.Get("left")
+	Dim Top As Int = Args.Get("top")
+	Dim Width As Int = Args.Get("width")
+	Dim Height As Int = Args.Get("height")
+	Dim Value As Int = Args.Get("value")
+	Dim Buttons As List
+	Buttons.Initialize
+	Dim Handle As Map
+	Handle.Initialize
+	Handle.Put("buttons", Buttons)
+	Handle.Put("value", Value)
+	Dim ButtonWidth As Int = Width / 5
+	For I = 1 To 5
+		Dim B As Button
+		B.Initialize("ratingStar")
+		Dim Tag As Map
+		Tag.Initialize
+		Tag.Put("handle", Handle)
+		Tag.Put("index", I)
+		B.Tag = Tag
+		B.Text = I
+		B.TextSize = 16
+		Parent.AddView(B, Left + (I - 1) * ButtonWidth, Top, ButtonWidth - 4dip, Height)
+		Buttons.Add(B)
+	Next
+	Rating_Paint(Handle)
+	Return Handle
+End Sub
+
+Private Sub Rating_Read(Handle As Object, Definition As Map) As Object
+	Dim H As Map = Handle
+	Return H.Get("value")
+End Sub
+
+Private Sub Rating_Validate(Value As Object, Definition As Map) As String
+	Try
+		Dim RatingValue As Int = Value
+		If RatingValue >= 1 And RatingValue <= 5 Then Return ""
+	Catch
+		Log(LastException.Message)
+	End Try
+	Return "Rating must be between 1 and 5"
+End Sub
+
+Private Sub Rating_Refresh(Handle As Object, Args As Map)
+	Dim H As Map = Handle
+	H.Put("value", Args.Get("value"))
+	Rating_Paint(H)
+End Sub
+
+Private Sub Rating_Dispose(Handle As Object)
+	Dim H As Map = Handle
+	Dim Buttons As List = H.Get("buttons")
+	For Each B As Button In Buttons
+		B.RemoveView
+	Next
+End Sub
+
+Private Sub Rating_Paint(Handle As Map)
+	Dim Buttons As List = Handle.Get("buttons")
+	Dim Value As Int = Handle.Get("value")
+	For I = 0 To Buttons.Size - 1
+		Dim B As Button = Buttons.Get(I)
+		If I < Value Then
+			B.Color = Colors.Blue
+			B.TextColor = Colors.White
+		Else
+			B.Color = Colors.LightGray
+			B.TextColor = Colors.Black
+		End If
+	Next
+End Sub
+
+Private Sub ratingStar_Click
+	Dim B As Button = Sender
+	Dim Tag As Map = B.Tag
+	Dim Handle As Map = Tag.Get("handle")
+	Handle.Put("value", Tag.Get("index"))
+	Rating_Paint(Handle)
 End Sub

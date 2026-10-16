@@ -98,6 +98,8 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Implement the create/read/validate/refresh/dispose lifecycle in the B4J page renderer.
 - [x] Demonstrate a custom rating renderer in the B4J demo and library-test example.
 - [x] Verify the custom renderer GUI behavior (create, edit, invalid value, Save, Reset, language/theme refresh, dispose) in both presentations (reported passing).
+- [x] Port the custom lifecycle (create/read/validate/dispose, fail-fast registration) to the B4A renderer with a matching rating sample.
+- [ ] Verify the B4A custom renderer on a device (render, edit, invalid value, Save, dispose).
 - [ ] Finalize public APIs and callback contracts against each target compiler.
 - [x] Package a distributable `.b4xlib` and verify integration from a fresh project.
 - [ ] Complete automated/repeatable tests, platform examples, and release documentation.

@@ -9,14 +9,21 @@ Version=14.2
 ' PrefsController. The host activity owns navigation and the container:
 ' call Render(Container) to build, Save to commit, Cancel to discard.
 ' File preferences open a ContentChooser and store the selected content path,
-' optionally copying into File.DirInternal/prefs-files. Directory picking is
-' not implemented yet; those preferences render their current value read-only.
+' optionally copying into File.DirInternal/prefs-files. Directory picks are
+' mediated by the host through SetDirectoryValue.
+' Custom preferences are built through renderers registered with
+' RegisterCustomRenderer, following the same create/read/validate/dispose
+' lifecycle as B4J. There are no localization/theme refresh triggers on B4A;
+' hosts re-render instead, which disposes and recreates custom controls.
 Sub Class_Globals
 	Private Model As PrefsModel
 	Private Controller As PrefsController
 	Private Localization As PrefsLocalization
 	Private Callback As Object
 	Private EventPrefix As String
+	Private CustomRenderers As Map
+	Private CustomHandles As Map
+	Private BuildError As String
 	Private Form As ScrollView
 	Private Controls As Map
 	Private ControlTypes As Map
@@ -44,11 +51,34 @@ Public Sub Initialize(Target As Object, EventName As String, Definition As Prefs
 	PendingFileId = ""
 	PendingCopy = False
 	PendingDirId = ""
+	CustomRenderers.Initialize
+	CustomHandles.Initialize
+	BuildError = ""
+End Sub
+
+' Registers a custom renderer for "custom" preferences. Name must match the
+' options.renderer value in the definition. Target is the module hosting the
+' lifecycle subs; EventName is their prefix. Required lifecycle subs, where
+' <E> is the event name:
+'   <E>_Create(Args As Map) As Object
+'   <E>_Read(Handle As Object, Definition As Map) As Object
+'   <E>_Validate(Value As Object, Definition As Map) As String
+'   <E>_Refresh(Handle As Object, Args As Map)
+'   <E>_Dispose(Handle As Object)
+' Note: B4A currently invokes create/read/validate/dispose only. Refresh has
+' no trigger here; hosts re-render, which disposes and recreates the control.
+Public Sub RegisterCustomRenderer(Name As String, Target As Object, EventName As String)
+	Dim Entry As Map
+	Entry.Initialize
+	Entry.Put("target", Target)
+	Entry.Put("event", EventName)
+	CustomRenderers.Put(Name, Entry)
 End Sub
 
 ' Builds the form inside Parent, replacing any previous content.
 Public Sub Render(Parent As Panel)
 	Controller.BeginDraft
+	DisposeCustomHandles
 	Controls.Initialize
 	ControlTypes.Initialize
 	ChoiceItems.Initialize
@@ -57,6 +87,8 @@ Public Sub Render(Parent As Panel)
 	SliderLabels.Initialize
 	SliderMin.Initialize
 	SliderMax.Initialize
+	CustomHandles.Initialize
+	BuildError = ""
 	Parent.RemoveAllViews
 	RowTop = 8dip
 	Form.Initialize(100dip)
@@ -79,7 +111,7 @@ Public Sub Render(Parent As Panel)
 		RowTop = RowTop + 8dip
 	Next
 	StatusLabel.Initialize("")
-	StatusLabel.Text = ""
+	StatusLabel.Text = BuildError
 	StatusLabel.TextSize = 14
 	StatusLabel.TextColor = Colors.Red
 	Form.Panel.AddView(StatusLabel, 16dip, RowTop, ContentWidth, 30dip)
@@ -269,8 +301,81 @@ Private Sub AddPreference(Pref As Map, ContentWidth As Int)
 		DirBrowse.TextSize = 16
 		Form.Panel.AddView(DirBrowse, 16dip + ContentWidth - 94dip, RowTop, 94dip, 52dip)
 		RowTop = RowTop + 60dip
+	Else If TypeName = "custom" Then
+		AddCustomPreference(Pref, ContentWidth)
 	End If
 	ControlTypes.Put(Id, TypeName)
+End Sub
+
+' Builds a custom preference through its registered renderer. The renderer
+' name comes from options.renderer. The Create handler receives an Args map
+' with parent/left/top/width/height (pixels), definition and value, and
+' returns a handle passed back to Read/Dispose.
+Private Sub AddCustomPreference(Pref As Map, ContentWidth As Int)
+	Dim Id As String = Pref.Get("id")
+	Dim Entry As Map = CustomEntry(Pref)
+	If Entry = Null Then
+		BuildError = "No custom renderer registered for preference " & Id
+		Log(BuildError)
+		Dim ErrorLabel As Label
+		ErrorLabel.Initialize("")
+		ErrorLabel.Text = BuildError
+		ErrorLabel.TextSize = 14
+		ErrorLabel.TextColor = Colors.Red
+		Form.Panel.AddView(ErrorLabel, 16dip, RowTop, ContentWidth, 52dip)
+		RowTop = RowTop + 60dip
+		Return
+	End If
+	Dim CustomHeight As Int = 60dip
+	If Pref.ContainsKey("options") Then
+		Dim CustomOptions As Map = Pref.Get("options")
+		If CustomOptions.ContainsKey("height") Then
+			Dim HeightDip As Int = CustomOptions.Get("height")
+			If HeightDip < 44 Then HeightDip = 44
+			CustomHeight = DipToCurrent(HeightDip)
+		End If
+	End If
+	Dim Args As Map
+	Args.Initialize
+	Args.Put("parent", Form.Panel)
+	Args.Put("left", 16dip)
+	Args.Put("top", RowTop)
+	Args.Put("width", ContentWidth)
+	Args.Put("height", CustomHeight)
+	Args.Put("definition", Pref)
+	Args.Put("value", Controller.GetValue(Id))
+	Dim Target As Object = Entry.Get("target")
+	Dim EventName As String = Entry.Get("event")
+	Dim Handle As Object = CallSub2(Target, EventName & "_Create", Args)
+	CustomHandles.Put(Id, Handle)
+	Controls.Put(Id, Handle)
+	RowTop = RowTop + CustomHeight + 8dip
+End Sub
+
+Private Sub CustomEntry(Pref As Map) As Map
+	If Pref.ContainsKey("options") = False Then Return Null
+	Dim Options As Map = Pref.Get("options")
+	If Options.ContainsKey("renderer") = False Then Return Null
+	Dim Name As String = Options.Get("renderer")
+	If CustomRenderers.ContainsKey(Name) = False Then Return Null
+	Return CustomRenderers.Get(Name)
+End Sub
+
+Private Sub ReadCustom(Id As String) As Object
+	Dim Pref As Map = Model.GetPreference(Id)
+	Dim Entry As Map = CustomEntry(Pref)
+	Return CallSub3(Entry.Get("target"), Entry.Get("event") & "_Read", CustomHandles.Get(Id), Pref)
+End Sub
+
+Private Sub DisposeCustomHandles
+	For Each Id As String In CustomHandles.Keys
+		Dim Pref As Map = Model.GetPreference(Id)
+		Dim Entry As Map = CustomEntry(Pref)
+		If Entry <> Null Then
+			CallSub2(Entry.Get("target"), Entry.Get("event") & "_Dispose", CustomHandles.Get(Id))
+		End If
+	Next
+	CustomHandles.Clear
 End Sub
 
 Private Sub prefsbrowsedir_Click
@@ -406,6 +511,10 @@ End Sub
 ' Reads all controls into the draft, validates, and commits on success.
 ' Returns True when the values were committed.
 Public Sub Save As Boolean
+	If BuildError <> "" Then
+		ShowError(BuildError)
+		Return False
+	End If
 	For Each Id As String In Controls.Keys
 		Dim TypeName As String = ControlTypes.Get(Id)
 		Dim Value As Object
@@ -451,6 +560,15 @@ Public Sub Save As Boolean
 			Case "file", "directory"
 				Dim PathField As EditText = Controls.Get(Id)
 				Value = PathField.Text
+			Case "custom"
+				Value = ReadCustom(Id)
+				Dim CustomPref As Map = Model.GetPreference(Id)
+				Dim Entry As Map = CustomEntry(CustomPref)
+				Dim ValidationError As String = CallSub3(Entry.Get("target"), Entry.Get("event") & "_Validate", Value, CustomPref)
+				If ValidationError <> "" Then
+					ShowError(ValidationError & " (" & Id & ")")
+					Return False
+				End If
 		End Select
 		If Controller.SetDraftValue(Id, Value) = False Then
 			ShowError(Controller.LastError)
@@ -471,6 +589,12 @@ End Sub
 ' Discards the current draft edits.
 Public Sub Cancel
 	Controller.CancelDraft
+End Sub
+
+' Releases custom renderer resources. Called when the host closes the form;
+' the host should still remove its own container views.
+Public Sub Dispose
+	DisposeCustomHandles
 End Sub
 
 Private Sub ShowError(Message As String)
