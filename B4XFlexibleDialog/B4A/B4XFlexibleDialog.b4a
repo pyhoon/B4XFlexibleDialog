@@ -6,15 +6,15 @@ Library3=phone
 Library4=javaobject
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
 Module1=|relative|..\B4J\PrefsController
-Module2=|relative|..\B4J\PrefsFileResult
-Module3=|relative|..\B4J\PrefsLocalization
-Module4=|relative|..\B4J\PrefsModel
-Module5=PrefsRenderer
-Module6=|relative|..\B4J\PrefsSelfTest
-Module7=|relative|..\B4J\PrefsStore
-Module8=|relative|..\B4J\PrefsTheme
-Module10=PrefsDirPicker
-Module9=Starter
+Module10=Starter
+Module2=PrefsDirPicker
+Module3=|relative|..\B4J\PrefsFileResult
+Module4=|relative|..\B4J\PrefsLocalization
+Module5=|relative|..\B4J\PrefsModel
+Module6=PrefsRenderer
+Module7=|relative|..\B4J\PrefsSelfTest
+Module8=|relative|..\B4J\PrefsStore
+Module9=|relative|..\B4J\PrefsTheme
 NumberOfFiles=0
 NumberOfLibraries=4
 NumberOfModules=10
@@ -187,7 +187,7 @@ Sub Prefs_Action(PreferenceId As String)
 End Sub
 
 Sub Prefs_BrowseDirectory(Id As String)
-	DirPicker.SelectDir(True)
+	DirPicker.SelectDir(False)
 End Sub
 
 Sub DirPicker_DirectoryPicked(Uri As String)
