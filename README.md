@@ -58,14 +58,14 @@ A ready-to-run consumer project is included at [`examples/B4JLibraryTest`](examp
 
 | Area | B4J | B4A | B4i |
 | --- | --- | --- | --- |
-| Model, controller, localization, theme, store | Implemented and verified | Compiles; runtime self-test pending | Source prepared; Mac builder required |
+| Model, controller, localization, theme, store | Implemented and verified | Verified: `PrefsSelfTest` 29/29 `passed=` on device | Source prepared; Mac builder required |
 | `.b4xlib` packaging | Implemented and verified | Not packaged | Not packaged |
 | Modal dialog renderer | Implemented and verified | Not implemented | Not implemented |
 | Embedded page renderer | Implemented and verified | Not implemented | Not implemented |
 | File/directory picker | Implemented and verified (JavaFX choosers) | Not implemented (see limitations) | Not implemented (see limitations) |
 | Persistence | File-backed demo verified | Store API shared; app-owned path differs | Store API shared; app-owned path differs |
 
-The B4A validation project at `B4XFlexibleDialog/B4A` references the shared modules with relative paths (`Module=|relative|..\B4J\...`) and runs `PrefsSelfTest` at startup, showing `passed=`/`failed=` plus the full log. It builds with:
+The B4A validation project at `B4XFlexibleDialog/B4A` references the shared modules with relative paths (`Module=|relative|..\B4J\...`) and runs `PrefsSelfTest` at startup, showing `passed=`/`failed=` plus the full log. It reported `passed=29 failed=0` on device. It builds with:
 
 ```powershell
 & 'C:\Program Files\B4X\B4A\B4ABuilder.exe' -Task=Build `
