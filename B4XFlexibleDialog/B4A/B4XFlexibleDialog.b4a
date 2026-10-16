@@ -7,11 +7,11 @@ Module1=|relative|..\B4J\PrefsController
 Module2=|relative|..\B4J\PrefsFileResult
 Module3=|relative|..\B4J\PrefsLocalization
 Module4=|relative|..\B4J\PrefsModel
-Module5=|relative|..\B4J\PrefsSelfTest
-Module6=|relative|..\B4J\PrefsStore
-Module7=|relative|..\B4J\PrefsTheme
-Module8=Starter
-Module9=PrefsRenderer
+Module5=PrefsRenderer
+Module6=|relative|..\B4J\PrefsSelfTest
+Module7=|relative|..\B4J\PrefsStore
+Module8=|relative|..\B4J\PrefsTheme
+Module9=Starter
 NumberOfFiles=0
 NumberOfLibraries=2
 NumberOfModules=9
@@ -141,11 +141,11 @@ Sub OpenButton_Click
 	CancelButton.Initialize("CancelButton")
 	CancelButton.Text = "Cancel"
 	Activity.AddView(CancelButton, 20dip + (100%x - 30dip) / 2, 100%y - 130dip, (100%x - 30dip) / 2, 60dip)
+	OpenButton.Visible = False
 End Sub
 
 Sub SaveButton_Click
 	If Renderer.Save Then
-		Log("Saved values: " & Controller.GetValues)
 		CloseForm
 	Else
 		Log("Save blocked by validation")
@@ -162,6 +162,7 @@ Private Sub CloseForm
 	HostPanel.RemoveView
 	SaveButton.RemoveView
 	CancelButton.RemoveView
+	OpenButton.Visible = True
 End Sub
 
 Sub Prefs_BeforeSave(Values As Map) As Boolean
