@@ -1,4 +1,4 @@
-B4A=true
+﻿B4A=true
 Group=Default Group
 ModulesStructureVersion=1
 Type=Class
@@ -8,8 +8,9 @@ Version=14.2
 ' Value state, validation and Save/Cancel semantics come from the shared
 ' PrefsController. The host activity owns navigation and the container:
 ' call Render(Container) to build, Save to commit, Cancel to discard.
-' File and directory pickers are not implemented yet; those preferences
-' render their current value read-only.
+' File preferences open a ContentChooser and store the selected content path,
+' optionally copying into File.DirInternal/prefs-files. Directory picking is
+' not implemented yet; those preferences render their current value read-only.
 Sub Class_Globals
 	Private Model As PrefsModel
 	Private Controller As PrefsController
@@ -26,6 +27,9 @@ Sub Class_Globals
 	Private SliderMin As Map
 	Private SliderMax As Map
 	Private StatusLabel As Label
+	Private FilePicker As ContentChooser
+	Private PendingFileId As String
+	Private PendingCopy As Boolean
 	Private RowTop As Int
 End Sub
 
@@ -35,6 +39,9 @@ Public Sub Initialize(Target As Object, EventName As String, Definition As Prefs
 	Model = Definition
 	Controller = ValueController
 	Localization = L10n
+	FilePicker.Initialize("prefscc")
+	PendingFileId = ""
+	PendingCopy = False
 End Sub
 
 ' Builds the form inside Parent, replacing any previous content.
@@ -228,7 +235,23 @@ Private Sub AddPreference(Pref As Map, ContentWidth As Int)
 		SliderLabels.Put(Id, ValueLabel)
 		Controls.Put(Id, Bar)
 		RowTop = RowTop + 60dip
-	Else If TypeName = "file" Or TypeName = "directory" Then
+	Else If TypeName = "file" Then
+		Dim PathField As EditText
+		PathField.Initialize("")
+		PathField.TextSize = 14
+		PathField.SingleLine = True
+		PathField.Enabled = False
+		PathField.Text = Controller.GetValue(Id)
+		Form.Panel.AddView(PathField, 16dip, RowTop, ContentWidth - 110dip, 52dip)
+		Controls.Put(Id, PathField)
+		Dim BrowseButton As Button
+		BrowseButton.Initialize("prefsbrowse")
+		BrowseButton.Tag = Id
+		BrowseButton.Text = Localization.Text("ui.browse")
+		BrowseButton.TextSize = 16
+		Form.Panel.AddView(BrowseButton, 16dip + ContentWidth - 94dip, RowTop, 94dip, 52dip)
+		RowTop = RowTop + 60dip
+	Else If TypeName = "directory" Then
 		Dim PathLabel As Label
 		PathLabel.Initialize("")
 		PathLabel.TextSize = 14
@@ -237,6 +260,53 @@ Private Sub AddPreference(Pref As Map, ContentWidth As Int)
 		RowTop = RowTop + 60dip
 	End If
 	ControlTypes.Put(Id, TypeName)
+End Sub
+
+Private Sub prefsbrowse_Click
+	Dim Source As Button = Sender
+	Dim Id As String = Source.Tag
+	Dim Pref As Map = Model.GetPreference(Id)
+	Dim Options As Map
+	Options.Initialize
+	If Pref.ContainsKey("options") Then Options = Pref.Get("options")
+	PendingFileId = Id
+	PendingCopy = False
+	If Options.ContainsKey("copyToAppStorage") Then PendingCopy = Options.Get("copyToAppStorage")
+	FilePicker.Show(MimeForOptions(Options), Localization.Text(Pref.Get("titleKey")))
+End Sub
+
+Private Sub prefscc_Result(Success As Boolean, Dir As String, FileName As String)
+	If PendingFileId = "" Then Return
+	Dim Id As String = PendingFileId
+	PendingFileId = ""
+	If Success = False Then Return
+	Dim Stored As String = File.Combine(Dir, FileName)
+	If PendingCopy Then
+		Dim TargetDir As String = File.Combine(File.DirInternal, "prefs-files")
+		If File.Exists(File.DirInternal, "prefs-files") = False Then File.MakeDir(File.DirInternal, "prefs-files")
+		File.Copy(Dir, FileName, TargetDir, FileName)
+		Stored = File.Combine(TargetDir, FileName)
+	End If
+	Dim Field As EditText = Controls.Get(Id)
+	Field.Text = Stored
+End Sub
+
+' Maps options.extensions to an Android MIME filter. Defaults to */* when
+' the list is absent or contains non-image types.
+Private Sub MimeForOptions(Options As Map) As String
+	If Options.ContainsKey("extensions") = False Then Return "*/*"
+	Dim Extensions As List = Options.Get("extensions")
+	If Extensions.Size = 0 Then Return "*/*"
+	For Each ExtensionObject As Object In Extensions
+		Dim Extension As String = ExtensionObject
+		If IsImageExtension(Extension) = False Then Return "*/*"
+	Next
+	Return "image/*"
+End Sub
+
+Private Sub IsImageExtension(Extension As String) As Boolean
+	Dim Lower As String = Extension.ToLowerCase
+	Return Lower = "png" Or Lower = "jpg" Or Lower = "jpeg" Or Lower = "gif" Or Lower = "webp" Or Lower = "bmp"
 End Sub
 
 Private Sub AddTitle(Pref As Map, ContentWidth As Int)
@@ -308,7 +378,10 @@ Public Sub Save As Boolean
 				Dim Minimum As Double = SliderMin.Get(Id)
 				Dim Maximum As Double = SliderMax.Get(Id)
 				Value = Minimum + (Maximum - Minimum) * (Bar.Value / 1000)
-			Case "file", "directory"
+			Case "file"
+				Dim PathField As EditText = Controls.Get(Id)
+				Value = PathField.Text
+			Case "directory"
 				Continue
 		End Select
 		If Controller.SetDraftValue(Id, Value) = False Then
