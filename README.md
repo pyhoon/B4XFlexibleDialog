@@ -40,6 +40,22 @@ A ready-to-run consumer project is included at [`examples/B4XPagesDemo`](example
 - B4J JSON (`Json`, library key `json`)
 - No third-party libraries, external pickers, or persistence dependencies.
 
+### XUI Views evaluation (not adopted)
+
+XUI Views (`B4XSwitch`, `B4XComboBox`, `B4XPlusMinus`, …) was evaluated as a source
+of replacement controls. It was deliberately not adopted, for these reasons:
+
+- Its views are designer-oriented (`DesignerCreateView` with a `Props` map); our
+  rows are built in code, so every adoption needs an emulation layer.
+- Its events dispatch to a callback object, which is fragile from renderer
+  class instances (the same class-instance dispatch that already ruled out a
+  `CallSub`-based commit listener here).
+- It would triple the dependency footprint (`XUI Views` plus transitives) for a
+  largely cosmetic gain; the renderers are complete and verified as-is.
+- The real payoff is cross-platform reuse. The right time is the B4A/B4i port
+  work, adopting per view (starting with `B4XSwitch`, which would finally give
+  the `switch` type a real toggle on all platforms) with on-device verification.
+
 ## Source modules
 
 - `PrefsModel.bas`: JSON parsing and validation; preference metadata only.
