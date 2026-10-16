@@ -58,7 +58,7 @@ A ready-to-run consumer project is included at [`examples/B4JLibraryTest`](examp
 
 | Area | B4J | B4A | B4i |
 | --- | --- | --- | --- |
-| Model, controller, localization, theme, store | Implemented and verified | Verified: `PrefsSelfTest` 29/29 `passed=` on device | Source prepared; Mac builder required |
+| Model, controller, localization, theme, store | Implemented and verified | Verified: `PrefsSelfTest` 29/29 `passed=` on device | Deferred (Mac/hosted builder required) |
 | `.b4xlib` packaging | Implemented and verified | Not packaged | Not packaged |
 | Modal dialog renderer | Implemented and verified | Not implemented | Not implemented |
 | Embedded page renderer | Implemented and verified | Not implemented | Not implemented |
@@ -80,7 +80,7 @@ B4A/B4i notes and limitations:
 - `PrefsFileProvider` and the `PrefsDialog`/`PrefsPage` renderers are B4J-only. Android needs a Storage Access Framework / `ContentChooser` picker returning content URIs (no permanent path); iOS needs a document picker with security-scoped access. Neither is implemented.
 - File/directory values must be treated as opaque strings or URIs; `copyToAppStorage` on B4J copies into `File.DirApp\prefs-files`, which has no B4A/B4i equivalent yet.
 - Persistence (`PrefsStore`) is platform code; only the storage location differs per platform (`File.DirApp` on B4J, app-internal dirs on B4A/B4i).
-- The B4i project at `B4XFlexibleDialog/B4i` is prepared but cannot be compiled without a Mac/hosted builder.
+- The B4i project at `B4XFlexibleDialog/B4i` is prepared but deferred: it cannot be compiled without a Mac/hosted builder.
 
 Do not claim cross-platform completion until B4A and B4i examples are compiled and exercised.
 

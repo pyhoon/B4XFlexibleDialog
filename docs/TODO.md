@@ -79,7 +79,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Create a B4A validation project reusing the shared sources via `|relative|` module references.
 - [x] Verify the shared modules compile on B4A with B4ABuilder (code, resources, and dex steps pass).
 - [x] Run the B4A self-test on a device and report the `passed=`/`failed=` log (reported `passed=29 failed=0`).
-- [ ] Prepare the B4i project (blocked on Mac/hosted builder; source ready, not compiled).
+- [ ] B4i project prepared but deferred (Mac/hosted builder required; revisit when builder access is available).
 - [ ] Implement platform-specific dialog/page renderers and native picker behavior.
 - [x] Start a capability matrix in the README; keep extending it as platforms are verified.
 
