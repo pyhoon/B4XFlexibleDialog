@@ -250,6 +250,7 @@ Private Sub Rating_Validate(Value As Object, Definition As Map) As String
 		Dim RatingValue As Int = Value
 		If RatingValue >= 1 And RatingValue <= 5 Then Return ""
 	Catch
+		Log(LastException.Message)
 	End Try
 	If Prefs.GetLanguage = "ms" Then Return Ms.Get("validation.rating")
 	Return En.Get("validation.rating")
@@ -270,16 +271,28 @@ Private Sub Rating_Dispose(Handle As Object)
 End Sub
 
 Private Sub Rating_Paint(Handle As Map)
+	Dim T As PrefsTheme = Prefs.GetTheme
+	Dim Accent As String = ThemeCss(T.AccentColor)
+	Dim OnText As String = ThemeCss(T.PrimaryButtonTextColor)
+	Dim OffBg As String = ThemeCss(T.SecondaryButtonBackgroundColor)
+	Dim OffText As String = ThemeCss(T.SecondaryButtonTextColor)
 	Dim Buttons As List = Handle.Get("buttons")
 	Dim Value As Int = Handle.Get("value")
 	For I = 0 To Buttons.Size - 1
 		Dim B As Button = Buttons.Get(I)
 		If I < Value Then
-			B.Style = "-fx-background-color: #1d4ed8; -fx-text-fill: white; -fx-font-weight: bold;"
+			B.Style = "-fx-background-color: " & Accent & "; -fx-text-fill: " & OnText & "; -fx-font-weight: bold; -fx-background-radius: 4;"
 		Else
-			B.Style = ""
+			B.Style = "-fx-background-color: " & OffBg & "; -fx-text-fill: " & OffText & "; -fx-background-radius: 4;"
 		End If
 	Next
+End Sub
+
+Private Sub ThemeCss(Color As Int) As String
+	Dim R As Int = Bit.And(Bit.ShiftRight(Color, 16), 255)
+	Dim G As Int = Bit.And(Bit.ShiftRight(Color, 8), 255)
+	Dim B As Int = Bit.And(Color, 255)
+	Return "rgb(" & R & "," & G & "," & B & ")"
 End Sub
 
 Private Sub ratingStar_Click
@@ -344,8 +357,8 @@ Private Sub RunCoreChecks(Definition As String)
 	Assert("custom without options rejected", BadModel.LoadFromJson("{""schemaVersion"":1,""id"":""x"",""sections"":[{""id"":""s"",""preferences"":[{""id"":""c"",""type"":""custom"",""titleKey"":""c""}]}]}") = False)
 	BadModel.Initialize
 	Assert("custom without renderer rejected", BadModel.LoadFromJson("{""schemaVersion"":1,""id"":""x"",""sections"":[{""id"":""s"",""preferences"":[{""id"":""c"",""type"":""custom"",""titleKey"":""c"",""options"":{}}]}]}") = False)
-	Assert("custom default loaded", Values.GetValue("satisfaction") = 3)
-	Assert("custom accepts any value shape", Values.SetValue("satisfaction", 5) And Values.GetValue("satisfaction") = 5)
+	Assert("custom default loaded", 3 = Values.GetValue("satisfaction"))
+	Assert("custom accepts any value shape", Values.SetValue("satisfaction", 5) And 5 = Values.GetValue("satisfaction"))
 	Assert("file accepts empty optional value", Values.SetValue("company_logo", ""))
 	Assert("file accepts allowed extension", Values.SetValue("company_logo", "C:\pics\logo.png"))
 	Assert("file rejects disallowed extension", Values.SetValue("company_logo", "C:\pics\notes.txt") = False)

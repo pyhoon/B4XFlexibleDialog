@@ -131,6 +131,7 @@ Dim Value As Object = Prefs.GetValue("username")
 Dim Values As Map = Prefs.GetValues ' Copy/snapshot
 Prefs.ResetToDefaults ' Restores every value preference to its default
 Prefs.ResetPreference("username") ' Restores one value preference to its default
+Dim Theme As PrefsTheme = Prefs.GetTheme ' Active theme object (same instance the dialog mutates)
 
 ' Persistence
 Dim Store As PrefsStore
@@ -163,7 +164,7 @@ The target must be a module (the app); class instances are not supported as the 
 - `<E>_Refresh(Handle As Object, Args As Map)` — update the control from `Args` (`definition`, `value`). Called on language/theme change and on Reset.
 - `<E>_Dispose(Handle As Object)` — release resources when the dialog closes or the page is disposed. Views owned by the content pane die with it, so removing them is optional but harmless.
 
-Showing a dialog or page with an unregistered renderer name fails fast: Save is blocked with `No custom renderer registered for preference <id>`, and the message is logged. The demo registers a 1–5 star rating renderer (`Rating_*` subs in the demo Main) used by the `satisfaction` preference in both presentations.
+Showing a dialog or page with an unregistered renderer name fails fast: Save is blocked with `No custom renderer registered for preference <id>`, and the message is logged. The demo registers a 1–5 star rating renderer (`Rating_*` subs in the demo Main) used by the `satisfaction` preference in both presentations. The sample paints its buttons from `Prefs.GetTheme` colors, so it follows light/dark switches including the in-dialog theme toggle.
 
 The B4A renderer does not implement the custom lifecycle yet: `custom` preferences render title-only there and keep their default values. Porting the contract to B4A is open work.
 

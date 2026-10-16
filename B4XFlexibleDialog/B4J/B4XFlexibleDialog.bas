@@ -163,6 +163,12 @@ Public Sub IsDarkTheme As Boolean
 	Return CurrentTheme.IsDark
 End Sub
 
+' Returns the active theme object. Custom renderers can read its colors so
+' they follow theme changes (the same object is mutated by theme toggles).
+Public Sub GetTheme As PrefsTheme
+	Return CurrentTheme
+End Sub
+
 Public Sub SetValue(Id As String, Value As Object) As Boolean
 	If CheckReady = False Then Return False
 	If Controller.SetValue(Id, Value) = False Then

@@ -11,6 +11,7 @@
 - Added `ResetToDefaults` / `ResetPreference` value operations and draft-reset Reset buttons in both presentations.
 - Added `PrefsStore` persistence: map-backed storage, JSON import/export, unknown-key preservation, and auto-persist after commit/set/reset.
 - Added the `custom` preference type with `RegisterCustomRenderer` and a create/read/validate/refresh/dispose lifecycle in both B4J presentations, plus a sample rating renderer.
+- Added `GetTheme` so custom renderers can follow the active theme; the sample rating buttons use theme accent/button colors.
 - Added `file` and `directory` preference types with a `PrefsFileProvider`/`PrefsFileResult` picker abstraction, extension filters, optional Clear, and optional copy-to-app-storage.
 - Added a shared `PrefsSelfTest` class and B4A/B4i validation projects; the B4A project reuses the shared sources and compiles with B4ABuilder (runtime self-test pending on device).
 - Added a B4A activity-form renderer (`PrefsRenderer`) with the same controller Save/Cancel semantics; compiles with B4ABuilder (on-device verification pending).
