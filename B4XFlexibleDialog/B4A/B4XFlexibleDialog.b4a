@@ -133,6 +133,7 @@ Sub OpenButton_Click
 	If FormOpen Then Return
 	FormOpen = True
 	HostPanel.Initialize("")
+	HostPanel.Color = Colors.White
 	Activity.AddView(HostPanel, 0, 0, 100%x, 100%y - 140dip)
 	Renderer.Render(HostPanel)
 	SaveButton.Initialize("SaveButton")
