@@ -1,4 +1,4 @@
-﻿AppType=JavaFX
+AppType=JavaFX
 Build1=Default,b4j.example
 File1=b4x_materialicons.ttf
 File2=en.json
@@ -14,15 +14,17 @@ Group=Default Group
 Library1=jcore
 Library2=jfx
 Library3=json
-Library4=b4xflexibledialog
+Library4=b4xpages
+Library5=b4xflexibledialog
+Module1=|relative|..\B4XMainPage
 NumberOfFiles=5
-NumberOfLibraries=4
-NumberOfModules=0
+NumberOfLibraries=5
+NumberOfModules=1
 Version=10.7
 @EndOfDesignText@
 #Region Project Attributes
-	#MainFormWidth: 640
-	#MainFormHeight: 420
+	#MainFormWidth: 1100
+	#MainFormHeight: 700
 #End Region
 
 Sub Process_Globals
@@ -37,7 +39,7 @@ End Sub
 
 Sub AppStart (Form1 As Form, Args() As String)
 	MainForm = Form1
-	MainForm.Title = "B4XFlexibleDialog library test"
+	MainForm.Title = "B4XFlexibleDialog B4XPages demo"
 
 	Dim Parser As JSONParser
 	Parser.Initialize(File.ReadString(File.DirAssets, "en.json"))
@@ -63,22 +65,55 @@ Sub AppStart (Form1 As Form, Args() As String)
 		If Store.FromJson(File.ReadString(File.DirApp, "prefs-store.json")) Then Prefs.LoadStoredValues
 	End If
 
-	Dim btn As Button
-	btn.Initialize("btn")
-	btn.Text = "Open preferences"
-	MainForm.RootPane.AddNode(btn, 30, 30, 200, 42)
+	Dim PagesManager As B4XPagesManager
+	PagesManager.Initialize(MainForm)
 	MainForm.Show
 End Sub
 
-Sub btn_Click
+' Called by B4XMainPage: opens the modal preferences dialog.
+Public Sub ShowPrefsDialog
 	Prefs.Show
 End Sub
+
+' Called by B4XMainPage: mounts the settings page into the given host.
+Public Sub ShowPrefsPage(Host As AnchorPane)
+	Prefs.CreatePage(Host)
+End Sub
+
+'Return true to allow the default exceptions handler to handle the uncaught exception.
+Sub Application_Error (Error As Exception, StackTrace As String) As Boolean
+	Return True
+End Sub
+
+'Template version: B4J-1.1
+#Region Delegates
+Sub MainForm_FocusChanged (HasFocus As Boolean)
+	B4XPages.Delegate.MainForm_FocusChanged(HasFocus)
+End Sub
+
+Sub MainForm_Resize (Width As Double, Height As Double)
+	B4XPages.Delegate.MainForm_Resize(Width, Height)
+End Sub
+
+Sub MainForm_Closed
+	B4XPages.Delegate.MainForm_Closed
+End Sub
+
+Sub MainForm_CloseRequest (EventData As Event)
+	B4XPages.Delegate.MainForm_CloseRequest(EventData)
+End Sub
+
+Public Sub MainForm_IconifiedChanged (Iconified As Boolean)
+	B4XPages.Delegate.MainForm_IconifiedChanged(Iconified)
+End Sub
+#End Region
 
 Sub Prefs_BeforeSave(Values As Map) As Boolean
 	Return True
 End Sub
 
 Sub Prefs_AfterSave(Values As Map)
+	Log("Saved values: " & Values)
 	File.WriteString(File.DirApp, "prefs-store.json", Store.ToJson)
 End Sub
 
