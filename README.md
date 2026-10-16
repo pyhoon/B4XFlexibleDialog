@@ -60,7 +60,7 @@ A ready-to-run consumer project is included at [`examples/B4JLibraryTest`](examp
 | --- | --- | --- | --- |
 | Model, controller, localization, theme, store | Implemented and verified | Verified: `PrefsSelfTest` 29/29 `passed=` on device | Deferred (Mac/hosted builder required) |
 | `.b4xlib` packaging | Implemented and verified | Not packaged | Not packaged |
-| Modal dialog renderer | Implemented and verified | Implemented (`PrefsRenderer` activity form); on-device verification pending | Not implemented |
+| Modal dialog renderer | Implemented and verified | Implemented and verified on device (`PrefsRenderer` activity form) | Not implemented |
 | Embedded page renderer | Implemented and verified | Covered by the same activity form; dedicated page container pending | Not implemented |
 | File/directory picker | Implemented and verified (JavaFX choosers) | Not implemented (values render read-only; see limitations) | Not implemented (see limitations) |
 | Persistence | File-backed demo verified | Store API shared; app-owned path differs | Store API shared; app-owned path differs |
