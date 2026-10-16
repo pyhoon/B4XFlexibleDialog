@@ -129,6 +129,7 @@ Private Sub Rating_Validate(Value As Object, Definition As Map) As String
 		Dim RatingValue As Int = Value
 		If RatingValue >= 1 And RatingValue <= 5 Then Return ""
 	Catch
+		Log(LastException.Message)
 	End Try
 	If Prefs.GetLanguage = "ms" Then Return Ms.Get("validation.rating")
 	Return En.Get("validation.rating")
