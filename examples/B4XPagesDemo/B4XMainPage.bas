@@ -26,6 +26,8 @@ Sub Class_Globals
 	Private En As Map
 	Private Ms As Map
 	Private StoreFileName As String = "prefs-values.json"
+	Private SetupDone As Boolean
+	Private PageHostReady As Boolean
 	#If B4J
 	Private DialogButton As Button
 	Private Facade As B4XFlexibleDialog
@@ -49,13 +51,20 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	Root = Root1
 	TitleLabel.Initialize("")
 	TitleLabel.Text = "B4XFlexibleDialog"
-	TitleLabel.TextSize = 22
+	TitleLabel.As(B4XView).TextSize = 22
 	Root.AddView(TitleLabel, 20dip, 16dip, 440dip, 36dip)
 
 	#If B4J
 	DialogButton.Initialize("DialogButton")
 	DialogButton.Text = "Open preferences dialog"
 	Root.AddView(DialogButton, 20dip, 64dip, 300dip, 48dip)
+	#Else if B4i
+	SaveButton.Initialize("SaveButton", SaveButton.STYLE_SYSTEM)
+	SaveButton.Text = "Save"
+	Root.AddView(SaveButton, 20dip, 64dip, 145dip, 44dip)
+	CancelButton.Initialize("CancelButton", SaveButton.STYLE_SYSTEM)
+	CancelButton.Text = "Cancel"
+	Root.AddView(CancelButton, 175dip, 64dip, 145dip, 44dip)
 	#Else
 	SaveButton.Initialize("SaveButton")
 	SaveButton.Text = "Save"
@@ -67,7 +76,13 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 
 	CreatePageHost
 	Root.AddView(PageHost, 340dip, 16dip, Max(200dip, Root.Width - 360dip), Max(240dip, Root.Height - 32dip))
+	PageHostReady = True
 	Setup
+End Sub
+
+' Keeps the hosted page filling the right-hand side as the page is resized.
+Private Sub B4XPage_Resize (Width As Int, Height As Int)
+	If PageHostReady Then PageHost.SetLayoutAnimated(0, 340dip, 16dip, Max(200dip, Root.Width - 360dip), Max(240dip, Root.Height - 32dip))
 End Sub
 
 Private Sub CreatePageHost
@@ -95,6 +110,8 @@ Private Sub Setup
 	#If B4J
 	If MainForm = Null Then Return
 	#End If
+	If SetupDone Then Return
+	SetupDone = True
 	LoadDictionaries
 	#If B4J
 	Facade.Initialize(Me, "Prefs", MainForm)
@@ -109,8 +126,8 @@ Private Sub Setup
 	Facade.RegisterCustomRenderer("RatingStars", Me, "Rating")
 	Store.Initialize
 	Facade.SetStore(Store)
-	If File.Exists(File.DirApp, "prefs-store.json") Then
-		If Store.FromJson(File.ReadString(File.DirApp, "prefs-store.json")) Then Facade.LoadStoredValues
+	If File.Exists(StoreDirectory, StoreFileName) Then
+		If Store.FromJson(File.ReadString(StoreDirectory, StoreFileName)) Then Facade.LoadStoredValues
 	End If
 	Facade.CreatePage(PageHost)
 	#Else
@@ -210,7 +227,7 @@ End Sub
 Sub Prefs_AfterSave (Values As Map)
 	Log("Saved values: " & Values)
 	#If B4J
-	File.WriteString(File.DirApp, "prefs-store.json", Store.ToJson)
+	File.WriteString(StoreDirectory, StoreFileName, Store.ToJson)
 	#End If
 End Sub
 

@@ -7,12 +7,13 @@ FileGroup2=New Group
 FileGroup3=New Group
 Group=App
 Library1=b4xflexibledialog
-Library2=icore
-Library3=ijson
-Library4=b4xpages
+Library2=b4xpages
+Library3=icore
+Library4=ijson
+Library5=xui views
 Module1=|relative|..\B4XMainPage
 NumberOfFiles=3
-NumberOfLibraries=4
+NumberOfLibraries=5
 NumberOfModules=1
 Version=8.8
 @EndOfDesignText@

@@ -9,15 +9,16 @@ FileGroup2=Default Group
 FileGroup3=Default Group
 FileGroup4=Default Group
 Group=Default Group
-Library1=jcore
-Library2=jfx
-Library3=json
-Library4=jxui
-Library5=b4xpages
-Library6=b4xflexibledialog
+Library1=b4xflexibledialog
+Library2=b4xpages
+Library3=jcore
+Library4=jfx
+Library5=json
+Library6=jxui
+Library7=xui views
 Module1=|relative|..\B4XMainPage
 NumberOfFiles=4
-NumberOfLibraries=6
+NumberOfLibraries=7
 NumberOfModules=1
 Version=10.7
 @EndOfDesignText@
@@ -39,8 +40,10 @@ Sub AppStart (Form1 As Form, Args() As String)
 	MainForm.Title = "B4XFlexibleDialog B4XPages demo"
 	Dim PagesManager As B4XPagesManager
 	PagesManager.Initialize(MainForm)
-	B4XPages.MainPage.SetHostForm(MainForm)
 	MainForm.Show
+	' The facade adds its stylesheet to the owner Form, which needs the Scene that
+	' Show creates, so the form must be shown before the page is wired up.
+	B4XPages.MainPage.SetHostForm(MainForm)
 End Sub
 
 'Return true to allow the default exceptions handler to handle the uncaught exception.

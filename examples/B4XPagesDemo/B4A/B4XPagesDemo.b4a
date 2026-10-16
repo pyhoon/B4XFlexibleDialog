@@ -6,17 +6,18 @@ FileGroup1=Default Group
 FileGroup2=Default Group
 FileGroup3=Default Group
 Group=Default Group
-Library1=core
+Library1=b4xflexibledialog
 Library2=b4xpages
-Library3=xui
-Library4=phone
-Library5=javaobject
-Library6=b4xflexibledialog
-Library7=json
+Library3=core
+Library4=javaobject
+Library5=json
+Library6=phone
+Library7=xui
+Library8=xui views
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
 Module1=|relative|..\B4XMainPage
 NumberOfFiles=3
-NumberOfLibraries=7
+NumberOfLibraries=8
 NumberOfModules=1
 Version=14.2
 @EndOfDesignText@
