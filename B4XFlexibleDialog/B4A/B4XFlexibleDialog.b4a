@@ -278,17 +278,17 @@ Private Sub Rating_Dispose(Handle As Object)
 	Next
 End Sub
 
+' Selection is shown with a checkmark prefix so the buttons keep the
+' application theme instead of hardcoded colors.
 Private Sub Rating_Paint(Handle As Map)
 	Dim Buttons As List = Handle.Get("buttons")
 	Dim Value As Int = Handle.Get("value")
 	For I = 0 To Buttons.Size - 1
 		Dim B As Button = Buttons.Get(I)
 		If I < Value Then
-			B.Color = Colors.Blue
-			B.TextColor = Colors.White
+			B.Text = "✓ " & (I + 1)
 		Else
-			B.Color = Colors.LightGray
-			B.TextColor = Colors.Black
+			B.Text = I + 1
 		End If
 	Next
 End Sub
