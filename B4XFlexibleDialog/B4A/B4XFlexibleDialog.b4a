@@ -1,4 +1,6 @@
 ﻿Build1=Default,b4a.example
+File1=B4X_MaterialIcons.ttf
+FileGroup1=Default Group
 Group=Default Group
 Library1=core
 Library2=json
@@ -15,7 +17,7 @@ Module6=PrefsRenderer
 Module7=|relative|..\B4J\PrefsSelfTest
 Module8=|relative|..\B4J\PrefsStore
 Module9=|relative|..\B4J\PrefsTheme
-NumberOfFiles=0
+NumberOfFiles=1
 NumberOfLibraries=4
 NumberOfModules=10
 Version=14.2
@@ -64,6 +66,7 @@ Sub Globals
 	Private Localization As PrefsLocalization
 	Private Renderer As PrefsRenderer
 	Private DirPicker As PrefsDirPicker
+	Private StarFont As Typeface
 	Private Store As PrefsStore
 	Private StoreFileName As String = "prefs-values.json"
 	Private HostPanel As Panel
@@ -231,19 +234,21 @@ Private Sub Rating_Create(Args As Map) As Object
 	Handle.Initialize
 	Handle.Put("buttons", Buttons)
 	Handle.Put("value", Value)
-	Dim ButtonWidth As Int = Width / 5
+	If StarFont.IsInitialized = False Then StarFont = Typeface.LoadFromAssets("B4X_MaterialIcons.ttf")
+	Dim StarWidth As Int = Width / 5
 	For I = 1 To 5
-		Dim B As Button
-		B.Initialize("ratingStar")
+		Dim Star As Label
+		Star.Initialize("ratingStar")
 		Dim Tag As Map
 		Tag.Initialize
 		Tag.Put("handle", Handle)
 		Tag.Put("index", I)
-		B.Tag = Tag
-		B.Text = I
-		B.TextSize = 16
-		Parent.AddView(B, Left + (I - 1) * ButtonWidth, Top, ButtonWidth - 4dip, Height)
-		Buttons.Add(B)
+		Star.Tag = Tag
+		Star.Typeface = StarFont
+		Star.TextSize = 30
+		Star.Gravity = Gravity.CENTER
+		Parent.AddView(Star, Left + (I - 1) * StarWidth, Top, StarWidth, Height)
+		Buttons.Add(Star)
 	Next
 	Rating_Paint(Handle)
 	Return Handle
@@ -273,29 +278,31 @@ End Sub
 Private Sub Rating_Dispose(Handle As Object)
 	Dim H As Map = Handle
 	Dim Buttons As List = H.Get("buttons")
-	For Each B As Button In Buttons
-		B.RemoveView
+	For Each Star As Label In Buttons
+		Star.RemoveView
 	Next
 End Sub
 
-' Selection is shown with a checkmark prefix so the buttons keep the
-' application theme instead of hardcoded colors.
+' Selection is shown with filled versus outline star glyphs tinted gold and
+' gray, so the control needs no theme-specific colors.
 Private Sub Rating_Paint(Handle As Map)
 	Dim Buttons As List = Handle.Get("buttons")
 	Dim Value As Int = Handle.Get("value")
 	For I = 0 To Buttons.Size - 1
-		Dim B As Button = Buttons.Get(I)
+		Dim Star As Label = Buttons.Get(I)
 		If I < Value Then
-			B.Text = "✓ " & (I + 1)
+			Star.Text = Chr(0xE838)
+			Star.TextColor = Colors.RGB(255, 193, 7)
 		Else
-			B.Text = I + 1
+			Star.Text = Chr(0xE83A)
+			Star.TextColor = Colors.Gray
 		End If
 	Next
 End Sub
 
 Private Sub ratingStar_Click
-	Dim B As Button = Sender
-	Dim Tag As Map = B.Tag
+	Dim Star As Label = Sender
+	Dim Tag As Map = Star.Tag
 	Dim Handle As Map = Tag.Get("handle")
 	Handle.Put("value", Tag.Get("index"))
 	Rating_Paint(Handle)
