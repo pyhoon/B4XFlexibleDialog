@@ -30,7 +30,7 @@ if (-not $OutputDir) { $OutputDir = Join-Path $PSScriptRoot '..\dist' }
 
 # Platform-independent modules (no JavaFX/UI references).
 $sharedModules = @(
-    'PrefsModel', 'PrefsController', 'PrefsLocalization', 'PrefsTheme', 'PrefsStore', 'PrefsFileResult'
+    'PrefsModel', 'PrefsController', 'PrefsLocalization', 'PrefsTheme', 'PrefsStore', 'PrefsFileResult', 'PrefsSelfTest'
 )
 
 # B4J (JavaFX) modules.

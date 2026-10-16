@@ -1,4 +1,4 @@
-AppType=JavaFX
+﻿AppType=JavaFX
 Build1=Default,b4j.example
 File1=en.json
 File2=ms.json

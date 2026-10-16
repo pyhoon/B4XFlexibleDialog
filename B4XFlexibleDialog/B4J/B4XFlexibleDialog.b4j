@@ -20,11 +20,12 @@ Module4=PrefsFileProvider
 Module5=PrefsFileResult
 Module6=PrefsLocalization
 Module7=PrefsModel
+Module11=PrefsSelfTest
 Module8=PrefsPage
 Module9=PrefsStore
 NumberOfFiles=4
 NumberOfLibraries=3
-NumberOfModules=10
+NumberOfModules=11
 Version=10.7
 @EndOfDesignText@
 #Region Project Attributes

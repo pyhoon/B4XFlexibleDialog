@@ -39,9 +39,9 @@ The B4J model/controller and both renderers include multiline, password, checkbo
 
 `PrefsFileProvider` defines the picker contract and `PrefsFileResult` normalizes selections (success/cancelled, path, URI, display name, MIME type, access). The B4J implementation uses JavaFX `FileChooser`/`DirectoryChooser` with optional extension filters; applications may supply their own picker via `SetCustomHandler`, so no external picker is mandatory. `file` and `directory` preference types are integrated into the schema, model, controller, and both presentations, with cancel-preserves-value, optional Clear, and optional copy-to-app-storage. URI/path/access limitations are documented. Browse/Clear and extension filtering were verified in both presentations. Copy-to-app-storage is implemented but was not exercised because the demo definition disables it.
 
-## M6 — B4A and B4i adapters
+## M6 — B4A and B4i adapters — in progress
 
-Port the logical model/controller contracts, then implement and test platform-specific renderers and pickers. Do not claim cross-platform completion until B4A and B4i examples are compiled and exercised.
+The shared modules (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`) avoid JavaFX and compile unchanged on B4A (verified with B4ABuilder 14.20 through code, resource, and dex steps). A `PrefsSelfTest` class runs the core assertions without any UI, and a minimal B4A project reuses the same sources via relative module references and displays the result at startup. The B4i project is prepared in the same shape but cannot be compiled without a Mac/hosted builder. Dialog/page renderers and native pickers remain B4J-only; see the README capability matrix. Do not claim cross-platform completion until B4A and B4i examples are compiled and exercised.
 
 ## M7 — Extensibility and release
 

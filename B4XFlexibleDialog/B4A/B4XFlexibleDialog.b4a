@@ -1,0 +1,61 @@
+Build1=Default,b4a.example
+Group=Default Group
+Library1=core
+Library2=JSON
+ManifestCode='This code will be applied to the manifest file during compilation.~'You do not need to modify it in most cases.~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~AddManifestText(~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35"/>~<supports-screens android:largeScreens="true" ~    android:normalScreens="true" ~    android:smallScreens="true" ~    android:anyDensity="true"/>)~SetApplicationAttribute(android:icon, "@drawable/icon")~SetApplicationAttribute(android:label, "$LABEL$")~CreateResourceFromFile(Macro, Themes.LightTheme)~'End of default text.~'~
+Module1=|relative|..\B4J\PrefsModel
+Module2=|relative|..\B4J\PrefsController
+Module3=|relative|..\B4J\PrefsLocalization
+Module4=|relative|..\B4J\PrefsTheme
+Module5=|relative|..\B4J\PrefsStore
+Module6=|relative|..\B4J\PrefsFileResult
+Module7=|relative|..\B4J\PrefsSelfTest
+Module8=Starter
+NumberOfFiles=0
+NumberOfLibraries=2
+NumberOfModules=8
+Version=14.2
+@EndOfDesignText@
+#Region Project Attributes 
+	#ApplicationLabel: B4XFlexibleDialog
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: True
+#End Region
+
+' Shared-module validation for B4XFlexibleDialog.
+' Runs the platform-independent PrefsSelfTest at startup and shows the results.
+' No UI renderer is implemented on B4A yet.
+
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Private ResultsLabel As Label
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	ResultsLabel.Initialize("")
+	Activity.AddView(ResultsLabel, 10dip, 10dip, 100%x - 20dip, 100%y - 20dip)
+	Dim SelfTest As PrefsSelfTest
+	SelfTest.Initialize
+	Dim Outcome As Map = SelfTest.RunAll
+	Dim Passed As Int = Outcome.Get("passed")
+	Dim Failed As Int = Outcome.Get("failed")
+	Dim Report As String = "passed=" & Passed & " failed=" & Failed & CRLF & CRLF & Outcome.Get("log")
+	ResultsLabel.Text = Report
+	Log(Report)
+End Sub
+
+Sub Activity_Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+End Sub

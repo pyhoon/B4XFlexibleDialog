@@ -27,7 +27,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/package-b4xlib.ps1 -Ve
 
 `Version` must be a valid decimal (for example `0.2`, not `0.2.0`).
 
-The archive contains the platform-independent modules at the root (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`), the B4J-specific modules under `B4J/` (`B4XFlexibleDialog`, `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`), `Files/prefs.css`, and a `manifest.txt` declaring `B4J.DependsOn=jFX, Json`. Shared modules intentionally avoid JavaFX so they can be reused by future platform ports.
+The archive contains the platform-independent modules at the root (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`, `PrefsSelfTest`), the B4J-specific modules under `B4J/` (`B4XFlexibleDialog`, `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`), `Files/prefs.css`, and a `manifest.txt` declaring `B4J.DependsOn=jFX, Json`. Shared modules intentionally avoid JavaFX so they can be reused by future platform ports.
 
 To consume it in B4J, add `B4XFlexibleDialog.b4xlib` to the Libraries folder, reference the library in the project, and call `Prefs.Initialize` as shown above. This was verified by adding the packaged library to a fresh B4J project, copying the demo `Files\*`, and confirming it compiles and shows the dialog.
 
@@ -51,7 +51,38 @@ A ready-to-run consumer project is included at [`examples/B4JLibraryTest`](examp
 - `PrefsStore.bas`: persistence adapter (map-backed with JSON import/export); preserves unknown stored keys.
 - `PrefsFileProvider.bas`: file/directory picker abstraction; default B4J `FileChooser`/`DirectoryChooser`, optional custom handler, optional copy-to-app-storage.
 - `PrefsFileResult.bas`: normalized selection result (success/cancelled, path, URI, display name, MIME type, access).
+- `PrefsSelfTest.bas`: platform-independent core assertions (`RunAll` returns passed/failed/log); used by the B4A/B4i validation projects.
 - `B4XFlexibleDialog.bas`: facade and callback forwarding.
+
+## Platform support
+
+| Area | B4J | B4A | B4i |
+| --- | --- | --- | --- |
+| Model, controller, localization, theme, store | Implemented and verified | Compiles; runtime self-test pending | Source prepared; Mac builder required |
+| `.b4xlib` packaging | Implemented and verified | Not packaged | Not packaged |
+| Modal dialog renderer | Implemented and verified | Not implemented | Not implemented |
+| Embedded page renderer | Implemented and verified | Not implemented | Not implemented |
+| File/directory picker | Implemented and verified (JavaFX choosers) | Not implemented (see limitations) | Not implemented (see limitations) |
+| Persistence | File-backed demo verified | Store API shared; app-owned path differs | Store API shared; app-owned path differs |
+
+The B4A validation project at `B4XFlexibleDialog/B4A` references the shared modules with relative paths (`Module=|relative|..\B4J\...`) and runs `PrefsSelfTest` at startup, showing `passed=`/`failed=` plus the full log. It builds with:
+
+```powershell
+& 'C:\Program Files\B4X\B4A\B4ABuilder.exe' -Task=Build `
+  -BaseFolder='B4XFlexibleDialog\B4A' `
+  -Project='B4XFlexibleDialog\B4A\B4XFlexibleDialog.b4a' `
+  -ShowWarnings=True -NoSign=True
+```
+
+B4A/B4i notes and limitations:
+
+- The shared modules use only cross-platform keywords (`JSONParser`, `JSONGenerator`, `DateTime`, `Map`, `List`, `Asc`); no JavaFX references, so the same source compiles on B4A (verified) and is expected to compile on B4i (unverified).
+- `PrefsFileProvider` and the `PrefsDialog`/`PrefsPage` renderers are B4J-only. Android needs a Storage Access Framework / `ContentChooser` picker returning content URIs (no permanent path); iOS needs a document picker with security-scoped access. Neither is implemented.
+- File/directory values must be treated as opaque strings or URIs; `copyToAppStorage` on B4J copies into `File.DirApp\prefs-files`, which has no B4A/B4i equivalent yet.
+- Persistence (`PrefsStore`) is platform code; only the storage location differs per platform (`File.DirApp` on B4J, app-internal dirs on B4A/B4i).
+- The B4i project at `B4XFlexibleDialog/B4i` is prepared but cannot be compiled without a Mac/hosted builder.
+
+Do not claim cross-platform completion until B4A and B4i examples are compiled and exercised.
 
 ## Definition JSON v1
 

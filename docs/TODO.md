@@ -72,12 +72,16 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Verify Browse/Clear and extension filtering in both presentations (reported: paths populated in dialog and page).
 - [ ] Verify copy-to-app-storage with a real selection (implemented but not exercised; disabled in the demo definition).
 
-## M6 — B4A and B4i adapters
+## M6 — B4A and B4i adapters — IN PROGRESS
 
-- [ ] Establish supported B4A/B4i toolchains and compile environments.
-- [ ] Port model/controller/localization/theme semantics.
+- [x] Establish supported toolchains: B4A 14.20 + Android SDK 36, B4i project format (Mac/hosted builder required).
+- [x] Add shared, UI-free `PrefsSelfTest` (`RunAll` returns passed/failed/log).
+- [x] Create a B4A validation project reusing the shared sources via `|relative|` module references.
+- [x] Verify the shared modules compile on B4A with B4ABuilder (code, resources, and dex steps pass).
+- [ ] Run the B4A self-test on a device/emulator and report the `passed=`/`failed=` log.
+- [ ] Prepare the B4i project (blocked on Mac/hosted builder; source ready, not compiled).
 - [ ] Implement platform-specific dialog/page renderers and native picker behavior.
-- [ ] Verify each platform with runnable examples and maintain a capability matrix.
+- [x] Start a capability matrix in the README; keep extending it as platforms are verified.
 
 ## M7 — Extensibility and release
 
