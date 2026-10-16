@@ -12,8 +12,7 @@ Version=9.85
 ' events and for the sample RatingStars custom renderer.
 '
 ' Platform notes:
-'  - B4J: the facade needs the owner Form, which the page cannot obtain, so Main
-'    hands it over with SetHostForm once B4XPages was initialized.
+'  - B4J: the facade needs the owner Form, obtained with B4XPages.GetNativeParent.
 '  - B4A/B4i: the renderer has no built-in Save/Cancel chrome, so the page
 '    provides those buttons.
 
@@ -31,7 +30,6 @@ Sub Class_Globals
 	#If B4J
 	Private DialogButton As Button
 	Private Facade As B4XFlexibleDialog
-	Private MainForm As Form
 	#Else
 	Private SaveButton As Button
 	Private CancelButton As Button
@@ -95,25 +93,13 @@ Private Sub CreatePageHost
 	#End If
 End Sub
 
-#If B4J
-' Called by Main once B4XPages was initialized. The facade needs the owner Form,
-' which a B4XPages page cannot obtain on its own.
-Public Sub SetHostForm (Form1 As Form)
-	MainForm = Form1
-	Setup
-End Sub
-#End If
-
-' Builds the library objects, loads the definition and shows the form. On B4J it
-' is a no-op until Main supplies the owner Form through SetHostForm.
+' Builds the library objects, loads the definition and shows the form.
 Private Sub Setup
-	#If B4J
-	If MainForm = Null Then Return
-	#End If
 	If SetupDone Then Return
 	SetupDone = True
 	LoadDictionaries
 	#If B4J
+	Dim MainForm As Form = B4XPages.GetNativeParent(Me)
 	Facade.Initialize(Me, "Prefs", MainForm)
 	Facade.SetDictionary("en", En)
 	Facade.SetDictionary("ms", Ms)
@@ -129,7 +115,7 @@ Private Sub Setup
 	If File.Exists(StoreDirectory, StoreFileName) Then
 		If Store.FromJson(File.ReadString(StoreDirectory, StoreFileName)) Then Facade.LoadStoredValues
 	End If
-	Facade.CreatePage(PageHost)
+	CallSubDelayed(Me, "MountPage")
 	#Else
 	Localization.Initialize
 	Localization.SetDictionary("en", En)
@@ -156,6 +142,14 @@ Private Sub Setup
 	Renderer.Render(PageHost)
 	#End If
 End Sub
+
+#If B4J
+' Deferred so the owner Form has been shown and its Scene exists before the
+' facade attaches its stylesheet.
+Private Sub MountPage
+	Facade.CreatePage(PageHost)
+End Sub
+#End If
 
 Private Sub LoadDictionaries
 	Dim Parser As JSONParser

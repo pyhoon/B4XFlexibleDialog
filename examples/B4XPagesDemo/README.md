@@ -52,7 +52,7 @@ the shared page compiles on B4i while the real renderer is pending.
 ## Files
 
 - `B4XMainPage.bas` — the shared page: UI, library wiring, persistence and the rating renderer (platform branches via `#If`).
-- `B4J/B4XPagesDemo.b4j` — B4J project. `Main` hands the owner form to the page with `B4XPages.MainPage.SetHostForm`.
+- `B4J/B4XPagesDemo.b4j` — B4J project. `Main` only initializes `B4XPagesManager` and shows the form; the page gets its owner form itself with `B4XPages.GetNativeParent`.
 - `B4A/B4XPagesDemo.b4a` — B4A project. `Main` just initializes `B4XPagesManager`; the page does the rest.
 - `B4i/B4XPagesDemo.b4i` — B4i project (unverified; needs a Mac builder).
 - `B4J/Files/` and `B4A/Files/` and `B4i/Files/` — `settings.json`, `en.json`, `ms.json` (B4J also `prefs.css`). The rating sample uses the built-in MaterialIcons font.

@@ -92,7 +92,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Package the B4A modules (`PrefsRenderer`, `PrefsDirPicker`) under `B4A/` and ship the `XUI`/`jXUI` dependencies in `manifest.txt`.
 - [x] Extend the B4XPages example to B4A (single shared `B4XMainPage` with `#If B4J`/`#If B4A` branches) and add a B4i project.
 - [x] Start a capability matrix in the README; keep extending it as platforms are verified.
-- [x] Collapse the B4XPages example's `AppHost` dispatcher and per-platform `PrefsHost` classes into the single shared `B4XMainPage` (B4J `Main` hands the owner form via `B4XPages.MainPage.SetHostForm`).
+- [x] Collapse the B4XPages example's `AppHost` dispatcher and per-platform `PrefsHost` classes into the single shared `B4XMainPage` (B4J `Main` only initializes `B4XPagesManager` and shows the form; the page fetches the owner form with `B4XPages.GetNativeParent`).
 - [x] Ship documented B4i stubs (`B4i/PrefsRenderer`, `B4i/PrefsDirPicker`) in the `.b4xlib` and make the B4i project a self-consistent self-test harness.
 
 ## M7 — Extensibility and release — IN PROGRESS

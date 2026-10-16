@@ -41,9 +41,6 @@ Sub AppStart (Form1 As Form, Args() As String)
 	Dim PagesManager As B4XPagesManager
 	PagesManager.Initialize(MainForm)
 	MainForm.Show
-	' The facade adds its stylesheet to the owner Form, which needs the Scene that
-	' Show creates, so the form must be shown before the page is wired up.
-	B4XPages.MainPage.SetHostForm(MainForm)
 End Sub
 
 'Return true to allow the default exceptions handler to handle the uncaught exception.
