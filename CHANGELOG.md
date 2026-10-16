@@ -15,6 +15,7 @@
 - Added a B4A activity-form renderer (`PrefsRenderer`) with the same controller Save/Cancel semantics; compiles with B4ABuilder (on-device verification pending).
 - Added B4A `file` selection via `ContentChooser` with MIME filtering and optional copy to app-internal storage (on-device verification pending); directory picking remains unimplemented.
 - Added B4A `directory` selection via `ExternalStorage` with persistable tree URIs (on-device verification pending).
+- Replaced the B4A directory flow with a dependency-free `PrefsDirPicker` (SAF tree URIs, no `DocumentFile` requirement) after `ExternalStorage` crashed on a missing legacy class.
 - Added a `.b4xlib` packaging script and generated `dist/B4XFlexibleDialog.b4xlib` (shared modules at root, B4J modules under `B4J/`).
 - Added startup assertions for the new value types and validation cases.
 

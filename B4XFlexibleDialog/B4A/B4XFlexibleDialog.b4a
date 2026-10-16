@@ -3,8 +3,7 @@ Group=Default Group
 Library1=core
 Library2=json
 Library3=phone
-Library4=externalstorage
-Library5=javaobject
+Library4=javaobject
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
 Module1=|relative|..\B4J\PrefsController
 Module2=|relative|..\B4J\PrefsFileResult
@@ -14,10 +13,11 @@ Module5=PrefsRenderer
 Module6=|relative|..\B4J\PrefsSelfTest
 Module7=|relative|..\B4J\PrefsStore
 Module8=|relative|..\B4J\PrefsTheme
+Module10=PrefsDirPicker
 Module9=Starter
 NumberOfFiles=0
-NumberOfLibraries=5
-NumberOfModules=9
+NumberOfLibraries=4
+NumberOfModules=10
 Version=14.2
 @EndOfDesignText@
 #Region Project Attributes 
@@ -63,7 +63,7 @@ Sub Globals
 	Private Controller As PrefsController
 	Private Localization As PrefsLocalization
 	Private Renderer As PrefsRenderer
-	Private DirStorage As ExternalStorage
+	Private DirPicker As PrefsDirPicker
 	Private HostPanel As Panel
 	Private SaveButton As Button
 	Private CancelButton As Button
@@ -130,7 +130,7 @@ Private Sub LoadDefinition
 	End If
 	Controller.Initialize(Model)
 	Renderer.Initialize(Me, "Prefs", Model, Controller, Localization)
-	DirStorage.Initialize(Me, "DirStorage")
+	DirPicker.Initialize(Me, "DirPicker")
 End Sub
 
 Private Sub DemoDefinition As String
@@ -187,11 +187,14 @@ Sub Prefs_Action(PreferenceId As String)
 End Sub
 
 Sub Prefs_BrowseDirectory(Id As String)
-	DirStorage.SelectDir(True)
+	DirPicker.SelectDir(True)
 End Sub
 
-Sub DirStorage_ExternalFolderAvailable
-	Dim Uri As String = File.ReadString(File.DirInternal, DirStorage.PreviousUriFileName)
+Sub DirPicker_DirectoryPicked(Uri As String)
 	Log("Picked directory: " & Uri)
 	Renderer.SetDirectoryValue(Uri)
+End Sub
+
+Sub DirPicker_DirectoryCancelled
+	Log("Directory pick cancelled")
 End Sub
