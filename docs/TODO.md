@@ -89,6 +89,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [ ] B4i project prepared but deferred (Mac/hosted builder required; revisit when builder access is available).
 - [x] Implement B4A platform-specific native control rendering for the dialog and page.
 - [x] Port the facade (`B4XFlexibleDialog`), `PrefsDialog`, and `PrefsPage` cross-platform with `#If B4J`/`#If B4A` branches; retire `PrefsRenderer` (and its B4i stub). Verified compiling on both B4JBuilder 10.70 and B4ABuilder 14.20; the B4J demo also runs clean headlessly.
+- [x] Fix the B4J `PrefsDialog` showing crash (uninitialized content `Pane` in `ShowB4J`) found when running the ported demo; the dialog now opens and the B4J demo runs clean headlessly (`Restored 15 value(s)`).
 - [x] Cast the public view API to `B4XView` (`Show`, `CreatePage(Container As B4XView)`) so call sites are cross-platform.
 - [x] Package the B4A modules (`PrefsDirPicker`) under `B4A/` and ship the `XUI`/`jXUI` dependencies in `manifest.txt`.
 - [x] Extend the B4XPages example to B4A (single shared `B4XMainPage` with `#If B4J`/`#If B4A` branches) and add a B4i project.

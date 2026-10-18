@@ -8,6 +8,7 @@
 - Guarded `PrefsFileProvider`'s B4J `FileChooser`/`DirectoryChooser` behind `#If B4J`; non-B4J callers now get a clear "call `SetCustomHandler`" failure.
 - Retired the separate B4A `PrefsRenderer` (and its B4i stub) in favour of the shared dialog/page; updated the `.b4xlib` packaging so `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`, and the facade ship as shared modules.
 - Reworked the shared demo `B4XMainPage` to drive the library through the facade on every platform (drops the hand-built B4A overlay and Save/Cancel chrome).
+- Fixed the B4J `PrefsDialog` failing on show (`Object should first be initialized (B4XView)`) by creating the inner content `Pane` before assigning it to the `B4XView`, mirroring `PrefsPage`.
 
 ## Unreleased — Milestone 3 progress
 
