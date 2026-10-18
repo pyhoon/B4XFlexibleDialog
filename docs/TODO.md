@@ -98,6 +98,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 ## M7 — Extensibility and release — IN PROGRESS
 
 - [x] Evaluate XUI Views as replacement controls; defer adoption to the B4A/B4i port work (designer-oriented API, fragile class-instance event dispatch, dependency weight; see README).
+- [x] Spike third-party controls behind the custom-renderer lifecycle in the demo: a code-built XUI Views `B4XFloatTextField` and a MediaChooser-backed image picker with an XUI Views thumbnail, both re-themed live from `_Refresh`. The shipped renderers keep no MediaChooser or XUI Views dependency.
 
 - [x] Add the `custom` type to the schema, model (renderer name required), and controller (pass-through values, deep-cloned snapshots).
 - [x] Add `RegisterCustomRenderer` with fail-fast handling of unregistered renderer names.
