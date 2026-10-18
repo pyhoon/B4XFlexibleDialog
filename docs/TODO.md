@@ -110,7 +110,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Verify the custom renderer GUI behavior (create, edit, invalid value, Save, Reset, language/theme refresh, dispose) in both presentations (reported passing).
 - [x] Port the custom lifecycle (create/read/validate/dispose, fail-fast registration) to the B4A renderer with a matching rating sample.
 - [x] Give the B4A demo the same two presentations as B4J: an inline hosted page plus a button-opened modal dialog overlay (sharing the controller, with its own renderer instance and Save/Cancel).
-- [ ] Verify the B4A custom renderer on a device (render, edit, invalid value, Save, dispose).
-- [ ] Finalize public APIs and callback contracts against each target compiler.
+- [ ] Verify the B4A custom renderer on a device (render, edit, invalid value, Save, dispose). Only remaining M7 item: run `examples/B4XPagesDemo/B4A`, open the dialog/page, and exercise the `satisfaction` rating renderer.
+- [x] Finalize public APIs and callback contracts against each target compiler; the facade, `PrefsDialog`, and `PrefsPage` compile on B4JBuilder 10.70 and B4ABuilder 14.20, and the API is documented in the README.
 - [x] Package a distributable `.b4xlib` and verify integration from a fresh project.
-- [ ] Complete automated/repeatable tests, platform examples, and release documentation.
+- [x] Complete automated/repeatable tests, platform examples, and release documentation: the shared `PrefsSelfTest` now runs on B4J (29/29) via `tools/run-b4j-tests.ps1`; B4J and B4A examples ship (B4i deferred); the changelog is cut at 0.2.0 with build/test docs in the README.

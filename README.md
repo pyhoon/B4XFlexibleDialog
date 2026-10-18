@@ -143,7 +143,10 @@ Prefs.Initialize(Me, "Prefs", MainForm)
 Prefs.SetDictionary("en", EnglishMap)
 Prefs.SetDictionary("ms", MalayMap)
 Prefs.SetLanguage("en")
-Prefs.SetTheme(Prefs.CreateLightTheme)
+Dim Lang As String = Prefs.GetLanguage
+Prefs.SetTheme(Prefs.CreateLightTheme) ' Or CreateDarkTheme
+Dim Theme As PrefsTheme = Prefs.GetTheme ' Active theme object (same instance the dialog mutates)
+Dim Dark As Boolean = Prefs.IsDarkTheme
 If Prefs.LoadDefinition(DefinitionJson) = False Then Log(Prefs.LastError)
 
 Prefs.SetValue("username", "Aeric") ' Boolean result; LastError on failure
@@ -151,20 +154,32 @@ Dim Value As Object = Prefs.GetValue("username")
 Dim Values As Map = Prefs.GetValues ' Copy/snapshot
 Prefs.ResetToDefaults ' Restores every value preference to its default
 Prefs.ResetPreference("username") ' Restores one value preference to its default
-Dim Theme As PrefsTheme = Prefs.GetTheme ' Active theme object (same instance the dialog mutates)
+
+' Custom renderers and file/directory providers
+Prefs.RegisterCustomRenderer("RatingStars", Me, "Rating") ' See custom renderers below
+Dim Renderer As Map = Prefs.GetCustomRenderer("RatingStars")
+Prefs.SetFileProvider(MyProvider) ' Optional; replaces the default picker
+Dim Provider As PrefsFileProvider = Prefs.GetFileProvider
+Prefs.SetDirectoryValue(Uri) ' Feeds a host-picked directory value back to the dialog/page
 
 ' Persistence
 Dim Store As PrefsStore
 Store.Initialize
 Prefs.SetStore(Store) ' Writes committed values to the store after every commit/set/reset
+Dim Current As PrefsStore = Prefs.GetStore
 Dim Applied As Int = Prefs.LoadStoredValues ' Restores stored values for known value preferences
+Prefs.SaveStoredValues ' Writes committed values into the store (no JSON round-trip)
 Dim Json As String = Prefs.ExportValues ' Save committed values into the store and return a JSON snapshot
 Dim Imported As Int = Prefs.ImportValues(Json) ' Parse JSON into the store, then apply matching values
+
+' Presentations
 Prefs.Show ' Modal dialog: blocking on B4J, async overlay on B4A
 Prefs.CreatePage(MainForm.RootPane) ' Anchors a page in this caller-owned B4XView container
 Prefs.RefreshPage ' Rebuilds visible values from committed state
 Prefs.DisposePage ' Removes only the library-owned page node
 ```
+
+Every name above is a public sub on the facade and is the finalized API for this release, compiled and verified against B4JBuilder 10.70 and B4ABuilder 14.20. `Owner` is the B4J `Form`, the B4A `Activity`, or the B4i `Page`; `EventTarget`/`EventName` select the callback module and `<prefix>_*` subs. Getters (`GetLanguage`, `IsDarkTheme`, `GetTheme`, `GetValues`, `GetStore`, `GetFileProvider`, `GetCustomRenderer`) are read-only accessors.
 
 `SetValue` validates IDs, types, choice membership, string constraints, and number bounds; failed sets do not modify values. `GetValues` returns a copied map and deep-clones list/map values. `ResetToDefaults` and `ResetPreference` operate on committed values for value preferences and are excluded from change events (no change event exists in this milestone). `custom` values pass controller validation untouched; the registered renderer validates them at Save.
 
@@ -217,6 +232,38 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 
 `SetLanguage` resolves keys against the selected dictionary; an unknown key falls back to the key itself. The dialog's Language button toggles English/Malay and refreshes visible labels, including choice titles, without touching values. `SetTheme` accepts a theme from `CreateLightTheme` or `CreateDarkTheme`; the demo also toggles theme while the dialog is closed. The dialog's Theme button changes its live background/text/button colors. Colors are 32-bit ARGB integers. Refreshes do not raise preference value-change callbacks (there is no change event in this milestone).
 
+## Building and testing
+
+Build the library on each target compiler:
+
+```powershell
+# B4J library
+& 'C:\Program Files\B4X\B4J\B4JBuilder.exe' -Task=Build `
+  -BaseFolder='B4XFlexibleDialog\B4J' `
+  -Project='B4XFlexibleDialog\B4J\B4XFlexibleDialog.b4j' -ShowWarnings=True
+
+# B4A library (absolute -BaseFolder; unsigned)
+& 'C:\Program Files\B4X\B4A\B4ABuilder.exe' -Task=Build `
+  -BaseFolder='C:\Projects\B4XFlexibleDialog\B4XFlexibleDialog\B4A' `
+  -Project='B4XFlexibleDialog\B4A\B4XFlexibleDialog.b4a' -ShowWarnings=True -NoSign=True
+```
+
+Run the repeatable tests (builds the B4J harness and runs its assertions headlessly):
+
+```powershell
+powershell -File tools\run-b4j-tests.ps1
+```
+
+It exits non-zero if any `FAIL:` line appears or the shared self-test reports a non-zero failed count. The B4J library project runs both the shared, UI-free `PrefsSelfTest` (the same suite the B4A/B4i validation projects use, 29 checks) and its own inline core/store/facade assertions.
+
+The B4A validation project at `B4XFlexibleDialog/B4A` runs `PrefsSelfTest` at startup and shows `passed=`/`failed=` plus the full log. The B4i project is prepared in the same shape and is deferred until Mac/hosted builder access is available.
+
+Package the distributable:
+
+```powershell
+powershell -File tools\package-b4xlib.ps1 -Version 0.2
+```
+
 ## Test checklist and results
 
 | Check | Result |
@@ -225,6 +272,10 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | JSON syntax for schema, demo definition, and both locale files | **PASS** |
 | Demo jar contains `Files/settings.json`, `Files/en.json`, and `Files/ms.json` | **PASS** |
 | Core runtime assertions (model validation, supported values, string/number/date/time/selection constraints, scalar and list snapshots, draft cancel/commit) | **Included; run in demo on startup** |
+| Shared `PrefsSelfTest` on B4J | **PASS** (29 passed, 0 failed, headless) |
+| B4J assertion harness (`RunCoreChecks`/`RunStoreChecks`/`RunFacadeChecks` + self-test) | **PASS** (80 passed, 0 failed, headless) |
+| Repeatable runner `tools/run-b4j-tests.ps1` | **PASS** (builds + runs headlessly, exits 0) |
+| Public API and callback contracts compiled against B4JBuilder 10.70 and B4ABuilder 14.20 | **PASS** (both build clean) |
 | All implemented controls render and edit | **PASS** (reported GUI test) |
 | Save commits; Cancel and window close discard edits | **PASS** (reported GUI test) |
 | Invalid numbers (out-of-range and non-numeric text) block Save | **PASS** (reported GUI test) |

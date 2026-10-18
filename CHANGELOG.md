@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — cross-platform port
+## 0.2.0 — cross-platform port
 
 - Made the facade `B4XFlexibleDialog` cross-platform: `Show` drives `PrefsDialog` on B4J (blocking) and B4A (async overlay) and fires exactly one `_DialogClosed`; `CreatePage`/`RefreshPage`/`DisposePage` work on B4J+B4A; added `SetDirectoryValue` for host-driven directory picks.
 - Rewrote `PrefsDialog` with B4J/B4A/B4i branches so the modal dialog runs on B4A (previously B4J-only); first pass at the shared `MultiValues` state, per-slider min/max, and `B4XView`-based overlay teardown.
@@ -9,6 +9,9 @@
 - Retired the separate B4A `PrefsRenderer` (and its B4i stub) in favour of the shared dialog/page; updated the `.b4xlib` packaging so `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`, and the facade ship as shared modules.
 - Reworked the shared demo `B4XMainPage` to drive the library through the facade on every platform (drops the hand-built B4A overlay and Save/Cancel chrome).
 - Fixed the B4J `PrefsDialog` failing on show (`Object should first be initialized (B4XView)`) by creating the inner content `Pane` before assigning it to the `B4XView`, mirroring `PrefsPage`.
+- Finalized the cross-platform facade API and callback contracts; verified compiling against B4JBuilder 10.70 and B4ABuilder 14.20.
+- Ran the shared, UI-free `PrefsSelfTest` on B4J (29 passed, 0 failed) for parity with the B4A/B4i validation projects, alongside the B4J harness's inline assertions (80 passed, 0 failed).
+- Added `tools/run-b4j-tests.ps1`, a repeatable headless runner that builds the B4J harness and fails on any `FAIL:` line or non-zero self-test failure count.
 
 ## Unreleased — Milestone 3 progress
 

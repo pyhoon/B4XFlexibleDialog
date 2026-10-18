@@ -80,6 +80,7 @@ Sub AppStart (Form1 As Form, Args() As String)
 	RunCoreChecks(Definition)
 	RunStoreChecks(Definition)
 	RunFacadeChecks
+	RunSelfTest
 	PageHost.Initialize("host")
 	MainForm.RootPane.AddNode(PageHost, 280, 15, 780, 690)
 	MainForm.RootPane.SetAnchors(PageHost, 280, 15, 20, 20)
@@ -303,6 +304,16 @@ Private Sub ratingStar_MouseClicked (EventData As MouseEvent)
 	Dim Handle As Map = Tag.Get("handle")
 	Handle.Put("value", Tag.Get("index"))
 	Rating_Paint(Handle)
+End Sub
+
+' Runs the shared, UI-free PrefsSelfTest so the same assertions that run on
+' B4A/B4i also run on B4J, giving consistent cross-platform coverage.
+Private Sub RunSelfTest
+	Dim SelfTest As PrefsSelfTest
+	SelfTest.Initialize
+	Dim Outcome As Map = SelfTest.RunAll
+	Log("SelfTest passed=" & Outcome.Get("passed") & " failed=" & Outcome.Get("failed"))
+	Log(Outcome.Get("log"))
 End Sub
 
 Private Sub RunCoreChecks(Definition As String)
