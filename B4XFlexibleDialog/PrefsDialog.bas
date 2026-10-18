@@ -129,7 +129,9 @@ Private Sub ShowB4J As Boolean
 	DialogForm.Stylesheets.Add(File.GetUri(File.DirAssets, "prefs.css"))
 	DialogForm.RootPane.StyleClasses.Add("prefs-surface")
 	ApplyTheme
-	ContentPane.As(Pane).Initialize("dlg")
+	Dim InnerPane As Pane
+	InnerPane.Initialize("dlg")
+	ContentPane = InnerPane
 	DialogScroll.Initialize("dlg")
 	DialogScroll.FitToWidth = True
 	DialogScroll.InnerNode = ContentPane
