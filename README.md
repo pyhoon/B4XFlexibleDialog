@@ -90,6 +90,8 @@ The B4A validation project at `B4XFlexibleDialog/B4A` references the shared modu
   -ShowWarnings=True -NoSign=True
 ```
 
+The B4J library project at `B4XFlexibleDialog/B4J` runs the same core assertions (`RunCoreChecks`, `RunStoreChecks`, `RunFacadeChecks`) at startup and logs `PASS:`/`FAIL:` lines. A headless run reports 51 passed, 0 failed.
+
 B4A/B4i notes and limitations:
 
 - The shared modules use only cross-platform keywords (`JSONParser`, `JSONGenerator`, `DateTime`, `Map`, `List`, `Asc`); no JavaFX references, so the same source compiles on B4A (verified) and is expected to compile on B4i (deferred).
