@@ -243,20 +243,21 @@ Private Sub ShowB4A As Boolean
 	Form.Panel.Height = RowTop
 	Dim ButtonTop As Int = Card.Height - ButtonHeight - 8dip
 	LanguageButton.Initialize("dlg")
-	LanguageButton.Text = Localization.Text("ui.language")
+	LanguageButton.Tag = "language"
 	Card.AddView(LanguageButton, 12dip, ButtonTop, 96dip, ButtonHeight - 8dip)
 	ThemeButton.Initialize("dlg")
-	ThemeButton.Text = Localization.Text("ui.theme")
+	ThemeButton.Tag = "theme"
 	Card.AddView(ThemeButton, 112dip, ButtonTop, 84dip, ButtonHeight - 8dip)
 	ResetButton.Initialize("dlg")
-	ResetButton.Text = Localization.Text("ui.reset")
+	ResetButton.Tag = "reset"
 	Card.AddView(ResetButton, Card.Width - 12dip - 96dip - 100dip - 100dip, ButtonTop, 96dip, ButtonHeight - 8dip)
 	CancelButton.Initialize("dlg")
-	CancelButton.Text = Localization.Text("ui.cancel")
+	CancelButton.Tag = "cancel"
 	Card.AddView(CancelButton, Card.Width - 12dip - 96dip - 100dip, ButtonTop, 96dip, ButtonHeight - 8dip)
 	SaveButton.Initialize("dlg")
-	SaveButton.Text = Localization.Text("ui.save")
+	SaveButton.Tag = "save"
 	Card.AddView(SaveButton, Card.Width - 12dip - 96dip, ButtonTop, 96dip, ButtonHeight - 8dip)
+	RefreshButtons
 	Return True
 End Sub
 #End If
@@ -1243,16 +1244,19 @@ Private Sub dlg_Click
 	Dim Source As Object = Sender
 	If Source Is Button Then
 		Dim B As Button = Source
-		If B.Text = Localization.Text("ui.save") Then
+		Dim Action As String = "" & B.Tag
+		If Action = "save" Then
 			If SaveDraft Then CloseOverlay
-		End If
-		If B.Text = Localization.Text("ui.cancel") Then
+		Else If Action = "cancel" Then
 			Controller.CancelDraft
 			CloseOverlay
+		Else If Action = "reset" Then
+			ResetDraft
+		Else If Action = "language" Then
+			Language_Click
+		Else If Action = "theme" Then
+			Theme_Click
 		End If
-		If B.Text = Localization.Text("ui.reset") Then ResetDraft
-		If B.Text = Localization.Text("ui.language") Then Language_Click
-		If B.Text = Localization.Text("ui.theme") Then Theme_Click
 	End If
 End Sub
 
@@ -1297,6 +1301,7 @@ Private Sub Language_Click
 		Next
 	Next
 	RefreshFileButtons
+	RefreshButtons
 End Sub
 
 Private Sub Theme_Click
@@ -1324,6 +1329,14 @@ Private Sub RefreshFileButtons
 		Dim BrowseButton As Button = BrowseButtons.Get(ButtonId)
 		BrowseButton.Text = Localization.Text("ui.browse")
 	Next
+End Sub
+
+Private Sub RefreshButtons
+	SaveButton.Text = Localization.Text("ui.save")
+	CancelButton.Text = Localization.Text("ui.cancel")
+	ResetButton.Text = Localization.Text("ui.reset")
+	LanguageButton.Text = Localization.Text("ui.language")
+	ThemeButton.Text = Localization.Text("ui.theme")
 End Sub
 
 Private Sub prefsAction_Click
