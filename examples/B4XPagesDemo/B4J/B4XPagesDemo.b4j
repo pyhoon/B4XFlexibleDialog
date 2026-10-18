@@ -16,9 +16,10 @@ Library4=jfx
 Library5=json
 Library6=jxui
 Library7=xui views
+Library8=mediachooser
 Module1=|relative|..\B4XMainPage
 NumberOfFiles=4
-NumberOfLibraries=7
+NumberOfLibraries=8
 NumberOfModules=1
 Version=10.7
 @EndOfDesignText@

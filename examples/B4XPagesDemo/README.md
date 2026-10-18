@@ -49,10 +49,17 @@ the shared page compiles on B4i while the real renderer is pending.
 - Both presentations share committed values: Save in one and the other reflects it.
 - Edit values and Save; close and relaunch: values are restored from the local store file.
 - The `satisfaction` row is a custom star-rating renderer (`Rating_*` subs in `B4XMainPage`).
+- The `integrations` section is a demo-only spike of third-party libraries:
+  `avatar` uses a `MediaImage` renderer that hosts **MediaChooser** (an image picker
+  on B4J/B4A/B4i) next to an **XUI Views** `B4XImageView` thumbnail created from code
+  with `XUIViewsUtils.CreateB4XImageView`; `nickname` uses an `XuiText` renderer
+  built on XUI Views' `B4XFloatTextField`. Both controls are created in code
+  (`DesignerCreateView`), so they stay cross-platform without designer layouts.
 
 ## Files
 
-- `B4XMainPage.bas` — the shared page: UI, library wiring, persistence and the rating renderer (platform branches via `#If`).
+- `B4XMainPage.bas` — the shared page: UI, library wiring, persistence and the custom renderers (`Rating_*`, `MediaImage_*`, `XuiText_*`; platform branches via `#If`).
+- The projects also reference the `mediachooser` and `xui views` libraries (and their platform dependencies) for the integrations spike.
 - `B4J/B4XPagesDemo.b4j` — B4J project. `Main` only initializes `B4XPagesManager` and shows the form; the page gets its owner form itself with `B4XPages.GetNativeParent`.
 - `B4A/B4XPagesDemo.b4a` — B4A project. `Main` just initializes `B4XPagesManager`; the page does the rest.
 - `B4i/B4XPagesDemo.b4i` — B4i project (unverified; needs a Mac builder).

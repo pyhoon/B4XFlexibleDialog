@@ -25,6 +25,14 @@
         {"id": "account_note", "type": "label", "titleKey": "setting.account_note", "descriptionKey": "setting.account_note_description"},
         {"id": "clear_cache", "type": "action", "titleKey": "setting.clear_cache"}
       ]
+    },
+    {
+      "id": "integrations",
+      "titleKey": "section.integrations",
+      "preferences": [
+        {"id": "avatar", "type": "custom", "titleKey": "setting.avatar", "defaultValue": "", "options": {"renderer": "MediaImage", "height": 88}},
+        {"id": "nickname", "type": "custom", "titleKey": "setting.nickname", "defaultValue": "", "options": {"renderer": "XuiText", "height": 64}}
+      ]
     }
   ]
 }

@@ -30,10 +30,12 @@ Sub Class_Globals
 	Private StoreFileName As String = "prefs-values.json"
 	Private SetupDone As Boolean
 	Private PageHostReady As Boolean
+	Private MediaChooser1 As MediaChooser
 	#If B4J
 	Private DialogButton As Button
 	Private Facade As B4XFlexibleDialog
 	#Else
+	Private DemoTheme As PrefsTheme
 	Private SaveButton As Button
 	Private CancelButton As Button
 	Private Renderer As PrefsRenderer
@@ -133,6 +135,8 @@ Private Sub Setup
 		Return
 	End If
 	Facade.RegisterCustomRenderer("RatingStars", Me, "Rating")
+	Facade.RegisterCustomRenderer("MediaImage", Me, "MediaImage")
+	Facade.RegisterCustomRenderer("XuiText", Me, "XuiText")
 	Store.Initialize
 	Facade.SetStore(Store)
 	If File.Exists(StoreDirectory, StoreFileName) Then
@@ -152,6 +156,8 @@ Private Sub Setup
 	Controller.Initialize(Model)
 	Renderer.Initialize(Me, "Prefs", Model, Controller, Localization)
 	Renderer.RegisterCustomRenderer("RatingStars", Me, "Rating")
+	Renderer.RegisterCustomRenderer("MediaImage", Me, "MediaImage")
+	Renderer.RegisterCustomRenderer("XuiText", Me, "XuiText")
 	DirPicker.Initialize(Me, "DirPicker")
 	Store.Initialize
 	If File.Exists(StoreDirectory, StoreFileName) Then
@@ -393,6 +399,265 @@ Private Sub Rating_StarClicked (StarObject As Object)
 	Rating_Paint(Handle)
 End Sub
 
+' ---------------------------------------------------------------------------
+' Demo-only spike: a custom renderer that hosts two third-party cross-platform
+' libraries (the shipped B4A/B4i renderer is untouched):
+'   - XUI Views  -> XUIViewsUtils.CreateB4XImageView builds the thumbnail from
+'                   code, without a designer layout.
+'   - MediaChooser -> picks an image on B4J, B4A and B4i and raises a
+'                   ResumableSub so the handler can await the result.
+' It proves both can be driven from a custom renderer's create/read/refresh/
+' dispose lifecycle while staying platform-agnostic.
+Private Sub MediaImage_Create (Args As Map) As Object
+	Dim Parent As B4XView = Args.Get("parent")
+	Dim Definition As Map = Args.Get("definition")
+	#If B4J
+	Dim Left As Double = Args.Get("left")
+	Dim Top As Double = Args.Get("top")
+	Dim Width As Double = Args.Get("width")
+	Dim Height As Double = Args.Get("height")
+	Dim Size As Double = Min(Height, 72dip)
+	#Else
+	Dim Left As Int = Args.Get("left")
+	Dim Top As Int = Args.Get("top")
+	Dim Width As Int = Args.Get("width")
+	Dim Height As Int = Args.Get("height")
+	Dim Size As Int = Min(Height, 72dip)
+	#End If
+
+	Dim Preview As B4XImageView = XUIViewsUtils.CreateB4XImageView
+	Preview.ResizeMode = "FILL"
+	Parent.AddView(Preview.mBase, Left, Top, Size, Size)
+
+	Dim PickButton As Button
+	#If B4i
+	PickButton.Initialize("MediaImagePick", PickButton.STYLE_SYSTEM)
+	#Else
+	PickButton.Initialize("MediaImagePick")
+	#End If
+	PickButton.Text = "Choose image..."
+	Parent.AddView(PickButton, Left + Size + 12dip, Top + Size / 2 - 20dip, Width - Size - 12dip, 40dip)
+
+	Dim Handle As Map
+	Handle.Initialize
+	Handle.Put("preview", Preview)
+	Handle.Put("button", PickButton)
+	Handle.Put("id", Definition.Get("id"))
+	Dim Value As String = "" & Args.Get("value")
+	Handle.Put("value", Value)
+	If Value <> "" Then
+		Handle.Put("dir", PathParent(Value))
+		Handle.Put("file", PathName(Value))
+	End If
+	PickButton.Tag = Handle
+	MediaImage_ApplyTheme(Handle)
+	MediaImage_Load(Handle)
+	Return Handle
+End Sub
+
+' Re-applied from _Refresh too, which the library fires on value *and* theme changes.
+Private Sub MediaImage_ApplyTheme (Handle As Map)
+	Dim T As PrefsTheme = Theme
+	Dim Preview As B4XImageView = Handle.Get("preview")
+	Preview.mBackgroundColor = T.InputBackgroundColor
+	Preview.CornersRadius = 8
+	Dim PickButton As Button = Handle.Get("button")
+	#If B4J
+	PickButton.Style = "-fx-background-color: " & ThemeCss(T.SecondaryButtonBackgroundColor) & "; -fx-text-fill: " & ThemeCss(T.SecondaryButtonTextColor) & "; -fx-background-radius: 4;"
+	#Else
+	PickButton.As(B4XView).TextColor = T.SecondaryButtonTextColor
+	PickButton.As(B4XView).SetColorAndBorder(T.SecondaryButtonBackgroundColor, 0, 0, 4dip)
+	#End If
+End Sub
+
+Private Sub MediaImage_Load (Handle As Map)
+	Dim Preview As B4XImageView = Handle.Get("preview")
+	Dim Dir As String = Handle.GetDefault("dir", "")
+	Dim FileName As String = Handle.GetDefault("file", "")
+	If Dir <> "" And FileName <> "" And File.Exists(Dir, FileName) Then
+		Preview.Load(Dir, FileName)
+	Else
+		Preview.Clear
+	End If
+End Sub
+
+' File.GetParent/GetName are not available on every platform, so split the path
+' ourselves (B4J hands MediaChooser results back as a full path).
+Private Sub PathName (Path As String) As String
+	Dim P As String = Path
+	#If B4J
+	P = P.Replace(Chr(92), "/")
+	#End If
+	Dim Index As Int = P.LastIndexOf("/")
+	If Index = -1 Then Return P
+	Return P.SubString(Index + 1)
+End Sub
+
+Private Sub PathParent (Path As String) As String
+	Dim P As String = Path
+	#If B4J
+	P = P.Replace(Chr(92), "/")
+	#End If
+	Dim Index As Int = P.LastIndexOf("/")
+	If Index = -1 Then Return ""
+	Return P.SubString2(0, Index)
+End Sub
+
+' Shared theme source for the spike widgets: B4J uses the facade's live theme,
+' while B4A/B4i use a light theme so they match the hosted form.
+Private Sub Theme As PrefsTheme
+	#If B4J
+	Return Facade.GetTheme
+	#Else
+	If DemoTheme.IsInitialized = False Then DemoTheme.Initialize(False)
+	Return DemoTheme
+	#End If
+End Sub
+
+Private Sub MediaImage_Read (Handle As Object, Definition As Map) As Object
+	Dim H As Map = Handle
+	Return H.Get("value")
+End Sub
+
+Private Sub MediaImage_Validate (Value As Object, Definition As Map) As String
+	Return ""
+End Sub
+
+Private Sub MediaImage_Refresh (Handle As Object, Args As Map)
+	Dim H As Map = Handle
+	Dim Value As String = "" & Args.Get("value")
+	H.Put("value", Value)
+	If Value <> "" Then
+		H.Put("dir", PathParent(Value))
+		H.Put("file", PathName(Value))
+	End If
+	MediaImage_ApplyTheme(H)
+	MediaImage_Load(H)
+End Sub
+
+Private Sub MediaImage_Dispose (Handle As Object)
+	Dim H As Map = Handle
+	Dim Preview As B4XImageView = H.Get("preview")
+	Preview.mBase.RemoveViewFromParent
+	Dim PickButton As Button = H.Get("button")
+	Dim ButtonView As B4XView = PickButton
+	ButtonView.RemoveViewFromParent
+End Sub
+
+' XUI Views control driven purely from code: B4XFloatTextField only exposes
+' DesignerCreateView, so we feed it a base panel and a throwaway label.
+Private Sub XuiText_Create (Args As Map) As Object
+	Dim Parent As B4XView = Args.Get("parent")
+	#If B4J
+	Dim Left As Double = Args.Get("left")
+	Dim Top As Double = Args.Get("top")
+	Dim Width As Double = Args.Get("width")
+	Dim Height As Double = Args.Get("height")
+	#Else
+	Dim Left As Int = Args.Get("left")
+	Dim Top As Int = Args.Get("top")
+	Dim Width As Int = Args.Get("width")
+	Dim Height As Int = Args.Get("height")
+	#End If
+
+	Dim T As PrefsTheme = Theme
+
+	Dim Base As B4XView = xui.CreatePanel("")
+	Parent.AddView(Base, Left, Top, Width, Height)
+
+	Dim Lbl As Label
+	Lbl.Initialize("")
+	Dim LblView As B4XView = Lbl
+	LblView.TextColor = T.TextColor
+
+	Dim Props As Map = CreateMap("HintColor": T.AccentColor, "NonFocusedHintColor": T.SecondaryTextColor, "Hint": "Nickname", "ShowRevealButton": False)
+	Dim Field As B4XFloatTextField
+	Field.Initialize(Me, "XuiField")
+	Field.DesignerCreateView(Base, Lbl, Props)
+	Field.Text = "" & Args.Get("value")
+
+	Dim Handle As Map
+	Handle.Initialize
+	Handle.Put("base", Base)
+	Handle.Put("field", Field)
+	XuiText_ApplyTheme(Handle)
+	Return Handle
+End Sub
+
+' Re-applied from _Refresh too, so the field follows live theme changes. B4XFloatTextField
+' leaves its text field at the platform default, so we paint it with the theme's input
+' colors; B4J needs CSS (.Style) the same way the library's own inputs do.
+Private Sub XuiText_ApplyTheme (Handle As Map)
+	Dim T As PrefsTheme = Theme
+	Dim Field As B4XFloatTextField = Handle.Get("field")
+	Field.HintColor = T.AccentColor
+	Field.NonFocusedHintColor = T.SecondaryTextColor
+	Field.Update
+	#If B4J
+	Dim Tf As TextField = Field.TextField
+	Tf.Style = "-fx-control-inner-background: " & ThemeCss(T.InputBackgroundColor) & "; -fx-background-color: " & ThemeCss(T.InputBackgroundColor) & "; -fx-text-fill: " & ThemeCss(T.TextColor) & "; -fx-prompt-text-fill: " & ThemeCss(T.SecondaryTextColor) & "; -fx-accent: " & ThemeCss(T.AccentColor) & "; -fx-focus-color: " & ThemeCss(T.AccentColor) & "; -fx-border-color: " & ThemeCss(T.InputBorderColor) & "; -fx-border-radius: 4; -fx-background-radius: 4;"
+	#Else
+	Field.TextField.TextColor = T.TextColor
+	Field.TextField.SetColorAndBorder(T.InputBackgroundColor, 1dip, T.InputBorderColor, 4dip)
+	#End If
+	If Field.lblClear.IsInitialized Then Field.lblClear.TextColor = T.TextColor
+	If Field.lblV.IsInitialized Then Field.lblV.TextColor = T.TextColor
+End Sub
+
+Private Sub XuiText_Read (Handle As Object, Definition As Map) As Object
+	Dim H As Map = Handle
+	Dim Field As B4XFloatTextField = H.Get("field")
+	Return Field.Text
+End Sub
+
+Private Sub XuiText_Validate (Value As Object, Definition As Map) As String
+	Return ""
+End Sub
+
+Private Sub XuiText_Refresh (Handle As Object, Args As Map)
+	Dim H As Map = Handle
+	Dim Field As B4XFloatTextField = H.Get("field")
+	Field.Text = "" & Args.Get("value")
+	XuiText_ApplyTheme(H)
+End Sub
+
+Private Sub XuiText_Dispose (Handle As Object)
+	Dim H As Map = Handle
+	Dim Base As B4XView = H.Get("base")
+	Base.RemoveViewFromParent
+End Sub
+
+' MediaChooser is created on first use: on B4J it needs a data folder before
+' Initialize (XUI.SetDataFolder), which the shared page only sets here.
+Private Sub EnsureMediaChooser
+	If MediaChooser1.IsInitialized Then Return
+	#If B4J
+	xui.SetDataFolder("B4XPagesDemo")
+	#End If
+	MediaChooser1.Initialize(Me, "MediaChooser")
+End Sub
+
+Private Sub MediaImagePick_Click
+	Dim Btn As B4XView = Sender
+	Dim Handle As Map = Btn.Tag
+	EnsureMediaChooser
+	Wait For (MediaChooser1.ChooseImage(Btn)) Complete (Result As MediaChooserResult)
+	If Result.Success = False Then Return
+	Dim Dir As String = Result.MediaDir
+	Dim FileName As String = Result.MediaFile
+	#If B4J
+	If FileName = "" Then
+		FileName = PathName(Dir)
+		Dir = PathParent(Dir)
+	End If
+	#End If
+	Handle.Put("dir", Dir)
+	Handle.Put("file", FileName)
+	Handle.Put("value", File.Combine(Dir, FileName))
+	MediaImage_Load(Handle)
+	Log("MediaChooser picked: " & File.Combine(Dir, FileName))
+End Sub
+
 #If B4A
 ' Builds the hidden modal overlay used by the "Open preferences dialog" button.
 ' It mirrors the B4J dialog presentation alongside the inline hosted form: a dark
@@ -446,20 +711,23 @@ Private Sub LayoutDialog
 	Dim CardTop As Int = (Root.Height - CardHeight) / 2
 	DialogOverlay.SetLayoutAnimated(0, 0, 0, Root.Width, Root.Height)
 	DialogCard.SetLayoutAnimated(0, CardLeft, CardTop, CardWidth, CardHeight)
-	DialogTitle.SetLayoutAnimated(0, CardLeft + Pad, CardTop + Pad, CardWidth - Pad * 2, TitleHeight)
-	Dim HostTop As Int = CardTop + Pad + TitleHeight
+	' Card children use card-relative coordinates (the card already sits at CardLeft/CardTop).
+	DialogTitle.SetLayoutAnimated(0, Pad, Pad, CardWidth - Pad * 2, TitleHeight)
+	Dim HostTop As Int = Pad + TitleHeight
 	Dim HostHeight As Int = CardHeight - Pad * 3 - TitleHeight - ButtonHeight
-	DialogHost.SetLayoutAnimated(0, CardLeft + Pad, HostTop, CardWidth - Pad * 2, HostHeight)
+	DialogHost.SetLayoutAnimated(0, Pad, HostTop, CardWidth - Pad * 2, HostHeight)
 	Dim ButtonWidth As Int = 140dip
-	Dim ButtonTop As Int = CardTop + CardHeight - Pad - ButtonHeight
-	DialogCancelButton.SetLayoutAnimated(0, CardLeft + CardWidth - Pad - ButtonWidth, ButtonTop, ButtonWidth, ButtonHeight)
-	DialogSaveButton.SetLayoutAnimated(0, CardLeft + CardWidth - Pad - ButtonWidth * 2 - 12dip, ButtonTop, ButtonWidth, ButtonHeight)
+	Dim ButtonTop As Int = CardHeight - Pad - ButtonHeight
+	DialogCancelButton.SetLayoutAnimated(0, CardWidth - Pad - ButtonWidth, ButtonTop, ButtonWidth, ButtonHeight)
+	DialogSaveButton.SetLayoutAnimated(0, CardWidth - Pad - ButtonWidth * 2 - 12dip, ButtonTop, ButtonWidth, ButtonHeight)
 End Sub
 
 Private Sub OpenDialogButton_Click
 	If DialogOpen Then Return
 	DialogRenderer.Initialize(Me, "Prefs", Model, Controller, Localization)
 	DialogRenderer.RegisterCustomRenderer("RatingStars", Me, "Rating")
+	DialogRenderer.RegisterCustomRenderer("MediaImage", Me, "MediaImage")
+	DialogRenderer.RegisterCustomRenderer("XuiText", Me, "XuiText")
 	DialogOpen = True
 	LayoutDialog
 	DialogRenderer.Render(DialogHost)
