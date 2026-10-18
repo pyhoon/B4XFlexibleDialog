@@ -10,7 +10,7 @@ Version=8.8
 ' B4i support is not implemented yet. This module mirrors the B4A picker's public
 ' surface so shared code compiles and a real implementation can replace this file:
 '   Initialize(Target, EventName)
-'   SelectDir(Copy As Boolean)
+'   SelectDir(bCopy As Boolean)
 '
 ' Neither method selects anything today; SelectDir only logs a warning, so a host
 ' that requests the picker simply never receives a DirectoryPicked event.
@@ -25,6 +25,6 @@ Public Sub Initialize(Target As Object, EventName As String)
 	Log(NotImplementedMessage)
 End Sub
 
-Public Sub SelectDir(Copy As Boolean)
+Public Sub SelectDir(bCopy As Boolean)
 	Log(NotImplementedMessage & " (SelectDir)")
 End Sub

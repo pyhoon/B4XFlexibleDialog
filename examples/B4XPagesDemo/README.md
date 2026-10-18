@@ -2,22 +2,22 @@
 
 A B4XPages demo that consumes the packaged **B4XFlexibleDialog.b4xlib** on B4J,
 B4A and B4i from a single shared page. The shared `B4XMainPage` owns the whole
-demo: it builds its UI with cross-platform views, wires up the library (the B4J
-facade in-process, or the B4A/B4i `PrefsRenderer`), persists values and hosts the
-sample `RatingStars` custom renderer. On B4J a button opens the modal dialog
-(`Prefs.Show`) alongside the embedded page (`Prefs.CreatePage`); on B4A a button
-opens the same form in a modal overlay with Save/Cancel, next to the inline page.
-B4i has no renderer yet, so the page just provides Save/Cancel for the hosted
-panel. Values persist locally and are restored on launch.
+demo: it builds its UI with cross-platform views, wires up the library through
+its cross-platform facade (`Facade.Show` / `Facade.CreatePage`), persists values
+and hosts the sample `RatingStars` custom renderer. A button opens the modal
+dialog (`Show`) alongside the embedded page (`CreatePage`) on B4J and B4A alike;
+the page and the dialog provide their own Save/Cancel/Reset chrome. B4i compiles
+against the shared page but its dialog/page branches are no-op stubs for now.
+Values persist locally and are restored on launch.
 
 The page is the only module in the project (`B4XMainPage.bas`), so a page class
 never reaches into an Activity module (B4A forbids that), and no view-typed class
 fields live in `Process_Globals` (B4A forbids that too). Platform differences are
 handled with `#If B4J`/`#If B4A`/`#If B4i` blocks inside the one file.
 
-B4i is wired up as stubs for now (`B4i/README.md`): the library ships a B4i
-`PrefsRenderer`/`PrefsDirPicker` with the same public surface but no-op bodies, so
-the shared page compiles on B4i while the real renderer is pending.
+B4i is wired up as stubs for now (`B4i/README.md`): the library's facade/dialog/page
+B4i branches and its `PrefsDirPicker` are no-op stubs, so the shared page compiles
+on B4i while the real implementation is pending.
 
 ## Setup
 
@@ -45,7 +45,7 @@ the shared page compiles on B4i while the real renderer is pending.
 ## What to look for
 
 - B4J: the page shows the settings form inline on the right; the dialog button opens the modal form.
-- B4A: the page hosts the same form with Save/Cancel buttons above it; the dialog button opens it in a modal overlay with its own Save/Cancel.
+- B4A: the page hosts the same form inline; the dialog button opens it in a modal overlay. Both provide their own chrome.
 - Both presentations share committed values: Save in one and the other reflects it.
 - Edit values and Save; close and relaunch: values are restored from the local store file.
 - The `satisfaction` row is a custom star-rating renderer (`Rating_*` subs in `B4XMainPage`).

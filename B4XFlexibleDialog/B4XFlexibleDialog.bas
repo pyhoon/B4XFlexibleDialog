@@ -4,11 +4,20 @@ ModulesStructureVersion=1
 Type=Class
 Version=10.7
 @EndOfDesignText@
-' Public B4J facade for a JSON-backed modal preferences dialog.
+' Public cross-platform facade for a JSON-backed preferences UI.
+' B4J  - modal dialog (Show) and an embeddable JavaFX page (CreatePage).
+' B4A  - modal overlay dialog (Show) and an embeddable page (CreatePage).
+' B4i  - not implemented yet; Show/CreatePage compile but do nothing.
 Sub Class_Globals
 	Private Callback As Object
 	Private EventPrefix As String
+	#If B4A
+	Private OwnerForm As Activity
+	#Else If B4J
 	Private OwnerForm As Form
+	#Else
+	Private OwnerForm As Page
+	#End If
 	Private Model As PrefsModel
 	Private Controller As PrefsController
 	Private Localization As PrefsLocalization
@@ -16,13 +25,16 @@ Sub Class_Globals
 	Private ActivePage As PrefsPage
 	Private PageActive As Boolean
 	Private PageStylesheetAdded As Boolean
+	#If B4A
+	Private ActiveDialog As PrefsDialog
+	#End If
 	Private FileProvider As PrefsFileProvider
 	Private CustomRenderers As Map
 	Private Ready As Boolean
 	Public LastError As String
 End Sub
 
-Public Sub Initialize(EventTarget As Object, EventName As String, Owner As Form)
+Public Sub Initialize (EventTarget As Object, EventName As String, Owner As Object)
 	Callback = EventTarget
 	EventPrefix = EventName
 	OwnerForm = Owner
@@ -36,7 +48,7 @@ Public Sub Initialize(EventTarget As Object, EventName As String, Owner As Form)
 	LastError = ""
 End Sub
 
-Public Sub SetFileProvider(Provider As PrefsFileProvider)
+Public Sub SetFileProvider (Provider As PrefsFileProvider)
 	FileProvider = Provider
 End Sub
 
@@ -53,7 +65,7 @@ End Sub
 '   <E>_Validate(Value As Object, Definition As Map) As String
 '   <E>_Refresh(Handle As Object, Args As Map)
 '   <E>_Dispose(Handle As Object)
-Public Sub RegisterCustomRenderer(Name As String, Target As Object, EventName As String)
+Public Sub RegisterCustomRenderer (Name As String, Target As Object, EventName As String)
 	Dim Entry As Map
 	Entry.Initialize
 	Entry.Put("target", Target)
@@ -61,12 +73,12 @@ Public Sub RegisterCustomRenderer(Name As String, Target As Object, EventName As
 	CustomRenderers.Put(Name, Entry)
 End Sub
 
-Public Sub GetCustomRenderer(Name As String) As Map
+Public Sub GetCustomRenderer (Name As String) As Map
 	If CustomRenderers.ContainsKey(Name) Then Return CustomRenderers.Get(Name)
 	Return Null
 End Sub
 
-Public Sub LoadDefinition(DefinitionJson As String) As Boolean
+Public Sub LoadDefinition (DefinitionJson As String) As Boolean
 	If PageActive Then DisposePage
 	Dim NewModel As PrefsModel
 	NewModel.Initialize
@@ -83,7 +95,7 @@ Public Sub LoadDefinition(DefinitionJson As String) As Boolean
 End Sub
 
 ' Enables persistence. Committed values are written to the store after commit/set/reset.
-Public Sub SetStore(S As PrefsStore)
+Public Sub SetStore (S As PrefsStore)
 	Controller.SetStore(S)
 End Sub
 
@@ -108,7 +120,7 @@ Public Sub SaveStoredValues
 End Sub
 
 ' Imports values from a JSON object string into the store, then applies them. Returns applied count.
-Public Sub ImportValues(JsonText As String) As Int
+Public Sub ImportValues (JsonText As String) As Int
 	If CheckReady = False Then Return 0
 	Dim S As PrefsStore = Controller.GetStore
 	If S.IsInitialized = False Then Return 0
@@ -129,11 +141,11 @@ Public Sub ExportValues As String
 	Return S.ToJson
 End Sub
 
-Public Sub SetDictionary(Language As String, Values As Map)
+Public Sub SetDictionary (Language As String, Values As Map)
 	Localization.SetDictionary(Language, Values)
 End Sub
 
-Public Sub SetLanguage(Language As String)
+Public Sub SetLanguage (Language As String)
 	Localization.SetLanguage(Language)
 	If PageActive Then ActivePage.RefreshLocalization
 End Sub
@@ -142,7 +154,7 @@ Public Sub GetLanguage As String
 	Return Localization.GetLanguage
 End Sub
 
-Public Sub SetTheme(Value As PrefsTheme)
+Public Sub SetTheme (Value As PrefsTheme)
 	CurrentTheme = Value
 	If PageActive Then ActivePage.SetTheme(Value)
 End Sub
@@ -169,7 +181,7 @@ Public Sub GetTheme As PrefsTheme
 	Return CurrentTheme
 End Sub
 
-Public Sub SetValue(Id As String, Value As Object) As Boolean
+Public Sub SetValue (Id As String, Value As Object) As Boolean
 	If CheckReady = False Then Return False
 	If Controller.SetValue(Id, Value) = False Then
 		LastError = Controller.LastError
@@ -180,7 +192,7 @@ Public Sub SetValue(Id As String, Value As Object) As Boolean
 	Return True
 End Sub
 
-Public Sub GetValue(Id As String) As Object
+Public Sub GetValue (Id As String) As Object
 	If Ready = False Then Return Null
 	Return Controller.GetValue(Id)
 End Sub
@@ -200,39 +212,55 @@ Public Sub ResetToDefaults
 	If PageActive Then ActivePage.RefreshValues
 End Sub
 
-Public Sub ResetPreference(Id As String)
+Public Sub ResetPreference (Id As String)
 	If CheckReady = False Then Return
 	Controller.ResetPreference(Id)
 	If PageActive Then ActivePage.RefreshValue(Id, Controller.GetValue(Id))
 End Sub
 
+' Shows the dialog. On B4J this blocks until the window closes. On B4A it builds
+' an overlay and returns immediately; the _DialogClosed event is raised by the
+' dialog when the user finishes. In both cases the host receives exactly one
+' _DialogClosed(Saved As Boolean) call.
 Public Sub Show
 	If CheckReady = False Then
-		LogError(LastError)
+		ReportError(LastError)
 		Return
 	End If
 	If PageActive Then ActivePage.RefreshValues
 	Dim Dialog As PrefsDialog
 	Dialog.Initialize(OwnerForm, Controller, Model, Localization, CurrentTheme, FileProvider, CustomRenderers, Callback, EventPrefix)
+	#If B4J
 	Dim WasSaved As Boolean = Dialog.Show
-	If PageActive Then ActivePage.RefreshValues
 	CallSub2(Callback, EventPrefix & "_DialogClosed", WasSaved)
+	#Else If B4A
+	ActiveDialog = Dialog
+	Dialog.Show
+	#Else
+	Dialog.Show
+	CallSub2(Callback, EventPrefix & "_DialogClosed", False)
+	#End If
 End Sub
 
 ' Mounts the settings page inside a caller-owned container. The container is
 ' typed as B4XView so callers can pass any host view (an AnchorPane on B4J,
-' a Panel elsewhere) without depending on a platform-specific control type.
-Public Sub CreatePage(Container As B4XView)
+' a Panel on B4A).
+Public Sub CreatePage (Container As B4XView)
 	If CheckReady = False Then
-		LogError(LastError)
+		ReportError(LastError)
 		Return
 	End If
 	If PageActive Then DisposePage
+	#If B4A
+	ActiveDialog = Null
+	#End If
+	#If B4J
 	If PageStylesheetAdded = False Then
 		Dim CssUri As String = File.GetUri(File.DirAssets, "prefs.css")
 		If OwnerForm.Stylesheets.IndexOf(CssUri) = -1 Then OwnerForm.Stylesheets.Add(CssUri)
 		PageStylesheetAdded = True
 	End If
+	#End If
 	ActivePage.Initialize(Container, Controller, Model, Localization, CurrentTheme, FileProvider, CustomRenderers, Callback, EventPrefix)
 	PageActive = True
 End Sub
@@ -248,10 +276,26 @@ Public Sub DisposePage
 	End If
 End Sub
 
+' Delivers a directory chosen by the host application (after a _BrowseDirectory
+' event) to the currently open dialog or page. No-op elsewhere.
+Public Sub SetDirectoryValue (Uri As String)
+	#If B4A
+	If ActiveDialog <> Null Then
+		ActiveDialog.SetDirectoryValue(Uri)
+	Else If PageActive Then
+		ActivePage.SetDirectoryValue(Uri)
+	End If
+	#End If
+End Sub
+
 Private Sub CheckReady As Boolean
 	If Ready = False Then
 		LastError = "LoadDefinition must succeed before accessing preference values or showing the dialog."
 		Return False
 	End If
 	Return True
+End Sub
+
+Private Sub ReportError (Message As String)
+	Log("B4XFlexibleDialog: " & Message)
 End Sub

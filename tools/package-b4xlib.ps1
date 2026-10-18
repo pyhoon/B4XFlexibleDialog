@@ -40,23 +40,22 @@ if (-not $OutputDir) { $OutputDir = Join-Path $PSScriptRoot '..\dist' }
 
 # Platform-independent modules (no JavaFX/UI references); live at the source root.
 $sharedModules = @(
-    'PrefsModel', 'PrefsController', 'PrefsLocalization', 'PrefsTheme', 'PrefsStore', 'PrefsFileResult', 'PrefsSelfTest'
+    'PrefsModel', 'PrefsController', 'PrefsLocalization', 'PrefsTheme', 'PrefsStore', 'PrefsFileResult', 'PrefsSelfTest', 'PrefsDialog', 'PrefsPage', 'PrefsFileProvider', 'B4XFlexibleDialog'
 )
 
-# B4J (JavaFX) modules; also live at the source root, shipped under B4J/.
-$b4jModules = @(
-    'B4XFlexibleDialog', 'PrefsDialog', 'PrefsPage', 'PrefsFileProvider'
-)
+# B4J (JavaFX) modules; also live at the source root, shipped under B4J/. The
+# facade is cross-platform now, so no B4J-only modules remain.
+$b4jModules = @()
 
 # B4A (Android) modules.
 $b4aModules = @(
-    'PrefsRenderer', 'PrefsDirPicker'
+    'PrefsDirPicker'
 )
 
 # B4i (iOS) modules. These are not implemented yet; stubs ship so the shared call
 # sites compile against the library on B4i. See B4XFlexibleDialog/B4i/*.bas.
 $b4iModules = @(
-    'PrefsRenderer', 'PrefsDirPicker'
+    'PrefsDirPicker'
 )
 
 $SourceDir = (Resolve-Path -LiteralPath $SourceDir).Path

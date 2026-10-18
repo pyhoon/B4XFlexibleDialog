@@ -1,15 +1,27 @@
 ﻿B4J=true
-Group=App
+Group=Classes
 ModulesStructureVersion=1
 Type=Class
 Version=10.7
 @EndOfDesignText@
-' Embedded B4J page. Owns one ScrollPane child; never clears the caller's container.
+' Embedded cross-platform preferences page. It builds itself into a caller-owned
+' container and never clears the caller's other children.
+'   B4J - a JavaFX ScrollPane mounted on an AnchorPane.
+'   B4A - a ScrollView built over the caller's B4XView (Panel) with native controls.
+'   B4i - not implemented yet; the shared call sites still compile.
+' Save/Cancel/Reset commit or discard the controller draft; the host reloads the
+' page after Save and Cancel (see the demo B4XMainPage).
 Sub Class_Globals
+	#If B4J
 	Private fx As JFX
 	Private Container As AnchorPane
 	Private Scroll As ScrollPane
 	Private Content As Pane
+	#Else If B4A
+	Private Container As B4XView
+	Private Scroll As ScrollView
+	Private Content As B4XView
+	#End If
 	Private Controller As PrefsController
 	Private Model As PrefsModel
 	Private Localization As PrefsLocalization
@@ -25,6 +37,10 @@ Sub Class_Globals
 	Private TitleLabels As Map
 	Private SectionLabels As Map
 	Private SliderLabels As Map
+	Private SliderMin As Map
+	Private SliderMax As Map
+	Private MultiValues As Map
+	Private PendingDirId As String
 	Private ActionButtons As Map
 	Private BrowseButtons As Map
 	Private ClearButtons As Map
@@ -40,9 +56,8 @@ Sub Class_Globals
 End Sub
 
 ' TargetContainer is a B4XView so the page API stays platform-neutral; the
-' anchor layout underneath still requires an AnchorPane on B4J.
+' layout underneath requires an AnchorPane on B4J and any panel on B4A.
 Public Sub Initialize(TargetContainer As B4XView, ValueController As PrefsController, Definition As PrefsModel, L10n As PrefsLocalization, UiTheme As PrefsTheme, Provider As PrefsFileProvider, Renderers As Map, Target As Object, TargetEvent As String)
-	Container = TargetContainer
 	Controller = ValueController
 	Model = Definition
 	Localization = L10n
@@ -53,20 +68,15 @@ Public Sub Initialize(TargetContainer As B4XView, ValueController As PrefsContro
 	EventPrefix = TargetEvent
 	IsDisposed = False
 	Controller.BeginDraft
+	#If B4J Or B4A
+	Container = TargetContainer
 	BuildPage
+	#End If
 End Sub
 
+#If B4J
 Private Sub BuildPage
-	Controls.Initialize
-	ControlTypes.Initialize
-	TitleLabels.Initialize
-	SectionLabels.Initialize
-	SliderLabels.Initialize
-	ActionButtons.Initialize
-	BrowseButtons.Initialize
-	ClearButtons.Initialize
-	CustomHandles.Initialize
-	BuildError = ""
+	InitMaps
 	RowTop = 18
 	Content.Initialize("page")
 	Content.StyleClasses.Add("prefs-surface")
@@ -85,8 +95,7 @@ Private Sub BuildPage
 	PageTitle.TextColor = fx.Colors.From32Bit(Theme.TextColor)
 	Content.AddNode(PageTitle, 24, RowTop, ContentWidth - 48, 34)
 	RowTop = RowTop + 44
-	Dim Sections As List = Model.GetSections
-	For Each Section As Map In Sections
+	For Each Section As Map In Model.GetSections
 		Dim SectionTitle As Label
 		SectionTitle.Initialize("")
 		SectionTitle.Text = Localization.Text(Section.Get("titleKey"))
@@ -119,10 +128,92 @@ Private Sub BuildPage
 		StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 	End If
 End Sub
+#End If
+
+#If B4A
+Private Sub BuildPage
+	InitMaps
+	RowTop = 12dip
+	Dim W As Int = Container.Width
+	Dim H As Int = Container.Height
+	If W <= 0 Then W = 100%x
+	If H <= 0 Then H = 100%y
+	ContentWidth = W
+	InputLeft = 16dip
+	Scroll.Initialize(W)
+	Container.AddView(Scroll, 0, 0, W, H)
+	Content = Scroll.Panel
+	Content.Color = Colors.White
+	PageTitle.Initialize("")
+	PageTitle.Text = Localization.Text(Model.GetTitleKey)
+	PageTitle.TextSize = 22
+	PageTitle.TextColor = Colors.DarkGray
+	Content.AddView(PageTitle, 16dip, RowTop, W - 32dip, 44dip)
+	RowTop = RowTop + 56dip
+	For Each SectionObject As Object In Model.GetSections
+		Dim SectionMap As Map = SectionObject
+		Dim SectionTitle As Label
+		SectionTitle.Initialize("")
+		SectionTitle.Text = Localization.Text(SectionMap.Get("titleKey"))
+		SectionTitle.TextSize = 16
+		SectionTitle.TextColor = Colors.Gray
+		Content.AddView(SectionTitle, 16dip, RowTop, W - 32dip, 30dip)
+		SectionLabels.Put(SectionMap.Get("id"), SectionTitle)
+		RowTop = RowTop + 38dip
+		Dim Items As List = SectionMap.Get("preferences")
+		For Each PrefObject As Object In Items
+			Dim Pref As Map = PrefObject
+			AddPreference(Pref)
+		Next
+		RowTop = RowTop + 8dip
+	Next
+	StatusLabel.Initialize("")
+	StatusLabel.Text = BuildError
+	StatusLabel.TextSize = 14
+	StatusLabel.TextColor = Colors.Red
+	Content.AddView(StatusLabel, 16dip, RowTop, W - 32dip, 30dip)
+	RowTop = RowTop + 38dip
+	SaveButton.Initialize("pageSave")
+	SaveButton.Text = Localization.Text("ui.save")
+	SaveButton.TextSize = 16
+	Content.AddView(SaveButton, 16dip, RowTop, (W - 40dip) / 2, 52dip)
+	CancelButton.Initialize("pageCancel")
+	CancelButton.Text = Localization.Text("ui.cancel")
+	CancelButton.TextSize = 16
+	Content.AddView(CancelButton, 24dip + (W - 40dip) / 2, RowTop, (W - 40dip) / 2, 52dip)
+	RowTop = RowTop + 64dip
+	ResetButton.Initialize("pageReset")
+	ResetButton.Text = Localization.Text("ui.reset")
+	ResetButton.TextSize = 16
+	Content.AddView(ResetButton, 16dip, RowTop, W - 32dip, 48dip)
+	RowTop = RowTop + 60dip
+	Content.Height = RowTop
+	If BuildError <> "" Then
+		StatusLabel.Text = BuildError
+	End If
+End Sub
+#End If
+
+Private Sub InitMaps
+	Controls.Initialize
+	ControlTypes.Initialize
+	TitleLabels.Initialize
+	SectionLabels.Initialize
+	SliderLabels.Initialize
+	SliderMin.Initialize
+	SliderMax.Initialize
+	MultiValues.Initialize
+	ActionButtons.Initialize
+	BrowseButtons.Initialize
+	ClearButtons.Initialize
+	CustomHandles.Initialize
+	BuildError = ""
+End Sub
 
 Private Sub AddPreference(Pref As Map)
 	Dim Id As String = Pref.Get("id")
 	Dim TypeName As String = Pref.Get("type")
+	#If B4J
 	If TypeName = "label" Then
 		Dim InfoLabel As Label
 		InfoLabel.Initialize("")
@@ -262,8 +353,169 @@ Private Sub AddPreference(Pref As Map)
 			AddCustomPreference(Pref)
 		End If
 	End If
+	#Else If B4A
+	Dim InnerWidth As Int = ContentWidth - 32dip
+	If TypeName = "label" Then
+		Dim InfoKey As String = Pref.Get("titleKey")
+		If Pref.ContainsKey("descriptionKey") Then InfoKey = Pref.Get("descriptionKey")
+		Dim InfoLabel As Label
+		InfoLabel.Initialize("")
+		InfoLabel.Text = Localization.Text(InfoKey)
+		InfoLabel.TextSize = 14
+		InfoLabel.TextColor = Colors.Gray
+		Content.AddView(InfoLabel, 16dip, RowTop, InnerWidth, 30dip)
+		TitleLabels.Put(Id, InfoLabel)
+		RowTop = RowTop + 38dip
+	Else If TypeName = "action" Then
+		Dim ActionButton As Button
+		ActionButton.Initialize("pageAction")
+		ActionButton.Tag = Id
+		ActionButton.Text = Localization.Text(Pref.Get("titleKey"))
+		ActionButton.TextSize = 16
+		Content.AddView(ActionButton, 16dip, RowTop, InnerWidth, 52dip)
+		ActionButtons.Put(Id, ActionButton)
+		RowTop = RowTop + 60dip
+	Else If TypeName = "switch" Or TypeName = "checkbox" Then
+		Dim Check As CheckBox
+		Check.Initialize("")
+		Check.Text = Localization.Text(Pref.Get("titleKey"))
+		Check.TextSize = 16
+		Check.Checked = Controller.GetValue(Id)
+		Content.AddView(Check, 16dip, RowTop, InnerWidth, 52dip)
+		Controls.Put(Id, Check)
+		TitleLabels.Put(Id, Check)
+		RowTop = RowTop + 60dip
+	Else
+		Dim Title As Label
+		Title.Initialize("")
+		Title.Text = Localization.Text(Pref.Get("titleKey"))
+		Title.TextSize = 16
+		Content.AddView(Title, 16dip, RowTop, InnerWidth, 26dip)
+		TitleLabels.Put(Id, Title)
+		RowTop = RowTop + 30dip
+		If TypeName = "text" Or TypeName = "number" Or TypeName = "password" Or TypeName = "time" Or TypeName = "datetime" Then
+			Dim Input As EditText
+			Input.Initialize("")
+			Input.TextSize = 16
+			Input.SingleLine = True
+			If TypeName = "password" Then Input.PasswordMode = True
+			If TypeName = "number" Then Input.InputType = Input.INPUT_TYPE_DECIMAL_NUMBERS
+			If TypeName = "time" Then Input.Hint = Localization.Text("format.time")
+			If TypeName = "datetime" Then Input.Hint = Localization.Text("format.datetime")
+			Input.Text = "" & Controller.GetValue(Id)
+			Content.AddView(Input, 16dip, RowTop, InnerWidth, 52dip)
+			Controls.Put(Id, Input)
+			RowTop = RowTop + 60dip
+		Else If TypeName = "multiline" Then
+			Dim MultilineInput As EditText
+			MultilineInput.Initialize("")
+			MultilineInput.TextSize = 16
+			MultilineInput.SingleLine = False
+			MultilineInput.Text = "" & Controller.GetValue(Id)
+			Content.AddView(MultilineInput, 16dip, RowTop, InnerWidth, 120dip)
+			Controls.Put(Id, MultilineInput)
+			RowTop = RowTop + 128dip
+		Else If TypeName = "multichoice" Then
+			Dim MultiOptions As Map = Pref.Get("options")
+			Dim MultiItems As List = MultiOptions.Get("items")
+			Dim SelectedValues As List = Controller.GetValue(Id)
+			Dim Checks As List
+			Checks.Initialize
+			Dim ItemValues As List
+			ItemValues.Initialize
+			For I = 0 To MultiItems.Size - 1
+				Dim MultiItem As Map = MultiItems.Get(I)
+				Dim Box As CheckBox
+				Box.Initialize("")
+				Box.Text = Localization.Text(MultiItem.Get("titleKey"))
+				Box.TextSize = 16
+				Dim ItemValue As String = MultiItem.Get("value")
+				ItemValues.Add(ItemValue)
+				For Each SelectedObject As Object In SelectedValues
+					Dim SelectedValue As String = SelectedObject
+					If ItemValue = SelectedValue Then Box.Checked = True
+				Next
+				Content.AddView(Box, 16dip, RowTop, InnerWidth, 44dip)
+				RowTop = RowTop + 48dip
+				Checks.Add(Box)
+			Next
+			Controls.Put(Id, Checks)
+			MultiValues.Put(Id, ItemValues)
+			RowTop = RowTop + 8dip
+		Else If TypeName = "date" Then
+			Dim DateInput As EditText
+			DateInput.Initialize("")
+			DateInput.TextSize = 16
+			DateInput.SingleLine = True
+			DateInput.Hint = "yyyy-MM-dd"
+			DateInput.Text = "" & Controller.GetValue(Id)
+			Content.AddView(DateInput, 16dip, RowTop, InnerWidth, 52dip)
+			Controls.Put(Id, DateInput)
+			RowTop = RowTop + 60dip
+		Else If TypeName = "choice" Then
+			Dim PrefOptions As Map = Pref.Get("options")
+			Dim ChoiceItems As List = PrefOptions.Get("items")
+			Dim Selector As Spinner
+			Selector.Initialize("")
+			Dim Selected As Int = -1
+			For I = 0 To ChoiceItems.Size - 1
+				Dim Item As Map = ChoiceItems.Get(I)
+				Selector.Add(Localization.Text(Item.Get("titleKey")))
+				If Item.Get("value") = Controller.GetValue(Id) Then Selected = I
+			Next
+			Selector.SelectedIndex = Selected
+			Content.AddView(Selector, 16dip, RowTop, InnerWidth, 52dip)
+			Controls.Put(Id, Selector)
+			RowTop = RowTop + 60dip
+		Else If TypeName = "slider" Then
+			Dim SliderOptions As Map
+			SliderOptions.Initialize
+			If Pref.ContainsKey("options") Then SliderOptions = Pref.Get("options")
+			Dim Minimum As Double = 0
+			Dim Maximum As Double = 100
+			If SliderOptions.ContainsKey("min") Then Minimum = SliderOptions.Get("min")
+			If SliderOptions.ContainsKey("max") Then Maximum = SliderOptions.Get("max")
+			SliderMin.Put(Id, Minimum)
+			SliderMax.Put(Id, Maximum)
+			Dim Bar As SeekBar
+			Bar.Initialize("pageSeek")
+			Bar.Tag = Id
+			Bar.Max = 1000
+			Bar.Value = SliderToPosition(Controller.GetValue(Id), Minimum, Maximum)
+			Content.AddView(Bar, 16dip, RowTop, InnerWidth - 80dip, 52dip)
+			Dim ValueLabel As Label
+			ValueLabel.Initialize("")
+			ValueLabel.TextSize = 14
+			ValueLabel.Text = Controller.GetValue(Id)
+			Content.AddView(ValueLabel, 16dip + InnerWidth - 74dip, RowTop + 12dip, 70dip, 28dip)
+			SliderLabels.Put(Id, ValueLabel)
+			Controls.Put(Id, Bar)
+			RowTop = RowTop + 60dip
+		Else If TypeName = "file" Or TypeName = "directory" Then
+			Dim PathField As EditText
+			PathField.Initialize("")
+			PathField.TextSize = 14
+			PathField.SingleLine = True
+			PathField.Text = "" & Controller.GetValue(Id)
+			Content.AddView(PathField, 16dip, RowTop, InnerWidth - 100dip, 52dip)
+			Controls.Put(Id, PathField)
+			Dim BrowseButton As Button
+			BrowseButton.Initialize("pageBrowse")
+			BrowseButton.Tag = Id
+			BrowseButton.Text = Localization.Text("ui.browse")
+			BrowseButton.TextSize = 16
+			Content.AddView(BrowseButton, 16dip + InnerWidth - 90dip, RowTop, 90dip, 52dip)
+			BrowseButtons.Put(Id, BrowseButton)
+			RowTop = RowTop + 60dip
+		Else If TypeName = "custom" Then
+			AddCustomPreference(Pref)
+		End If
+	End If
+	#End If
 	ControlTypes.Put(Id, TypeName)
+	#If B4J
 	RowTop = RowTop + Theme.RowSpacing + 32
+	#End If
 End Sub
 
 ' Builds a custom preference through its registered renderer. See PrefsDialog
@@ -273,12 +525,21 @@ Private Sub AddCustomPreference(Pref As Map)
 	Dim Entry As Map = CustomEntry(Pref)
 	If Entry = Null Then
 		BuildError = "No custom renderer registered for preference " & Id
-		LogError(BuildError)
+		#If B4J Or B4A
+		Log(BuildError)
+		#End If
 		Dim ErrorLabel As Label
 		ErrorLabel.Initialize("")
 		ErrorLabel.Text = BuildError
+		#If B4J
 		ErrorLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
 		Content.AddNode(ErrorLabel, InputLeft, RowTop, ContentWidth - 40 - InputLeft, 34)
+		#Else If B4A
+		ErrorLabel.TextSize = 14
+		ErrorLabel.TextColor = Colors.Red
+		Content.AddView(ErrorLabel, 16dip, RowTop, ContentWidth - 32dip, 52dip)
+		RowTop = RowTop + 60dip
+		#End If
 		Return
 	End If
 	Dim CustomHeight As Int = 56
@@ -286,13 +547,25 @@ Private Sub AddCustomPreference(Pref As Map)
 		Dim CustomOptions As Map = Pref.Get("options")
 		If CustomOptions.ContainsKey("height") Then CustomHeight = CustomOptions.Get("height")
 	End If
+	#If B4A
+	If CustomHeight < 44 Then CustomHeight = 44
+	CustomHeight = DipToCurrent(CustomHeight)
+	#Else
 	If CustomHeight < 34 Then CustomHeight = 34
+	#End If
 	Dim Args As Map
 	Args.Initialize
+	#If B4J
 	Args.Put("parent", Content)
 	Args.Put("left", InputLeft)
 	Args.Put("top", RowTop)
 	Args.Put("width", ContentWidth - 40 - InputLeft)
+	#Else If B4A
+	Args.Put("parent", Content)
+	Args.Put("left", 16dip)
+	Args.Put("top", RowTop)
+	Args.Put("width", ContentWidth - 32dip)
+	#End If
 	Args.Put("height", CustomHeight)
 	Args.Put("definition", Pref)
 	Args.Put("value", Controller.GetValue(Id))
@@ -301,7 +574,11 @@ Private Sub AddCustomPreference(Pref As Map)
 	Dim Handle As Object = CallSub2(Target, EventName & "_Create", Args)
 	CustomHandles.Put(Id, Handle)
 	Controls.Put(Id, Handle)
+	#If B4J
 	RowTop = RowTop + CustomHeight - 34
+	#Else If B4A
+	RowTop = RowTop + CustomHeight + 8dip
+	#End If
 End Sub
 
 Private Sub CustomEntry(Pref As Map) As Map
@@ -341,6 +618,36 @@ Private Sub DisposeCustomHandles
 	CustomHandles.Clear
 End Sub
 
+Private Sub HasAllowClear(Pref As Map) As Boolean
+	If Pref.ContainsKey("options") = False Then Return False
+	Dim Options As Map = Pref.Get("options")
+	If Options.ContainsKey("allowClear") = False Then Return False
+	Dim Value As Boolean = Options.Get("allowClear")
+	Return Value
+End Sub
+
+Private Sub HasCopyToAppStorage(Pref As Map) As Boolean
+	If Pref.ContainsKey("options") = False Then Return False
+	Dim Options As Map = Pref.Get("options")
+	If Options.ContainsKey("copyToAppStorage") = False Then Return False
+	Dim Value As Boolean = Options.Get("copyToAppStorage")
+	Return Value
+End Sub
+
+Private Sub BuildProviderOptions(Pref As Map) As Map
+	Dim Source As Map
+	Source.Initialize
+	If Pref.ContainsKey("options") Then Source = Pref.Get("options")
+	Dim Result As Map
+	Result.Initialize
+	For Each Key As String In Source.Keys
+		Result.Put(Key, Source.Get(Key))
+	Next
+	Result.Put("title", Localization.Text(Pref.Get("titleKey")))
+	Return Result
+End Sub
+
+#If B4J
 Private Sub pageBrowse_Click
 	Dim BrowseButton As Button = Sender
 	BrowseFile(BrowseButton.Tag)
@@ -382,35 +689,24 @@ Private Sub ClearFile(Id As String)
 	Dim Field As TextField = Controls.Get(Id)
 	Field.Text = ""
 End Sub
+#End If
 
-Private Sub BuildProviderOptions(Pref As Map) As Map
-	Dim Source As Map
-	Source.Initialize
-	If Pref.ContainsKey("options") Then Source = Pref.Get("options")
-	Dim Result As Map
-	Result.Initialize
-	For Each Key As String In Source.Keys
-		Result.Put(Key, Source.Get(Key))
-	Next
-	Result.Put("title", Localization.Text(Pref.Get("titleKey")))
-	Return Result
+#If B4A
+Private Sub pageBrowse_Click
+	Dim BrowseButton As Button = Sender
+	Dim Id As String = BrowseButton.Tag
+	PendingDirId = Id
+	CallSub2(Callback, EventPrefix & "_BrowseDirectory", Id)
 End Sub
 
-Private Sub HasAllowClear(Pref As Map) As Boolean
-	If Pref.ContainsKey("options") = False Then Return False
-	Dim Options As Map = Pref.Get("options")
-	If Options.ContainsKey("allowClear") = False Then Return False
-	Dim Value As Boolean = Options.Get("allowClear")
-	Return Value
+' Called by the host after a directory pick completes.
+Public Sub SetDirectoryValue(Uri As String)
+	If PendingDirId = "" Then Return
+	Dim Field As EditText = Controls.Get(PendingDirId)
+	Field.Text = Uri
+	PendingDirId = ""
 End Sub
-
-Private Sub HasCopyToAppStorage(Pref As Map) As Boolean
-	If Pref.ContainsKey("options") = False Then Return False
-	Dim Options As Map = Pref.Get("options")
-	If Options.ContainsKey("copyToAppStorage") = False Then Return False
-	Dim Value As Boolean = Options.Get("copyToAppStorage")
-	Return Value
-End Sub
+#End If
 
 Public Sub RefreshValues
 	If IsDisposed Then Return
@@ -419,7 +715,9 @@ Public Sub RefreshValues
 	For Each Id As String In Controls.Keys
 		UpdateControl(Id, Controller.GetValue(Id))
 	Next
+	#If B4J Or B4A
 	StatusLabel.Text = ""
+	#End If
 End Sub
 
 Public Sub RefreshValue(Id As String, Value As Object)
@@ -429,6 +727,7 @@ End Sub
 
 Private Sub UpdateControl(Id As String, Value As Object)
 	Dim TypeName As String = ControlTypes.Get(Id)
+	#If B4J
 	Select TypeName
 		Case "text", "number", "password", "time", "datetime", "file", "directory"
 			Dim Input As TextField = Controls.Get(Id)
@@ -478,13 +777,56 @@ Private Sub UpdateControl(Id As String, Value As Object)
 				If ItemValue = SelectedValue Then Choice.SelectedIndex = I
 			Next
 	End Select
+	#Else If B4A
+	Select TypeName
+		Case "text", "multiline", "password", "number", "date", "time", "datetime", "file", "directory"
+			Dim Input As EditText = Controls.Get(Id)
+			Input.Text = "" & Value
+		Case "switch", "checkbox"
+			Dim Check As CheckBox = Controls.Get(Id)
+			Check.Checked = Value
+		Case "choice"
+			Dim Selector As Spinner = Controls.Get(Id)
+			Dim Pref As Map = Model.GetPreference(Id)
+			Dim Options As Map = Pref.Get("options")
+			Dim Items As List = Options.Get("items")
+			Dim SelectedValue As String = Value
+			Selector.SelectedIndex = -1
+			For I = 0 To Items.Size - 1
+				Dim Item As Map = Items.Get(I)
+				Dim ItemValue As String = Item.Get("value")
+				If ItemValue = SelectedValue Then Selector.SelectedIndex = I
+			Next
+		Case "multichoice"
+			Dim Checks As List = Controls.Get(Id)
+			Dim ItemValues As List = MultiValues.Get(Id)
+			Dim SelectedValues As List = Value
+			For I = 0 To Checks.Size - 1
+				Dim Box As CheckBox = Checks.Get(I)
+				Box.Checked = False
+				For Each SelectedObject As Object In SelectedValues
+					Dim SelectedValue As String = SelectedObject
+					If SelectedValue = ItemValues.Get(I) Then Box.Checked = True
+				Next
+			Next
+		Case "slider"
+			Dim Bar As SeekBar = Controls.Get(Id)
+			Dim Minimum As Double = SliderMin.Get(Id)
+			Dim Maximum As Double = SliderMax.Get(Id)
+			Bar.Value = SliderToPosition(Value, Minimum, Maximum)
+			Dim ValueLabel As Label = SliderLabels.Get(Id)
+			ValueLabel.Text = "" & Value
+		Case "custom"
+			RefreshCustom(Id, Value)
+	End Select
+	#End If
 End Sub
 
 Public Sub RefreshLocalization
 	If IsDisposed Then Return
+	#If B4J Or B4A
 	PageTitle.Text = Localization.Text(Model.GetTitleKey)
-	Dim Sections As List = Model.GetSections
-	For Each Section As Map In Sections
+	For Each Section As Map In Model.GetSections
 		Dim SectionTitle As Label = SectionLabels.Get(Section.Get("id"))
 		SectionTitle.Text = Localization.Text(Section.Get("titleKey"))
 		Dim Preferences As List = Section.Get("preferences")
@@ -507,6 +849,7 @@ Public Sub RefreshLocalization
 			End If
 			If Pref.Get("type") = "custom" Then
 				RefreshCustom(Id, ReadCustom(Id))
+			#If B4J
 			Else If Pref.Get("type") = "choice" Then
 				Dim Choice As ComboBox = Controls.Get(Id)
 				Dim SelectedIndex As Int = Choice.SelectedIndex
@@ -527,9 +870,18 @@ Public Sub RefreshLocalization
 					Multi.Items.Add(Localization.Text(Item.Get("titleKey")))
 				Next
 				Multi.SetSelectedIndices(SelectedIndices)
-			Else If Pref.Get("type") = "slider" Then
-				Dim SliderValueLabel As Label = SliderLabels.Get(Id)
-				SliderValueLabel.TextColor = fx.Colors.From32Bit(Theme.TextColor)
+			#Else If B4A
+			Else If Pref.Get("type") = "choice" Then
+				Dim Selector As Spinner = Controls.Get(Id)
+				Dim SelectedIndex As Int = Selector.SelectedIndex
+				Selector.Clear
+				Dim ChoiceOptions As Map = Pref.Get("options")
+				Dim ChoiceItems As List = ChoiceOptions.Get("items")
+				For Each Item As Map In ChoiceItems
+					Selector.Add(Localization.Text(Item.Get("titleKey")))
+				Next
+				Selector.SelectedIndex = SelectedIndex
+			#End If
 			End If
 		Next
 	Next
@@ -540,14 +892,18 @@ Public Sub RefreshLocalization
 		Dim BrowseButton As Button = BrowseButtons.Get(ButtonId)
 		BrowseButton.Text = Localization.Text("ui.browse")
 	Next
+	#If B4J
 	For Each ButtonId As String In ClearButtons.Keys
 		Dim ClearButton As Button = ClearButtons.Get(ButtonId)
 		ClearButton.Text = Localization.Text("ui.clear")
 	Next
+	#End If
+	#End If
 End Sub
 
 Public Sub RefreshTheme
 	If IsDisposed Then Return
+	#If B4J
 	ApplyTheme
 	For Each Id As String In TitleLabels.Keys
 		If ControlTypes.Get(Id) = "switch" Or ControlTypes.Get(Id) = "checkbox" Then
@@ -596,13 +952,22 @@ Public Sub RefreshTheme
 		ActionButton.Style = "-fx-background-color: " & ColorCss(Theme.AccentColor) & "; -fx-text-fill: " & ColorCss(Theme.PrimaryButtonTextColor) & ";"
 	Next
 	ApplyButtonStyles
+	#Else If B4A
+	For Each Id As String In Controls.Keys
+		If ControlTypes.Get(Id) = "custom" Then RefreshCustom(Id, ReadCustom(Id))
+	Next
+	#End If
 End Sub
 
 Public Sub SetTheme(Value As PrefsTheme)
 	Theme = Value
+	#If B4J
 	RefreshTheme
+	#Else
+	#End If
 End Sub
 
+#If B4J
 Private Sub ApplyTheme
 	Content.Style = "-fx-background-color: " & ColorCss(Theme.BackgroundColor) & "; -prefs-input-bg: " & ColorCss(Theme.InputBackgroundColor) & "; -prefs-input-text: " & ColorCss(Theme.TextColor) & "; -prefs-input-border: " & ColorCss(Theme.InputBorderColor) & "; -prefs-accent: " & ColorCss(Theme.AccentColor) & "; -prefs-checkmark-text: " & ColorCss(Theme.PrimaryButtonTextColor) & ";"
 	Scroll.Style = "-fx-background-color: " & ColorCss(Theme.BackgroundColor) & "; -fx-background: " & ColorCss(Theme.BackgroundColor) & "; -prefs-input-bg: " & ColorCss(Theme.InputBackgroundColor) & "; -prefs-input-text: " & ColorCss(Theme.TextColor) & "; -prefs-input-border: " & ColorCss(Theme.InputBorderColor) & "; -prefs-accent: " & ColorCss(Theme.AccentColor) & "; -prefs-checkmark-text: " & ColorCss(Theme.PrimaryButtonTextColor) & ";"
@@ -643,7 +1008,9 @@ Private Sub ColorCss(Color As Int) As String
 	Dim B As Int = Bit.And(Color, 255)
 	Return "rgb(" & R & "," & G & "," & B & ")"
 End Sub
+#End If
 
+#If B4J
 Private Sub pageSave_Click
 	Save_Click
 End Sub
@@ -651,15 +1018,35 @@ End Sub
 Private Sub pageCancel_Click
 	Cancel_Click
 End Sub
+#End If
+
+#If B4A
+Private Sub pageSave_Click
+	If SaveDraft Then StatusLabel.Text = Localization.Text("ui.saved")
+End Sub
+
+Private Sub pageCancel_Click
+	CancelDraft
+	StatusLabel.Text = Localization.Text("ui.cancelled")
+End Sub
+#End If
 
 Private Sub pageReset_Click
-	Controller.ResetDraftToDefaults
-	For Each Id As String In Controls.Keys
-		UpdateControl(Id, Controller.GetDraftValues.Get(Id))
-	Next
-	StatusLabel.Text = Localization.Text("ui.reset_done")
-	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
+	ResetDraft
 End Sub
+
+#If B4A
+Private Sub pageSeek_ValueChanged(Value As Int, UserChanged As Boolean)
+	Dim Bar As SeekBar = Sender
+	Dim Id As String = Bar.Tag
+	If SliderLabels.ContainsKey(Id) = False Then Return
+	Dim Minimum As Double = SliderMin.Get(Id)
+	Dim Maximum As Double = SliderMax.Get(Id)
+	Dim Shown As Double = Minimum + (Maximum - Minimum) * (Value / 1000)
+	Dim ValueLabel As Label = SliderLabels.Get(Id)
+	ValueLabel.Text = Shown
+End Sub
+#End If
 
 Private Sub pageAction_Click
 	Dim ActionButton As Button = Sender
@@ -667,6 +1054,7 @@ Private Sub pageAction_Click
 	CallSub2(Callback, EventPrefix & "_Action", PreferenceId)
 End Sub
 
+#If B4J
 Private Sub page_Click
 	' Preference controls use this event name but are read when Save is pressed.
 End Sub
@@ -678,16 +1066,56 @@ Private Sub page_ValueChange(Value As Double)
 	Dim SliderValueLabel As Label = SliderLabels.Get(Id)
 	SliderValueLabel.Text = "" & Value
 End Sub
+#End If
 
+#If B4J
 Private Sub Save_Click
+	If SaveDraft Then
+		StatusLabel.Text = Localization.Text("ui.saved")
+		StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
+	End If
+End Sub
+
+Private Sub Cancel_Click
+	CancelDraft
+	StatusLabel.Text = Localization.Text("ui.cancelled")
+	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
+End Sub
+#End If
+
+Private Sub ResetDraft
+	Controller.ResetDraftToDefaults
+	For Each Id As String In Controls.Keys
+		UpdateControl(Id, Controller.GetDraftValues.Get(Id))
+	Next
+	#If B4J Or B4A
+	StatusLabel.Text = Localization.Text("ui.reset_done")
+	#End If
+	#If B4J
+	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
+	#End If
+End Sub
+
+Private Sub CancelDraft
+	Controller.CancelDraft
+	Controller.BeginDraft
+	For Each Id As String In Controls.Keys
+		UpdateControl(Id, Controller.GetValue(Id))
+	Next
+End Sub
+
+' Reads every control into the draft, validates and commits on success.
+Private Sub SaveDraft As Boolean
 	If BuildError <> "" Then
+		#If B4J Or B4A
 		StatusLabel.Text = BuildError
-		StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
-		Return
+		#End If
+		Return False
 	End If
 	For Each Id As String In Controls.Keys
 		Dim TypeName As String = ControlTypes.Get(Id)
 		Dim Value As Object
+		#If B4J
 		Select TypeName
 			Case "file", "directory"
 				Dim PathField As TextField = Controls.Get(Id)
@@ -697,8 +1125,7 @@ Private Sub Save_Click
 				If TypeName = "number" Then
 					If IsNumber(Input.Text) = False Then
 						StatusLabel.Text = Localization.Text("validation.number") & " (" & Id & ")"
-						StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
-						Return
+						Return False
 					End If
 					Dim NumberValue As Double = Input.Text
 					Value = NumberValue
@@ -734,8 +1161,7 @@ Private Sub Save_Click
 				Dim Choice As ComboBox = Controls.Get(Id)
 				If Choice.SelectedIndex < 0 Then
 					StatusLabel.Text = Localization.Text("validation.choice") & " (" & Id & ")"
-					StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
-					Return
+					Return False
 				End If
 				Dim Pref As Map = Model.GetPreference(Id)
 				Dim Options As Map = Pref.Get("options")
@@ -749,45 +1175,99 @@ Private Sub Save_Click
 				Dim ValidationError As String = CallSub3(Entry.Get("target"), Entry.Get("event") & "_Validate", Value, CustomPref)
 				If ValidationError <> "" Then
 					StatusLabel.Text = ValidationError & " (" & Id & ")"
-					StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
-					Return
+					Return False
 				End If
 		End Select
+		#Else If B4A
+		Select TypeName
+			Case "text", "multiline", "password", "number", "date", "time", "datetime"
+				Dim Input As EditText = Controls.Get(Id)
+				If TypeName = "number" Then
+					If IsNumber(Input.Text) = False Then
+						StatusLabel.Text = Localization.Text("validation.number") & " (" & Id & ")"
+						Return False
+					End If
+					Dim NumberValue As Double = Input.Text
+					Value = NumberValue
+				Else
+					Value = Input.Text
+				End If
+			Case "switch", "checkbox"
+				Dim Check As CheckBox = Controls.Get(Id)
+				Value = Check.Checked
+			Case "choice"
+				Dim Selector As Spinner = Controls.Get(Id)
+				If Selector.SelectedIndex < 0 Then
+					StatusLabel.Text = Localization.Text("validation.choice") & " (" & Id & ")"
+					Return False
+				End If
+				Dim Pref As Map = Model.GetPreference(Id)
+				Dim Options As Map = Pref.Get("options")
+				Dim Items As List = Options.Get("items")
+				Dim SelectedItem As Map = Items.Get(Selector.SelectedIndex)
+				Value = SelectedItem.Get("value")
+			Case "multichoice"
+				Dim Checks As List = Controls.Get(Id)
+				Dim ItemValues As List = MultiValues.Get(Id)
+				Dim Selected As List
+				Selected.Initialize
+				For I = 0 To Checks.Size - 1
+					Dim Box As CheckBox = Checks.Get(I)
+					If Box.Checked Then Selected.Add(ItemValues.Get(I))
+				Next
+				Value = Selected
+			Case "slider"
+				Dim Bar As SeekBar = Controls.Get(Id)
+				Dim Minimum As Double = SliderMin.Get(Id)
+				Dim Maximum As Double = SliderMax.Get(Id)
+				Value = Minimum + (Maximum - Minimum) * (Bar.Value / 1000)
+			Case "file", "directory"
+				Dim PathField As EditText = Controls.Get(Id)
+				Value = PathField.Text
+			Case "custom"
+				Value = ReadCustom(Id)
+				Dim CustomPref As Map = Model.GetPreference(Id)
+				Dim Entry As Map = CustomEntry(CustomPref)
+				Dim ValidationError As String = CallSub3(Entry.Get("target"), Entry.Get("event") & "_Validate", Value, CustomPref)
+				If ValidationError <> "" Then
+					StatusLabel.Text = ValidationError & " (" & Id & ")"
+					Return False
+				End If
+		End Select
+		#End If
 		If Controller.SetDraftValue(Id, Value) = False Then
+			#If B4J Or B4A
 			StatusLabel.Text = Controller.LastError
-			StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
-			Return
+			#End If
+			Return False
 		End If
 	Next
 	Dim Validation As String = Controller.ValidateDraft
 	If Validation <> "" Then
+		#If B4J Or B4A
 		StatusLabel.Text = Validation
-		StatusLabel.TextColor = fx.Colors.From32Bit(Theme.ErrorTextColor)
-		Return
+		#End If
+		Return False
 	End If
-	If CallSub2(Callback, EventPrefix & "_BeforeSave", Controller.GetDraftValues) = False Then Return
+	If CallSub2(Callback, EventPrefix & "_BeforeSave", Controller.GetDraftValues) = False Then Return False
 	Controller.CommitDraft
 	CallSub2(Callback, EventPrefix & "_AfterSave", Controller.GetValues)
 	Controller.BeginDraft
-	StatusLabel.Text = Localization.Text("ui.saved")
-	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
-End Sub
-
-Private Sub Cancel_Click
-	Controller.CancelDraft
-	Controller.BeginDraft
-	For Each Id As String In Controls.Keys
-		UpdateControl(Id, Controller.GetValue(Id))
-	Next
-	StatusLabel.Text = Localization.Text("ui.cancelled")
-	StatusLabel.TextColor = fx.Colors.From32Bit(Theme.SecondaryTextColor)
+	Return True
 End Sub
 
 Public Sub Dispose
 	If IsDisposed Then Return
 	Controller.CancelDraft
+	#If B4J Or B4A
 	DisposeCustomHandles
+	#End If
+	#If B4J
 	Scroll.RemoveNodeFromParent
+	#Else If B4A
+	Dim S As B4XView = Scroll
+	S.RemoveViewFromParent
+	#End If
 	IsDisposed = True
 End Sub
 
@@ -813,3 +1293,14 @@ Private Sub TicksToIso(Ticks As Long) As String
 	DateTime.DateFormat = PreviousFormat
 	Return Result
 End Sub
+
+#If B4A
+Private Sub SliderToPosition(Value As Object, Minimum As Double, Maximum As Double) As Int
+	Dim NumericValue As Double = Value
+	If Maximum = Minimum Then Return 0
+	Dim Position As Int = (NumericValue - Minimum) / (Maximum - Minimum) * 1000
+	If Position < 0 Then Position = 0
+	If Position > 1000 Then Position = 1000
+	Return Position
+End Sub
+#End If

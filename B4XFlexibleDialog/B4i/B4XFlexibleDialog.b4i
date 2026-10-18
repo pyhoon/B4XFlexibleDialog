@@ -1,21 +1,22 @@
-Build1=Default,b4i.example
+﻿Build1=Default,b4i.example
+File1=Dialog.bil
+File2=MainPage.bil
+FileGroup1=Default Group
+FileGroup2=Default Group
 Group=App
 Library1=icore
 Library2=ijson
-Library3=ixui
-Library4=iphone
 Module1=|relative|..\PrefsController
 Module2=PrefsDirPicker
 Module3=|relative|..\PrefsFileResult
 Module4=|relative|..\PrefsLocalization
 Module5=|relative|..\PrefsModel
-Module6=PrefsRenderer
-Module7=|relative|..\PrefsSelfTest
-Module8=|relative|..\PrefsStore
-Module9=|relative|..\PrefsTheme
-NumberOfFiles=0
-NumberOfLibraries=4
-NumberOfModules=9
+Module6=|relative|..\PrefsSelfTest
+Module7=|relative|..\PrefsStore
+Module8=|relative|..\PrefsTheme
+NumberOfFiles=2
+NumberOfLibraries=2
+NumberOfModules=8
 Version=8.8
 @EndOfDesignText@
 'Code module
@@ -31,8 +32,8 @@ Version=8.8
 
 ' B4i validation harness for B4XFlexibleDialog.
 ' Runs the platform-independent PrefsSelfTest at startup and shows the results.
-' The B4i renderer/directory picker are stubs (see B4i/PrefsRenderer.bas and
-' B4i/PrefsDirPicker.bas), so no preferences form is shown.
+' The B4i directory picker is a stub (see B4i/PrefsDirPicker.bas); the cross-platform
+' facade and page compile here but their B4i branches are not implemented yet.
 ' NOTE: B4i compilation requires a Mac builder and has not been verified locally.
 
 Sub Process_Globals

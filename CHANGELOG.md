@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — cross-platform port
+
+- Made the facade `B4XFlexibleDialog` cross-platform: `Show` drives `PrefsDialog` on B4J (blocking) and B4A (async overlay) and fires exactly one `_DialogClosed`; `CreatePage`/`RefreshPage`/`DisposePage` work on B4J+B4A; added `SetDirectoryValue` for host-driven directory picks.
+- Rewrote `PrefsDialog` with B4J/B4A/B4i branches so the modal dialog runs on B4A (previously B4J-only); first pass at the shared `MultiValues` state, per-slider min/max, and `B4XView`-based overlay teardown.
+- Added a cross-platform `PrefsPage` (B4J JavaFX scroll pane; B4A `ScrollView` of native controls; B4i stub) so `CreatePage` works on B4A.
+- Guarded `PrefsFileProvider`'s B4J `FileChooser`/`DirectoryChooser` behind `#If B4J`; non-B4J callers now get a clear "call `SetCustomHandler`" failure.
+- Retired the separate B4A `PrefsRenderer` (and its B4i stub) in favour of the shared dialog/page; updated the `.b4xlib` packaging so `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`, and the facade ship as shared modules.
+- Reworked the shared demo `B4XMainPage` to drive the library through the facade on every platform (drops the hand-built B4A overlay and Save/Cancel chrome).
+
 ## Unreleased — Milestone 3 progress
 
 - Added `multiline`, `password`, and `checkbox` to the B4J model, dialog, page, and demo.

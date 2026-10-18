@@ -1,5 +1,5 @@
 ﻿B4J=true
-Group=App
+Group=Classes
 ModulesStructureVersion=1
 Type=Class
 Version=10.7
@@ -9,8 +9,16 @@ Version=10.7
 ' An application may supply its own picker via SetCustomHandler; the custom subs receive
 ' the Options map and must return a PrefsFileResult: Sub MyPicker_File(Options As Map) As PrefsFileResult
 Sub Class_Globals
+	#If B4J
 	Private fx As JFX
+	#End If
+	#If B4A
+	Private OwnerForm As Activity
+	#Else If B4J
 	Private OwnerForm As Form
+	#Else
+	Private OwnerForm As Page
+	#End If
 	Private HandlerTarget As Object
 	Private FileHandlerEvent As String
 	Private DirectoryHandlerEvent As String
@@ -19,7 +27,7 @@ Sub Class_Globals
 	Public LastError As String
 End Sub
 
-Public Sub Initialize(Owner As Form)
+Public Sub Initialize (Owner As Object)
 	OwnerForm = Owner
 	HandlerTarget = Null
 	FileHandlerEvent = ""
@@ -49,7 +57,7 @@ Public Sub SelectFile(Options As Map) As PrefsFileResult
 	Return BuiltInSelectFile(Options)
 End Sub
 
-Public Sub SelectDirectory(Options As Map) As PrefsFileResult
+Public Sub SelectDirectory (Options As Map) As PrefsFileResult
 	If HasDirectoryHandler Then
 		Dim Custom As Object = CallSub2(HandlerTarget, DirectoryHandlerEvent, Options)
 		If Custom Is PrefsFileResult Then Return Custom
@@ -61,11 +69,16 @@ Public Sub SelectDirectory(Options As Map) As PrefsFileResult
 	Return BuiltInSelectDirectory(Options)
 End Sub
 
-Private Sub BuiltInSelectFile(Options As Map) As PrefsFileResult
+#If B4J
+Private Sub BuiltInSelectFile (Options As Map) As PrefsFileResult
 	Dim Result As PrefsFileResult
 	Result.Initialize
 	Dim Chooser As FileChooser
 	Chooser.Initialize
+	'Dim Chooser As MediaChooser
+	'Chooser.Initialize(Me, "chooser")
+	'Dim smm As SimpleMediaManager
+	'smm.Initialize
 	If Options.ContainsKey("title") Then Chooser.Title = Options.Get("title")
 	If Options.ContainsKey("initialDirectory") Then
 		Dim Initial As String = Options.Get("initialDirectory")
@@ -90,7 +103,7 @@ Private Sub BuiltInSelectFile(Options As Map) As PrefsFileResult
 	Return Result
 End Sub
 
-Private Sub BuiltInSelectDirectory(Options As Map) As PrefsFileResult
+Private Sub BuiltInSelectDirectory (Options As Map) As PrefsFileResult
 	Dim Result As PrefsFileResult
 	Result.Initialize
 	Dim Chooser As DirectoryChooser
@@ -109,22 +122,6 @@ Private Sub BuiltInSelectDirectory(Options As Map) As PrefsFileResult
 	Return Result
 End Sub
 
-' Copies a selected file into application-managed storage and returns the stored path.
-' Returns "" when copying is not possible.
-Public Sub CopyToAppStorage(SourcePath As String, TargetFileName As String) As String
-	Try
-		Dim DirectoryName As String = File.Combine(File.DirApp, "prefs-files")
-		If File.Exists(DirectoryName, "") = False Then File.MakeDir(File.DirApp, "prefs-files")
-		Dim TargetName As String = TargetFileName
-		If TargetName = "" Then TargetName = File.GetName(SourcePath)
-		File.Copy(File.GetFileParent(SourcePath), File.GetName(SourcePath), DirectoryName, TargetName)
-		Return File.Combine(DirectoryName, TargetName)
-	Catch
-		LastError = LastException.Message
-		Return ""
-	End Try
-End Sub
-
 Private Sub MimeFromExtension(FilePath As String) As String
 	Dim Name As String = File.GetName(FilePath)
 	Dim DotIndex As Int = Name.LastIndexOf(".")
@@ -140,6 +137,41 @@ Private Sub MimeFromExtension(FilePath As String) As String
 		Case "pdf": Return "application/pdf"
 	End Select
 	Return "application/octet-stream"
+End Sub
+#Else
+Private Sub BuiltInSelectFile (Options As Map) As PrefsFileResult
+	Dim Result As PrefsFileResult
+	Result.Initialize
+	Result.SetFailed("No built-in file picker on this platform. Call SetCustomHandler.")
+	Return Result
+End Sub
+
+Private Sub BuiltInSelectDirectory (Options As Map) As PrefsFileResult
+	Dim Result As PrefsFileResult
+	Result.Initialize
+	Result.SetFailed("No built-in directory picker on this platform. Call SetCustomHandler.")
+	Return Result
+End Sub
+#End If
+
+' Copies a selected file into application-managed storage and returns the stored path.
+' Returns "" when copying is not possible.
+Public Sub CopyToAppStorage(SourcePath As String, TargetFileName As String) As String
+	#If B4J
+	Try
+		Dim DirectoryName As String = File.Combine(File.DirApp, "prefs-files")
+		If File.Exists(DirectoryName, "") = False Then File.MakeDir(File.DirApp, "prefs-files")
+		Dim TargetName As String = TargetFileName
+		If TargetName = "" Then TargetName = File.GetName(SourcePath)
+		File.Copy(File.GetFileParent(SourcePath), File.GetName(SourcePath), DirectoryName, TargetName)
+		Return File.Combine(DirectoryName, TargetName)
+	Catch
+		LastError = LastException.Message
+		Return ""
+	End Try
+	#Else
+	Return ""
+	#End If
 End Sub
 
 Private Sub IsListObject(Value As Object) As Boolean

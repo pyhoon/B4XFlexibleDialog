@@ -1,24 +1,27 @@
 ﻿Build1=Default,b4a.example
 Group=App
 Library1=core
-Library2=json
-Library3=phone
-Library4=javaobject
-Library5=xui
+Library2=javaobject
+Library3=json
+Library4=xui
+Library5=phone
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
-Module1=|relative|..\PrefsController
-Module10=Starter
-Module2=PrefsDirPicker
-Module3=|relative|..\PrefsFileResult
-Module4=|relative|..\PrefsLocalization
-Module5=|relative|..\PrefsModel
-Module6=PrefsRenderer
-Module7=|relative|..\PrefsSelfTest
-Module8=|relative|..\PrefsStore
-Module9=|relative|..\PrefsTheme
+Module1=|relative|..\B4XFlexibleDialog
+Module10=|relative|..\PrefsSelfTest
+Module11=|relative|..\PrefsStore
+Module12=|relative|..\PrefsTheme
+Module13=Starter
+Module2=|relative|..\PrefsController
+Module3=|relative|..\PrefsDialog
+Module4=PrefsDirPicker
+Module5=|relative|..\PrefsFileProvider
+Module6=|relative|..\PrefsFileResult
+Module7=|relative|..\PrefsLocalization
+Module8=|relative|..\PrefsModel
+Module9=|relative|..\PrefsPage
 NumberOfFiles=0
 NumberOfLibraries=5
-NumberOfModules=10
+NumberOfModules=13
 Version=14.2
 @EndOfDesignText@
 #Region Project Attributes 
@@ -34,7 +37,7 @@ Version=14.2
 
 #Region Activity Attributes 
 	#FullScreen: False
-	#IncludeTitle: True
+	#IncludeTitle: False
 #End Region
 
 #Region Macros
@@ -48,29 +51,22 @@ Version=14.2
 #R8Optimizer: True
 #End If
 	
-' B4A validation and renderer demo for B4XFlexibleDialog.
-' Runs the platform-independent PrefsSelfTest at startup, then offers a
-' rendered preferences form (text, number, switch, choice and more) with
-' Save/Cancel backed by the shared PrefsController.
+' B4A validation harness for B4XFlexibleDialog.
+' Runs the platform-independent PrefsSelfTest at startup, then opens the
+' cross-platform facade dialog (PrefsDialog overlay) backed by the shared
+' PrefsController.
 
 Sub Process_Globals
-	Private xui As XUI
 	Private FormOpen As Boolean
 End Sub
 
 Sub Globals
 	Private ResultsLabel As Label
 	Private OpenButton As Button
-	Private Model As PrefsModel
-	Private Controller As PrefsController
-	Private Localization As PrefsLocalization
-	Private Renderer As PrefsRenderer
+	Private Facade As B4XFlexibleDialog
 	Private DirPicker As PrefsDirPicker
 	Private Store As PrefsStore
 	Private StoreFileName As String = "prefs-values.json"
-	Private HostPanel As Panel
-	Private SaveButton As Button
-	Private CancelButton As Button
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
@@ -125,22 +121,20 @@ Private Sub LoadDefinition
 	EnDict.Put("setting.account_note", "Account information")
 	EnDict.Put("setting.account_note_description", "Changes are kept in memory only.")
 	EnDict.Put("setting.clear_cache", "Clear temporary cache")
-	Localization.Initialize
-	Localization.SetDictionary("en", EnDict)
-	Localization.SetLanguage("en")
-	Model.Initialize
-	If Model.LoadFromJson(DemoDefinition) = False Then
-		Log("Definition error: " & Model.LastError)
+	Facade.Initialize(Me, "Prefs", Me)
+	Facade.SetDictionary("en", EnDict)
+	Facade.SetLanguage("en")
+	If Facade.LoadDefinition(DemoDefinition) = False Then
+		Log("Definition error: " & Facade.LastError)
 		Return
 	End If
-	Controller.Initialize(Model)
-	Renderer.Initialize(Me, "Prefs", Model, Controller, Localization)
-	Renderer.RegisterCustomRenderer("RatingStars", Me, "Rating")
+	Facade.RegisterCustomRenderer("RatingStars", Me, "Rating")
 	DirPicker.Initialize(Me, "DirPicker")
 	Store.Initialize
+	Facade.SetStore(Store)
 	If File.Exists(File.DirInternal, StoreFileName) Then
 		If Store.FromJson(File.ReadString(File.DirInternal, StoreFileName)) Then
-			Dim Restored As Int = Controller.ApplyValues(Store.Load)
+			Dim Restored As Int = Facade.LoadStoredValues
 			Log("Restored " & Restored & " value(s) from " & StoreFileName)
 		Else
 			Log("Stored values file could not be parsed: " & StoreFileName)
@@ -155,39 +149,14 @@ End Sub
 Sub OpenButton_Click
 	If FormOpen Then Return
 	FormOpen = True
-	HostPanel.Initialize("")
-	HostPanel.Color = Colors.White
-	Activity.AddView(HostPanel, 0, 0, 100%x, 100%y - 140dip)
-	Renderer.Render(HostPanel)
-	SaveButton.Initialize("SaveButton")
-	SaveButton.Text = "Save"
-	Activity.AddView(SaveButton, 10dip, 100%y - 130dip, (100%x - 30dip) / 2, 60dip)
-	CancelButton.Initialize("CancelButton")
-	CancelButton.Text = "Cancel"
-	Activity.AddView(CancelButton, 20dip + (100%x - 30dip) / 2, 100%y - 130dip, (100%x - 30dip) / 2, 60dip)
 	OpenButton.Visible = False
+	Facade.Show
 End Sub
 
-Sub SaveButton_Click
-	If Renderer.Save Then
-		CloseForm
-	Else
-		Log("Save blocked by validation")
-	End If
-End Sub
-
-Sub CancelButton_Click
-	Renderer.Cancel
-	CloseForm
-End Sub
-
-Private Sub CloseForm
+Sub Prefs_DialogClosed (Saved As Boolean)
 	FormOpen = False
-	Renderer.Dispose
-	HostPanel.RemoveView
-	SaveButton.RemoveView
-	CancelButton.RemoveView
 	OpenButton.Visible = True
+	If Saved Then Log("Dialog saved")
 End Sub
 
 Sub Prefs_BeforeSave(Values As Map) As Boolean
@@ -210,7 +179,7 @@ End Sub
 
 Sub DirPicker_DirectoryPicked(Uri As String)
 	Log("Picked directory: " & Uri)
-	Renderer.SetDirectoryValue(Uri)
+	Facade.SetDirectoryValue(Uri)
 End Sub
 
 Sub DirPicker_DirectoryCancelled

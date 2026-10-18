@@ -1,6 +1,6 @@
 # B4XFlexibleDialog
 
-Milestone 1 provides a B4J JSON-driven modal preferences dialog; Milestone 2 adds an embedded B4J page using the same model/controller. Milestone 3 is adding preference types and validation incrementally. Definitions and values remain independent of JavaFX controls. Current source supports `text`, `multiline`, `password`, `number`, `switch`, `checkbox`, `choice`, `multichoice`, `date`, `time`, `datetime`, `slider`, `file`, `directory`, `label`, `action`, and `custom` in both B4J presentations.
+Milestone 1 provides a B4J JSON-driven modal preferences dialog; Milestone 2 adds an embedded B4J page using the same model/controller. Milestone 3 is adding preference types and validation incrementally. Definitions and values remain independent of JavaFX controls. Current source supports `text`, `multiline`, `password`, `number`, `switch`, `checkbox`, `choice`, `multichoice`, `date`, `time`, `datetime`, `slider`, `file`, `directory`, `label`, `action`, and `custom` in the dialog and the embedded page, on B4J and B4A (B4i branches are stubs).
 
 ## Demo and build
 
@@ -27,11 +27,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/package-b4xlib.ps1 -Ve
 
 `Version` must be a valid decimal (for example `0.2`, not `0.2.0`).
 
-The archive contains the platform-independent modules at the root (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`, `PrefsSelfTest`), the B4J-specific modules under `B4J/` (`B4XFlexibleDialog`, `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`), the B4A-specific modules under `B4A/` (`PrefsRenderer`, `PrefsDirPicker`), `Files/prefs.css`, and a `manifest.txt` declaring `B4J.DependsOn=Json, jXUI` and `B4A.DependsOn=Phone, XUI, JavaObject`. Shared modules intentionally avoid JavaFX so they can be reused by the platform ports; the public view API is `B4XView`-based (`CreatePage(Container As B4XView)`) so it compiles on B4J and B4A alike.
+The archive contains the platform-independent modules at the root (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`, `PrefsSelfTest`, `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`, `B4XFlexibleDialog`), the B4A-specific modules under `B4A/` (`PrefsDirPicker`), the B4i-specific stub under `B4i/` (`PrefsDirPicker`), `Files/prefs.css`, and a `manifest.txt` declaring `B4J.DependsOn=Json, jXUI` and `B4A.DependsOn=Phone, XUI, JavaObject`. The dialog, page, file provider, and facade now ship as shared modules and branch per platform with `#If`; they avoid JavaFX types in their shared paths, and the public view API is `B4XView`-based (`Show`, `CreatePage(Container As B4XView)`) so the same source compiles on B4J and B4A alike.
 
 To consume it in B4J, add `B4XFlexibleDialog.b4xlib` to the Libraries folder, reference the library in the project, and call `Prefs.Initialize` as shown above. This was verified by adding the packaged library to a fresh B4J project, copying the demo `Files\*`, and confirming it compiles and shows the dialog.
 
-A ready-to-run consumer project is included at [`examples/B4XPagesDemo`](examples/B4XPagesDemo). Install the `.b4xlib`, open `B4J/B4XPagesDemo.b4j` (B4J) or `B4A/B4XPagesDemo.b4a` (B4A), and run; the B4J build lands in `examples/B4XPagesDemo/B4J/Objects/B4XPagesDemo.jar`, both with the library referenced as `b4xflexibledialog`. The shared `B4XMainPage` is the only module in the project: it embeds the settings page next to a dialog button on B4J, and adds Save/Cancel around the same form on B4A (its renderer has no built-in chrome), with platform differences handled by `#If` blocks in the one file. B4i reuses the same shared page, with the library's B4i renderer/picker shipped as stubs for now (`B4i/README.md`).
+A ready-to-run consumer project is included at [`examples/B4XPagesDemo`](examples/B4XPagesDemo). Install the `.b4xlib`, open `B4J/B4XPagesDemo.b4j` (B4J) or `B4A/B4XPagesDemo.b4a` (B4A), and run; the B4J build lands in `examples/B4XPagesDemo/B4J/Objects/B4XPagesDemo.jar`, both with the library referenced as `b4xflexibledialog`. The shared `B4XMainPage` is the only module in the project: it drives the library through its cross-platform facade (a button opens the modal dialog; the same form is embedded inline in the page host) with platform differences handled by `#If` blocks in the one file. B4i reuses the same shared page, with the library's B4i facade/page branches and directory picker shipped as stubs for now (`B4i/README.md`).
 
 ### Verified dependencies
 
@@ -60,12 +60,12 @@ of replacement controls. It was deliberately not adopted, for these reasons:
 
 - `PrefsModel.bas`: JSON parsing and validation; preference metadata only.
 - `PrefsController.bas`: defaults, typed values, draft state, validation, commit/cancel, snapshots; no UI types.
-- `PrefsDialog.bas`: B4J JavaFX form and control rendering.
-- `PrefsPage.bas`: B4J embedded page renderer; adds/removes only its own scroll pane in the supplied `AnchorPane`.
+- `PrefsDialog.bas`: cross-platform modal form (B4J JavaFX widgets, B4A overlay of native controls, B4i stub).
+- `PrefsPage.bas`: cross-platform embeddable page; adds/removes only its own scroll container in the supplied host `B4XView`.
 - `PrefsLocalization.bas`: language dictionaries and missing-key fallback.
 - `PrefsTheme.bas`: minimal light/dark colors and layout spacing.
 - `PrefsStore.bas`: persistence adapter (map-backed with JSON import/export); preserves unknown stored keys.
-- `PrefsFileProvider.bas`: file/directory picker abstraction; default B4J `FileChooser`/`DirectoryChooser`, optional custom handler, optional copy-to-app-storage.
+- `PrefsFileProvider.bas`: file/directory picker abstraction; default B4J `FileChooser`/`DirectoryChooser` (non-B4J platforms call `SetCustomHandler`), optional custom handler, optional copy-to-app-storage.
 - `PrefsFileResult.bas`: normalized selection result (success/cancelled, path, URI, display name, MIME type, access).
 - `PrefsSelfTest.bas`: platform-independent core assertions (`RunAll` returns passed/failed/log); used by the B4A/B4i validation projects.
 - `B4XFlexibleDialog.bas`: facade and callback forwarding.
@@ -76,8 +76,8 @@ of replacement controls. It was deliberately not adopted, for these reasons:
 | --- | --- | --- | --- |
 | Model, controller, localization, theme, store | Implemented and verified | Verified: `PrefsSelfTest` 29/29 `passed=` on device | Deferred (Mac/hosted builder required) |
 | `.b4xlib` packaging | Implemented and verified | B4A modules packaged under `B4A/` (verified building the demo from the archive) | Not packaged |
-| Modal dialog renderer | Implemented and verified | Implemented and verified on device (`PrefsRenderer` activity form) | Not implemented |
-| Embedded page renderer | Implemented and verified | Covered by the same activity form; dedicated page container pending | Not implemented |
+| Modal dialog renderer | Implemented and verified | Cross-platform `PrefsDialog` overlay (compiles; on-device verification pending) | Not implemented (compiles as a stub) |
+| Embedded page renderer | Implemented and verified | Cross-platform `PrefsPage` (compiles; on-device verification pending) | Not implemented (compiles as a stub) |
 | File/directory picker | Implemented and verified (JavaFX choosers) | Both implemented and verified (`ContentChooser` + SAF picker; tree URIs persist) | Not implemented (see limitations) |
 | Persistence | File-backed demo verified | Store API shared; app-owned path differs | Store API shared; app-owned path differs |
 
@@ -93,9 +93,9 @@ The B4A validation project at `B4XFlexibleDialog/B4A` references the shared modu
 B4A/B4i notes and limitations:
 
 - The shared modules use only cross-platform keywords (`JSONParser`, `JSONGenerator`, `DateTime`, `Map`, `List`, `Asc`); no JavaFX references, so the same source compiles on B4A (verified) and is expected to compile on B4i (deferred).
-- The B4A `PrefsRenderer` class renders into a host `Panel` with a `ScrollView`: `EditText` (text/number/multiline/password), `CheckBox` (switch/checkbox), `Spinner` (choice), per-item `CheckBox` rows (multichoice), `EditText` with ISO hints (date/time/datetime), `SeekBar` (slider), `Label` (label), and `Button` (action, fires `<prefix>_Action`). File/directory values render read-only. Save validates the full draft and commits atomically; Cancel discards. The B4A demo wires the same `Prefs_BeforeSave` / `Prefs_AfterSave` / `Prefs_Action` callbacks. Class instances live in activity `Globals`, not `Process_Globals`.
-- On B4A, `file` preferences open a `ContentChooser` (Phone library) filtered by MIME derived from `options.extensions`, store the selected content path, and optionally copy into `File.DirInternal/prefs-files` when `copyToAppStorage` is set. Cancelling preserves the existing value. Content URIs carry no usable file name, so copied files are named from the URI tail (or the preference id) plus the first allowed extension, keeping extension validation meaningful. Failures surface as a form error instead of crashing. `directory` preferences open the system folder picker through the dependency-free `PrefsDirPicker` class (Storage Access Framework `OPEN_DOCUMENT_TREE` with persistable URI permissions); the stored value is the tree URI string, saved under `File.DirInternal` for reuse, and the host feeds it back via `Renderer.SetDirectoryValue`. The demo wires `Prefs_BrowseDirectory` for this. iOS needs a document picker with security-scoped access (not implemented).
-- The B4J `PrefsFileProvider` and `PrefsDialog`/`PrefsPage` renderers remain B4J-only.
+- The cross-platform `PrefsDialog` (modal overlay) and `PrefsPage` (embedded `ScrollView`) render on B4A into native controls: `EditText` (text/number/multiline/password), `CheckBox` (switch/checkbox), `Spinner` (choice), per-item `CheckBox` rows (multichoice), `EditText` with ISO hints (date/time/datetime), `SeekBar` (slider), `Label` (label), and `Button` (action, fires `<prefix>_Action`). File/directory values render read-only. Save validates the full draft and commits atomically; Cancel discards. The B4A demo wires the same `Prefs_BeforeSave` / `Prefs_AfterSave` / `Prefs_Action` callbacks through the facade. Class instances live in activity `Globals`, not `Process_Globals`.
+- On B4A, `file` preferences open a `ContentChooser` (Phone library) filtered by MIME derived from `options.extensions`, store the selected content path, and optionally copy into `File.DirInternal/prefs-files` when `copyToAppStorage` is set. Cancelling preserves the existing value. Content URIs carry no usable file name, so copied files are named from the URI tail (or the preference id) plus the first allowed extension, keeping extension validation meaningful. Failures surface as a form error instead of crashing. `directory` preferences open the system folder picker through the dependency-free `PrefsDirPicker` class (Storage Access Framework `OPEN_DOCUMENT_TREE` with persistable URI permissions); the stored value is the tree URI string, saved under `File.DirInternal` for reuse, and the host feeds it back via `Facade.SetDirectoryValue`. The demo wires `Prefs_BrowseDirectory` for this. iOS needs a document picker with security-scoped access (not implemented).
+- `PrefsFileProvider`'s default pickers are B4J-only; on B4A/B4i the built-in selectors report that a custom handler is required (`SetCustomHandler`), so hosts supply their own picker (as the B4A `PrefsDirPicker` demo does for directories).
 - File/directory values must be treated as opaque strings or URIs; `copyToAppStorage` on B4J copies into `File.DirApp\prefs-files`, which has no B4A/B4i equivalent yet.
 - Persistence (`PrefsStore`) is platform code; only the storage location differs per platform (`File.DirApp` on B4J, `File.DirInternal` on B4A/B4i). The B4A demo saves committed values to `prefs-values.json` after each save and restores them at startup, so picked file paths and directory URIs survive restarts (directory access additionally relies on the persisted SAF grant).
 - The B4i project at `B4XFlexibleDialog/B4i` is prepared but deferred: it cannot be compiled without a Mac/hosted builder.
@@ -132,7 +132,9 @@ Supported preference contracts:
 
 `label` and `action` are non-value preferences; they are not stored in committed/draft maps, and `SetValue` rejects them. `defaultValue` is optional for text, multiline, password, number, switch, checkbox, multichoice, date, time, datetime, and slider (defaults above), and required for choice. String preferences support optional root fields `required`, `minLength`, and `maxLength`; empty required strings and values outside length bounds fail validation. Date values use ISO `yyyy-MM-dd` strings and are converted to/from B4J DatePicker ticks only at the UI boundary. Time/datetime are timezone-free wall-clock values. Multichoice values are copied when read/written to keep snapshots independent. Unknown schema versions, duplicate IDs, unsupported types, type mismatches, invalid choice defaults, malformed JSON, and invalid bounds are rejected with `LastError`.
 
-## Public B4J API
+## Public API (cross-platform)
+
+The facade is the same on every platform; `Owner` is the B4J `Form`, the B4A `Activity`, or the B4i `Page`.
 
 ```vb
 Prefs.Initialize(Me, "Prefs", MainForm)
@@ -140,7 +142,7 @@ Prefs.SetDictionary("en", EnglishMap)
 Prefs.SetDictionary("ms", MalayMap)
 Prefs.SetLanguage("en")
 Prefs.SetTheme(Prefs.CreateLightTheme)
-If Prefs.LoadDefinition(DefinitionJson) = False Then LogError(Prefs.LastError)
+If Prefs.LoadDefinition(DefinitionJson) = False Then Log(Prefs.LastError)
 
 Prefs.SetValue("username", "Aeric") ' Boolean result; LastError on failure
 Dim Value As Object = Prefs.GetValue("username")
@@ -156,8 +158,8 @@ Prefs.SetStore(Store) ' Writes committed values to the store after every commit/
 Dim Applied As Int = Prefs.LoadStoredValues ' Restores stored values for known value preferences
 Dim Json As String = Prefs.ExportValues ' Save committed values into the store and return a JSON snapshot
 Dim Imported As Int = Prefs.ImportValues(Json) ' Parse JSON into the store, then apply matching values
-Prefs.Show ' Synchronous modal form, owned by MainForm
-Prefs.CreatePage(MainForm.RootPane) ' Anchors a page in this caller-owned container
+Prefs.Show ' Modal dialog: blocking on B4J, async overlay on B4A
+Prefs.CreatePage(MainForm.RootPane) ' Anchors a page in this caller-owned B4XView container
 Prefs.RefreshPage ' Rebuilds visible values from committed state
 Prefs.DisposePage ' Removes only the library-owned page node
 ```
@@ -182,7 +184,7 @@ The target must be a module (the app); class instances are not supported as the 
 
 Showing a dialog or page with an unregistered renderer name fails fast: Save is blocked with `No custom renderer registered for preference <id>`, and the message is logged. The demo registers a 1–5 star rating renderer (`Rating_*` subs in the demo Main) used by the `satisfaction` preference in both presentations. The sample paints its buttons from `Prefs.GetTheme` colors, so it follows light/dark switches including the in-dialog theme toggle.
 
-The B4A renderer implements the custom lifecycle (create/read/validate/dispose with fail-fast on unregistered names) through `Renderer.RegisterCustomRenderer`; the B4A demo registers the same 1–5 rating sample. Refresh has no trigger on B4A — hosts re-render, which disposes and recreates custom controls. On-device verification is pending.
+The cross-platform dialog and page implement the same custom lifecycle (create/read/validate/refresh/dispose with fail-fast on unregistered names) via `Facade.RegisterCustomRenderer`; the B4A demo registers the same 1–5 rating sample. On-device verification is pending.
 
 ## Persistence (Milestone 4)
 
@@ -244,8 +246,8 @@ Callbacks use B4J `CallSub` / `CallSub2`; the before-save callback must return B
 | Modal dialog sizing at 600 DIP | **PASS** (reported GUI test) |
 | Values survive application reboot | **Supported via `PrefsStore`** (see Persistence) |
 
-The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestones 1–3 GUI results above were reported from demo runs. Committed values intentionally live in memory only; restarting the application restores definition defaults because persistence is deferred.
+The project was build-verified with B4JBuilder 10.70 and Java 19 selected by the builder. Milestones 1–3 GUI results above were reported from demo runs. The library stores committed values in memory; the demo persists them through `PrefsStore` (see Persistence) so they survive restarts.
 
 ## Deferred beyond current scope
 
-File/directory preferences and providers (M5), B4A/B4i support (M6), custom renderers (`custom`) and adaptive presentation (M7), immediate-save mode, conditional display, advanced validators, advanced styling, automated GUI testing, and distributable `.b4xlib` packaging.
+B4i implementation (the B4i facade/page branches and the directory picker are stubs; a Mac/hosted builder is required to verify), on-device verification of the B4A dialog/page, immediate-save mode, conditional display, advanced validators, advanced styling, and automated GUI testing.

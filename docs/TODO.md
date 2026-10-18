@@ -79,7 +79,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Create a B4A validation project reusing the shared sources via `|relative|` module references.
 - [x] Verify the shared modules compile on B4A with B4ABuilder (code, resources, and dex steps pass).
 - [x] Run the B4A self-test on a device and report the `passed=`/`failed=` log (reported `passed=29 failed=0`).
-- [x] Implement a B4A activity-form renderer (`PrefsRenderer`) for all types except file/directory pickers.
+- [x] Implement a B4A form renderer for all types except file/directory pickers (originally `PrefsRenderer`; later replaced by the cross-platform `PrefsDialog`/`PrefsPage`).
 - [x] Run the B4A rendered form on a device and verify edit/Save/Cancel per control type (reported passing).
 - [x] Implement the B4A file picker (`ContentChooser`, content-path values, optional copy to `File.DirInternal/prefs-files`).
 - [x] Run the B4A file picker on a device (reported: Browse, copy to `prefs-files`, and Save commit verified).
@@ -87,13 +87,14 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Run the B4A directory picker on a device (reported: folder switching, tree-URI Save commit verified).
 - [x] Persist B4A demo values with `PrefsStore` and verify full restart restore (reported `Restored 11 value(s)`).
 - [ ] B4i project prepared but deferred (Mac/hosted builder required; revisit when builder access is available).
-- [x] Implement B4A platform-specific form renderer and native picker behavior (dialog/page containers remain B4J-only).
-- [x] Cast the public view API to `B4XView` (`CreatePage(Container As B4XView)`, B4J `PrefsPage.Initialize`, B4A `PrefsRenderer.Render`) so call sites are cross-platform.
-- [x] Package the B4A modules (`PrefsRenderer`, `PrefsDirPicker`) under `B4A/` and ship the `XUI`/`jXUI` dependencies in `manifest.txt`.
+- [x] Implement B4A platform-specific native control rendering for the dialog and page.
+- [x] Port the facade (`B4XFlexibleDialog`), `PrefsDialog`, and `PrefsPage` cross-platform with `#If B4J`/`#If B4A` branches; retire `PrefsRenderer` (and its B4i stub). Verified compiling on both B4JBuilder 10.70 and B4ABuilder 14.20; the B4J demo also runs clean headlessly.
+- [x] Cast the public view API to `B4XView` (`Show`, `CreatePage(Container As B4XView)`) so call sites are cross-platform.
+- [x] Package the B4A modules (`PrefsDirPicker`) under `B4A/` and ship the `XUI`/`jXUI` dependencies in `manifest.txt`.
 - [x] Extend the B4XPages example to B4A (single shared `B4XMainPage` with `#If B4J`/`#If B4A` branches) and add a B4i project.
 - [x] Start a capability matrix in the README; keep extending it as platforms are verified.
 - [x] Collapse the B4XPages example's `AppHost` dispatcher and per-platform `PrefsHost` classes into the single shared `B4XMainPage` (B4J `Main` only initializes `B4XPagesManager` and shows the form; the page fetches the owner form with `B4XPages.GetNativeParent`).
-- [x] Ship documented B4i stubs (`B4i/PrefsRenderer`, `B4i/PrefsDirPicker`) in the `.b4xlib` and make the B4i project a self-consistent self-test harness.
+- [x] Ship the documented B4i `PrefsDirPicker` stub in the `.b4xlib` under `B4i/` and make the B4i project a self-consistent self-test harness.
 
 ## M7 — Extensibility and release — IN PROGRESS
 
