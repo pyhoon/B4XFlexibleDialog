@@ -56,13 +56,15 @@ $sharedModules = @(
 # facade is cross-platform now, so no B4J-only modules remain.
 $b4jModules = @()
 
-# B4A (Android) modules.
+# B4A (Android) modules. PrefsDirPicker is a single cross-platform source file at
+# the module root; #If B4A/#If B4i guards inside it keep it B4A-only, so it is
+# shipped into the B4A/ entry rather than compiled as a shared module.
 $b4aModules = @(
     'PrefsDirPicker'
 )
 
-# B4i (iOS) modules. These are not implemented yet; stubs ship so the shared call
-# sites compile against the library on B4i. See B4XFlexibleDialog/B4i/*.bas.
+# B4i (iOS) modules. B4i is not implemented yet; the same guarded source file
+# ships so shared call sites compile against the library on B4i.
 $b4iModules = @(
     'PrefsDirPicker'
 )
@@ -89,8 +91,8 @@ New-Item -ItemType Directory -Path (Join-Path $stage 'Files') | Out-Null
 try {
     foreach ($m in $sharedModules) { Copy-Module -Root $SourceDir -Name $m -Target $stage }
     foreach ($m in $b4jModules) { Copy-Module -Root $SourceDir -Name $m -Target (Join-Path $stage 'B4J') }
-    foreach ($m in $b4aModules) { Copy-Module -Root $B4ASourceDir -Name $m -Target (Join-Path $stage 'B4A') }
-    foreach ($m in $b4iModules) { Copy-Module -Root $B4iSourceDir -Name $m -Target (Join-Path $stage 'B4i') }
+    foreach ($m in $b4aModules) { Copy-Module -Root $SourceDir -Name $m -Target (Join-Path $stage 'B4A') }
+    foreach ($m in $b4iModules) { Copy-Module -Root $SourceDir -Name $m -Target (Join-Path $stage 'B4i') }
 
     $css = Join-Path $B4JSourceDir 'Files\prefs.css'
     if (-not (Test-Path -LiteralPath $css)) { throw "Missing asset: $css" }

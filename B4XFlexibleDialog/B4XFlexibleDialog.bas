@@ -11,10 +11,10 @@ Version=10.7
 Sub Class_Globals
 	Private Callback As Object
 	Private EventPrefix As String
-	#If B4A
-	Private OwnerForm As Activity
-	#Else If B4J
+	#If B4J
 	Private OwnerForm As Form
+	#Else If B4A
+	Private OwnerForm As Activity
 	#Else
 	Private OwnerForm As Page
 	#End If

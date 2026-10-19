@@ -25,8 +25,10 @@ Sub Class_Globals
 	Private Controller As PrefsController
 	Private Model As PrefsModel
 	Private Localization As PrefsLocalization
+	#If B4J
 	Private Theme As PrefsTheme
 	Private FileProvider As PrefsFileProvider
+	#End If
 	Private CustomRenderers As Map
 	Private CustomHandles As Map
 	Private BuildError As String
@@ -40,7 +42,9 @@ Sub Class_Globals
 	Private SliderMin As Map
 	Private SliderMax As Map
 	Private MultiValues As Map
+	#If B4A
 	Private PendingDirId As String
+	#End If
 	Private ActionButtons As Map
 	Private BrowseButtons As Map
 	Private ClearButtons As Map
@@ -51,7 +55,9 @@ Sub Class_Globals
 	Private ResetButton As Button
 	Private RowTop As Int
 	Private ContentWidth As Int
+	#If B4J
 	Private InputLeft As Int
+	#End If
 	Private IsDisposed As Boolean
 End Sub
 
@@ -61,8 +67,10 @@ Public Sub Initialize(TargetContainer As B4XView, ValueController As PrefsContro
 	Controller = ValueController
 	Model = Definition
 	Localization = L10n
+	#If B4J
 	Theme = UiTheme
 	FileProvider = Provider
+	#End If
 	CustomRenderers = Renderers
 	Callback = Target
 	EventPrefix = TargetEvent
@@ -139,7 +147,6 @@ Private Sub BuildPage
 	If W <= 0 Then W = 100%x
 	If H <= 0 Then H = 100%y
 	ContentWidth = W
-	InputLeft = 16dip
 	Scroll.Initialize(W)
 	Container.AddView(Scroll, 0, 0, W, H)
 	Content = Scroll.Panel
@@ -618,6 +625,7 @@ Private Sub DisposeCustomHandles
 	CustomHandles.Clear
 End Sub
 
+#If B4J
 Private Sub HasAllowClear(Pref As Map) As Boolean
 	If Pref.ContainsKey("options") = False Then Return False
 	Dim Options As Map = Pref.Get("options")
@@ -646,6 +654,7 @@ Private Sub BuildProviderOptions(Pref As Map) As Map
 	Result.Put("title", Localization.Text(Pref.Get("titleKey")))
 	Return Result
 End Sub
+#End If
 
 #If B4J
 Private Sub pageBrowse_Click
@@ -960,10 +969,9 @@ Public Sub RefreshTheme
 End Sub
 
 Public Sub SetTheme(Value As PrefsTheme)
-	Theme = Value
 	#If B4J
+	Theme = Value
 	RefreshTheme
-	#Else
 	#End If
 End Sub
 
@@ -1271,6 +1279,7 @@ Public Sub Dispose
 	IsDisposed = True
 End Sub
 
+#If B4J
 Private Sub IsoToTicks(Value As String) As Long
 	If Value = "" Then Return 0
 	Dim PreviousFormat As String = DateTime.DateFormat
@@ -1293,6 +1302,7 @@ Private Sub TicksToIso(Ticks As Long) As String
 	DateTime.DateFormat = PreviousFormat
 	Return Result
 End Sub
+#End If
 
 #If B4A
 Private Sub SliderToPosition(Value As Object, Minimum As Double, Maximum As Double) As Int

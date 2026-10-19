@@ -4,6 +4,10 @@ ModulesStructureVersion=1
 Type=Class
 Version=9.85
 @EndOfDesignText@
+#Region Shared Files
+#CustomBuildAction: folders ready, %WINDIR%\System32\Robocopy.exe,"..\..\Shared Files" "..\Files"
+'Ctrl + click to sync files: ide://run?file=%WINDIR%\System32\Robocopy.exe&args=..\..\Shared+Files&args=..\Files&FilesSync=True
+#End Region
 
 ' Shared B4XPages launcher page. This single class is the whole demo on every
 ' platform: it builds its UI with cross-platform views and drives the library
@@ -16,6 +20,8 @@ Version=9.85
 '    is mounted after the window is shown so its stylesheet can be attached.
 '  - B4A: the facade dialog is a modal overlay; the page is embedded alongside.
 '  - B4i: dialog/create-page compile but are not implemented yet.
+
+#Macro: Title, Export B4XPages, ide://run?File=%B4X%\Zipper.jar&Args=%PROJECT_NAME%.zip
 
 Sub Class_Globals
 	Private Root As B4XView
@@ -31,13 +37,13 @@ Sub Class_Globals
 	Private MediaChooser1 As MediaChooser
 	Private Facade As B4XFlexibleDialog
 	Private OpenDialogButton As Button
-	#If B4J
-	#Else
+	#If Not(B4J)
 	Private DirPicker As PrefsDirPicker
 	#End If
 End Sub
 
 Public Sub Initialize
+	
 End Sub
 
 'This event will be called once, before the page becomes visible.
@@ -95,8 +101,7 @@ Private Sub Setup
 	Facade.RegisterCustomRenderer("RatingStars", Me, "Rating")
 	Facade.RegisterCustomRenderer("MediaImage", Me, "MediaImage")
 	Facade.RegisterCustomRenderer("XuiText", Me, "XuiText")
-	#If B4J
-	#Else
+	#If Not(B4J)
 	DirPicker.Initialize(Me, "DirPicker")
 	#End If
 	Store.Initialize

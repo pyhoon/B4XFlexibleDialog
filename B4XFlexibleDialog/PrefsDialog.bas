@@ -34,12 +34,16 @@ Sub Class_Globals
 	#Else
 	Private OwnerForm As Page
 	#End If
+	#If B4J
 	Private ContentPane As B4XView
+	#End If
 	Private Controller As PrefsController
 	Private Model As PrefsModel
 	Private Localization As PrefsLocalization
 	Private Theme As PrefsTheme
+	#If B4J
 	Private FileProvider As PrefsFileProvider
+	#End If
 	Private CustomRenderers As Map
 	Private CustomHandles As Map
 	Private BuildError As String
@@ -64,8 +68,10 @@ Sub Class_Globals
 	Private ThemeButton As Button
 	Private Saved As Boolean
 	Private RowTop As Int
+	#If B4J
 	Private ContentWidth As Int
 	Private InputLeft As Int
+	#End If
 End Sub
 
 Public Sub Initialize (Owner As Object, ValueController As PrefsController, Definition As PrefsModel, L10n As PrefsLocalization, UiTheme As PrefsTheme, Provider As PrefsFileProvider, Renderers As Map, Target As Object, TargetEvent As String)
@@ -74,7 +80,9 @@ Public Sub Initialize (Owner As Object, ValueController As PrefsController, Defi
 	Model = Definition
 	Localization = L10n
 	Theme = UiTheme
+	#If B4J
 	FileProvider = Provider
+	#End If
 	CustomRenderers = Renderers
 	Callback = Target
 	EventPrefix = TargetEvent
@@ -110,8 +118,10 @@ Public Sub Show As Boolean
 	BuildError = ""
 	Saved = False
 	RowTop = 18
+	#If B4J
 	ContentWidth = 760
 	InputLeft = 240
+	#End If
 	#If B4J
 	Return ShowB4J
 	#Else If B4A
@@ -215,7 +225,7 @@ Private Sub ShowB4A As Boolean
 	OverlayPanel.Color = Colors.ARGB(150, 0, 0, 0)
 	' Buttons carry a Material elevation; raise the overlay above them so it is
 	' not painted underneath elevated siblings.
-	OverlayPanel.Elevation = 100
+	OverlayPanel.Elevation = 100dip
 	' %x/%y are not usable in a code-only class (no designer layout sets the
 	' module reference size), so derive the overlay from its host. Prefer the
 	' caller-supplied host (already inset below the title bar); fall back to the
@@ -239,17 +249,16 @@ Private Sub ShowB4A As Boolean
 	CardHeight = ViewHeight - 2 * CardTop
 	Card.Initialize("")
 	OverlayPanel.AddView(Card, CardLeft, CardTop, CardWidth, CardHeight)
-	Card.Color = Colors.White
+	Card.Color = Theme.BackgroundColor
 	TitleLabel.Initialize("")
 	TitleLabel.Text = Localization.Text(Model.GetTitleKey)
 	TitleLabel.TextSize = 20
-	TitleLabel.TextColor = Colors.DarkGray
+	TitleLabel.TextColor = Theme.TextColor
 	Card.AddView(TitleLabel, 16dip, 12dip, CardWidth - 32dip, 40dip)
 	Dim ButtonHeight As Int = 52dip
 	Dim FormTop As Int = 60dip
 	Form.Initialize(100dip)
 	Card.AddView(Form, 0, FormTop, CardWidth, CardHeight - FormTop - ButtonHeight - 12dip)
-	ContentPane = Form.Panel
 	Dim InnerWidth As Int = CardWidth - 32dip
 	For Each Section As Object In Model.GetSections
 		Dim SectionMap As Map = Section
@@ -257,7 +266,7 @@ Private Sub ShowB4A As Boolean
 		SectionTitle.Initialize("")
 		SectionTitle.Text = Localization.Text(SectionMap.Get("titleKey"))
 		SectionTitle.TextSize = 18
-		SectionTitle.TextColor = Colors.Gray
+		SectionTitle.TextColor = Theme.SecondaryTextColor
 		Form.Panel.AddView(SectionTitle, 16dip, RowTop, InnerWidth, 28dip)
 		SectionLabels.Put(SectionMap.Get("id"), SectionTitle)
 		RowTop = RowTop + 36dip
@@ -271,32 +280,33 @@ Private Sub ShowB4A As Boolean
 	StatusLabel.Initialize("")
 	StatusLabel.Text = BuildError
 	StatusLabel.TextSize = 14
-	StatusLabel.TextColor = Colors.Red
+	StatusLabel.TextColor = Theme.ErrorTextColor
 	Form.Panel.AddView(StatusLabel, 16dip, RowTop, InnerWidth, 30dip)
 	RowTop = RowTop + 38dip
 	Form.Panel.Height = RowTop
 	Dim ButtonTop As Int = CardHeight - ButtonHeight - 8dip
 	LanguageButton.Initialize("dlg")
 	LanguageButton.Tag = "language"
-	Card.AddView(LanguageButton, 12dip, ButtonTop, 96dip, ButtonHeight - 8dip)
+	Card.AddView(LanguageButton, 12dip, ButtonTop, 120dip, ButtonHeight - 8dip)
 	ThemeButton.Initialize("dlg")
 	ThemeButton.Tag = "theme"
-	Card.AddView(ThemeButton, 112dip, ButtonTop, 84dip, ButtonHeight - 8dip)
+	Card.AddView(ThemeButton, 140dip, ButtonTop, 120dip, ButtonHeight - 8dip)
 	ResetButton.Initialize("dlg")
 	ResetButton.Tag = "reset"
-	Card.AddView(ResetButton, CardWidth - 12dip - 96dip - 100dip - 100dip, ButtonTop, 96dip, ButtonHeight - 8dip)
+	Card.AddView(ResetButton, CardWidth - 12dip - 96dip - 8dip - 96dip - 8dip - 120dip, ButtonTop, 120dip, ButtonHeight - 8dip)
 	CancelButton.Initialize("dlg")
 	CancelButton.Tag = "cancel"
-	Card.AddView(CancelButton, CardWidth - 12dip - 96dip - 100dip, ButtonTop, 96dip, ButtonHeight - 8dip)
+	Card.AddView(CancelButton, CardWidth - 12dip - 96dip - 8dip - 96dip, ButtonTop, 96dip, ButtonHeight - 8dip)
 	SaveButton.Initialize("dlg")
 	SaveButton.Tag = "save"
 	Card.AddView(SaveButton, CardWidth - 12dip - 96dip, ButtonTop, 96dip, ButtonHeight - 8dip)
 	RefreshButtons
+	ApplyThemeB4A
 	Return True
 End Sub
 #End If
 
-Private Sub AddPreference(Pref As Map)
+Private Sub AddPreference (Pref As Map)
 	Dim Id As String = Pref.Get("id")
 	Dim TypeName As String = Pref.Get("type")
 	#If B4J
@@ -457,7 +467,7 @@ Private Sub AddPreference(Pref As Map)
 		InfoLabel.Initialize("")
 		InfoLabel.Text = Localization.Text(InfoKey)
 		InfoLabel.TextSize = 14
-		InfoLabel.TextColor = Colors.Gray
+		InfoLabel.TextColor = Theme.SecondaryTextColor
 		Form.Panel.AddView(InfoLabel, 16dip, RowTop, InnerWidth, 30dip)
 		TitleLabels.Put(Id, InfoLabel)
 		RowTop = RowTop + 38dip
@@ -628,7 +638,7 @@ Private Sub AddCustomPreference (Pref As Map)
 		ContentPane.AddView(ErrorLabel, InputLeft, RowTop, ContentWidth - 40 - InputLeft, 34)
 		#Else If B4A
 		ErrorLabel.TextSize = 14
-		ErrorLabel.TextColor = Colors.Red
+		ErrorLabel.TextColor = Theme.ErrorTextColor
 		Dim InnerWidth As Int = CardWidth - 32dip
 		Form.Panel.AddView(ErrorLabel, 16dip, RowTop, InnerWidth, 52dip)
 		RowTop = RowTop + 60dip
@@ -711,6 +721,7 @@ Private Sub RefreshCustom(Id As String, Value As Object)
 	CallSub3(Entry.Get("target"), Entry.Get("event") & "_Refresh", CustomHandles.Get(Id), Args)
 End Sub
 
+#If B4J
 Private Sub HasAllowClear(Pref As Map) As Boolean
 	If Pref.ContainsKey("options") = False Then Return False
 	Dim Options As Map = Pref.Get("options")
@@ -739,6 +750,7 @@ Private Sub BuildProviderOptions(Pref As Map) As Map
 	Result.Put("title", Localization.Text(Pref.Get("titleKey")))
 	Return Result
 End Sub
+#End If
 
 ' Reads every control into the draft, validates, and commits on success.
 ' Returns True when the values were committed.
@@ -1336,26 +1348,90 @@ Private Sub Language_Click
 	Next
 	RefreshFileButtons
 	RefreshButtons
+	ApplyThemeB4A
 End Sub
 
 Private Sub Theme_Click
 	Theme.Toggle
-	For Each Id As String In TitleLabels.Keys
-		Dim Node As Object = TitleLabels.Get(Id)
-		If Node Is Label Then
-			Dim Title As Label = Node
-			Title.TextColor = Colors.DarkGray
-		End If
-	Next
-	For Each Id As String In SectionLabels.Keys
-		Dim SectionTitle As Label = SectionLabels.Get(Id)
-		SectionTitle.TextColor = Colors.Gray
-	Next
+	ApplyThemeB4A
 	For Each Id As String In Controls.Keys
 		Dim TypeName As String = ControlTypes.Get(Id)
 		If TypeName = "custom" Then RefreshCustom(Id, ReadCustom(Id))
 	Next
 	RefreshFileButtons
+End Sub
+
+Private Sub ApplyThemeB4A
+	Card.Color = Theme.BackgroundColor
+	Dim FormPanel As B4XView = Form.Panel
+	FormPanel.Color = Theme.BackgroundColor
+	TitleLabel.TextColor = Theme.TextColor
+	StatusLabel.TextColor = Theme.ErrorTextColor
+	For Each SectionId As String In SectionLabels.Keys
+		Dim SectionTitle As Label = SectionLabels.Get(SectionId)
+		SectionTitle.TextColor = Theme.SecondaryTextColor
+	Next
+	For Each Id As String In TitleLabels.Keys
+		Dim Node As Object = TitleLabels.Get(Id)
+		Dim TitleView As B4XView = Node
+		If ControlTypes.Get(Id) = "label" Then
+			TitleView.TextColor = Theme.SecondaryTextColor
+		Else
+			TitleView.TextColor = Theme.TextColor
+		End If
+	Next
+	For Each Id As String In Controls.Keys
+		Dim TypeName As String = ControlTypes.Get(Id)
+		If TypeName = "text" Or TypeName = "number" Or TypeName = "password" Or TypeName = "time" Or TypeName = "datetime" Or TypeName = "multiline" Or TypeName = "date" Or TypeName = "file" Or TypeName = "directory" Then
+			Dim Input As EditText = Controls.Get(Id)
+			Input.TextColor = Theme.TextColor
+		Else If TypeName = "switch" Or TypeName = "checkbox" Then
+			Dim Check As CheckBox = Controls.Get(Id)
+			Check.TextColor = Theme.TextColor
+		Else If TypeName = "multichoice" Then
+			Dim Checks As List = Controls.Get(Id)
+			For Each CheckObject As Object In Checks
+				Dim ItemCheck As CheckBox = CheckObject
+				ItemCheck.TextColor = Theme.TextColor
+			Next
+		Else If TypeName = "choice" Then
+			Dim Selector As Spinner = Controls.Get(Id)
+			Selector.TextColor = Theme.TextColor
+		End If
+	Next
+	For Each Id As String In SliderLabels.Keys
+		Dim SliderValue As Label = SliderLabels.Get(Id)
+		SliderValue.TextColor = Theme.TextColor
+	Next
+	For Each Id As String In ActionButtons.Keys
+		Dim ActionButton As Button = ActionButtons.Get(Id)
+		StyleSecondaryButton(ActionButton)
+	Next
+	For Each Id As String In BrowseButtons.Keys
+		Dim BrowseButton As Button = BrowseButtons.Get(Id)
+		StyleSecondaryButton(BrowseButton)
+	Next
+	For Each Id As String In ClearButtons.Keys
+		Dim ClearButton As Button = ClearButtons.Get(Id)
+		StyleSecondaryButton(ClearButton)
+	Next
+	StyleSecondaryButton(LanguageButton)
+	StyleSecondaryButton(ThemeButton)
+	StyleSecondaryButton(ResetButton)
+	StyleSecondaryButton(CancelButton)
+	StylePrimaryButton(SaveButton)
+End Sub
+
+Private Sub StyleSecondaryButton (B As Button)
+	B.TextColor = Theme.SecondaryButtonTextColor
+	Dim V As B4XView = B
+	V.SetColorAndBorder(Theme.SecondaryButtonBackgroundColor, 0, 0, 4dip)
+End Sub
+
+Private Sub StylePrimaryButton (B As Button)
+	B.TextColor = Theme.PrimaryButtonTextColor
+	Dim V As B4XView = B
+	V.SetColorAndBorder(Theme.AccentColor, 0, 0, 4dip)
 End Sub
 
 Private Sub RefreshFileButtons

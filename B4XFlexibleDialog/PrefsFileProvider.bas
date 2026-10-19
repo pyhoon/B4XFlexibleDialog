@@ -11,13 +11,9 @@ Version=10.7
 Sub Class_Globals
 	#If B4J
 	Private fx As JFX
-	#End If
-	#If B4A
-	Private OwnerForm As Activity
-	#Else If B4J
 	Private OwnerForm As Form
 	#Else
-	Private OwnerForm As Page
+	Private OwnerForm As Object 'ignore
 	#End If
 	Private HandlerTarget As Object
 	Private FileHandlerEvent As String
@@ -75,10 +71,6 @@ Private Sub BuiltInSelectFile (Options As Map) As PrefsFileResult
 	Result.Initialize
 	Dim Chooser As FileChooser
 	Chooser.Initialize
-	'Dim Chooser As MediaChooser
-	'Chooser.Initialize(Me, "chooser")
-	'Dim smm As SimpleMediaManager
-	'smm.Initialize
 	If Options.ContainsKey("title") Then Chooser.Title = Options.Get("title")
 	If Options.ContainsKey("initialDirectory") Then
 		Dim Initial As String = Options.Get("initialDirectory")
@@ -139,14 +131,14 @@ Private Sub MimeFromExtension(FilePath As String) As String
 	Return "application/octet-stream"
 End Sub
 #Else
-Private Sub BuiltInSelectFile (Options As Map) As PrefsFileResult
+Private Sub BuiltInSelectFile (Options As Map) As PrefsFileResult 'ignore
 	Dim Result As PrefsFileResult
 	Result.Initialize
 	Result.SetFailed("No built-in file picker on this platform. Call SetCustomHandler.")
 	Return Result
 End Sub
 
-Private Sub BuiltInSelectDirectory (Options As Map) As PrefsFileResult
+Private Sub BuiltInSelectDirectory (Options As Map) As PrefsFileResult 'ignore
 	Dim Result As PrefsFileResult
 	Result.Initialize
 	Result.SetFailed("No built-in directory picker on this platform. Call SetCustomHandler.")
@@ -174,7 +166,9 @@ Public Sub CopyToAppStorage(SourcePath As String, TargetFileName As String) As S
 	#End If
 End Sub
 
+#If B4J
 Private Sub IsListObject(Value As Object) As Boolean
 	If Value Is List Then Return True
 	Return False
 End Sub
+#End If

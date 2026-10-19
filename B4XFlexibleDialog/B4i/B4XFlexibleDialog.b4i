@@ -1,22 +1,22 @@
 ﻿Build1=Default,b4i.example
-File1=Dialog.bil
-File2=MainPage.bil
-FileGroup1=Default Group
-FileGroup2=Default Group
 Group=App
 Library1=icore
 Library2=ijson
+Library3=ixui
 Module1=|relative|..\PrefsController
-Module2=PrefsDirPicker
-Module3=|relative|..\PrefsFileResult
-Module4=|relative|..\PrefsLocalization
-Module5=|relative|..\PrefsModel
-Module6=|relative|..\PrefsSelfTest
-Module7=|relative|..\PrefsStore
-Module8=|relative|..\PrefsTheme
-NumberOfFiles=2
-NumberOfLibraries=2
-NumberOfModules=8
+Module10=|relative|..\PrefsStore
+Module11=|relative|..\PrefsTheme
+Module2=|relative|..\PrefsDialog
+Module3=|relative|..\PrefsDirPicker
+Module4=|relative|..\PrefsFileProvider
+Module5=|relative|..\PrefsFileResult
+Module6=|relative|..\PrefsLocalization
+Module7=|relative|..\PrefsModel
+Module8=|relative|..\PrefsPage
+Module9=|relative|..\PrefsSelfTest
+NumberOfFiles=0
+NumberOfLibraries=3
+NumberOfModules=11
 Version=8.8
 @EndOfDesignText@
 'Code module

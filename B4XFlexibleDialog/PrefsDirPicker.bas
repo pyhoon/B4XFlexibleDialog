@@ -4,28 +4,49 @@ ModulesStructureVersion=1
 Type=Class
 Version=14.2
 @EndOfDesignText@
-' Minimal Storage Access Framework directory picker. Opens the system folder
-' picker, takes a persistable URI permission, and saves the tree URI string
+' Minimal Storage Access Framework directory picker for B4A.
+' Opens the system folder picker, takes a persistable URI permission, and saves the tree URI string
 ' to File.DirInternal for reuse across restarts.
 ' Raises <prefix>_DirectoryPicked(Uri As String) or <prefix>_DirectoryCancelled.
 ' Uses only Intent, JavaObject and File; no DocumentFile dependency.
+
+' B4i support is not implemented yet. This module mirrors the B4A picker's public
+' surface so shared code compiles and a real implementation can replace this file:
+'   Initialize(Target, EventName)
+'   SelectDir(bCopy As Boolean)
+'
+' Neither method selects anything today; SelectDir only logs a warning, so a host
+' that requests the picker simply never receives a DirectoryPicked event.
+'
+' NOTE: B4i compilation requires a Mac builder and has not been verified locally.
 Sub Class_Globals
+	#If B4i
+	Private NotImplementedMessage As String = "B4XFlexibleDialog: B4i directory picker is not implemented yet"
+	#Else
 	Private Callback As Object
-	Private EventPrefix As String
+	Private EventPrefix As String	
 	Private ctxt As JavaObject
 	Private ion As Object
 	Public PreviousUriFileName As String = "PrefsDirUri"
+	#End If
 End Sub
 
 Public Sub Initialize(Target As Object, EventName As String)
+	#If B4i
+	Log(NotImplementedMessage)
+	#Else
 	Callback = Target
 	EventPrefix = EventName
 	ctxt.InitializeContext
+	#End If
 End Sub
 
 ' Opens the system folder picker. When UsePrevious is True and a persisted
 ' grant still exists, the saved URI is returned without showing any UI.
 Public Sub SelectDir(UsePrevious As Boolean)
+	#If B4i
+	Log(NotImplementedMessage & " (SelectDir)")
+	#Else
 	If UsePrevious Then
 		Dim Saved As String = ReadSavedUri
 		If Saved <> "" And HasPersistedPermission(Saved) Then
@@ -37,8 +58,10 @@ Public Sub SelectDir(UsePrevious As Boolean)
 	i.Initialize("android.intent.action.OPEN_DOCUMENT_TREE", "")
 	i.PutExtra("android.content.extra.SHOW_ADVANCED", True)
 	StartActivityForResult(i)
+	#End If
 End Sub
 
+#If B4A
 Private Sub ion_Event(MethodName As String, Args() As Object) As Object
 	If -1 = Args(0) Then
 		Dim i As Intent = Args(1)
@@ -86,3 +109,4 @@ Private Sub GetBA As Object
 	Dim jo As JavaObject = Me
 	Return jo.RunMethod("getBA", Null)
 End Sub
+#End If
