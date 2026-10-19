@@ -15,9 +15,10 @@ never reaches into an Activity module (B4A forbids that), and no view-typed clas
 fields live in `Process_Globals` (B4A forbids that too). Platform differences are
 handled with `#If B4J`/`#If B4A`/`#If B4i` blocks inside the one file.
 
-B4i is wired up as stubs for now (`B4i/README.md`): the library's facade/dialog/page
-B4i branches and its `PrefsDirPicker` are no-op stubs, so the shared page compiles
-on B4i while the real implementation is pending.
+B4i is **not planned for the near term**. Its project and the library's B4i
+facade/dialog/page branches and `PrefsDirPicker` are compile-only stubs, kept so
+the shared page still compiles on B4i if someone picks it up later
+(`B4i/README.md`).
 
 ## Setup
 
@@ -62,5 +63,5 @@ on B4i while the real implementation is pending.
 - The projects also reference the `mediachooser` and `xui views` libraries (and their platform dependencies) for the integrations spike.
 - `B4J/B4XPagesDemo.b4j` — B4J project. `Main` only initializes `B4XPagesManager` and shows the form; the page gets its owner form itself with `B4XPages.GetNativeParent`.
 - `B4A/B4XPagesDemo.b4a` — B4A project. `Main` just initializes `B4XPagesManager`; the page does the rest.
-- `B4i/B4XPagesDemo.b4i` — B4i project (unverified; needs a Mac builder).
+- `B4i/B4XPagesDemo.b4i` — B4i project (not planned; kept for compile parity, needs a Mac builder).
 - `B4J/Files/` and `B4A/Files/` and `B4i/Files/` — `settings.json`, `en.json`, `ms.json` (B4J also `prefs.css`). The rating sample uses the built-in MaterialIcons font.

@@ -72,7 +72,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Verify Browse/Clear and extension filtering in both presentations (reported: paths populated in dialog and page).
 - [x] Verify copy-to-app-storage with a real selection (reported: picked file copied under `prefs-files`, stored path points at the copy).
 
-## M6 — B4A and B4i adapters — IN PROGRESS
+## M6 — B4A adapter (B4i not planned) — COMPLETE
 
 - [x] Establish supported toolchains: B4A 14.20 + Android SDK 36, B4i project format (Mac/hosted builder required).
 - [x] Add shared, UI-free `PrefsSelfTest` (`RunAll` returns passed/failed/log).
@@ -86,7 +86,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Implement Android directory picking via a dependency-free `PrefsDirPicker` (persistable tree URIs, host-mediated callback).
 - [x] Run the B4A directory picker on a device (reported: folder switching, tree-URI Save commit verified).
 - [x] Persist B4A demo values with `PrefsStore` and verify full restart restore (reported `Restored 11 value(s)`).
-- [ ] B4i project prepared but deferred (Mac/hosted builder required; revisit when builder access is available).
+- [ ] B4i is **not planned for the near term** (needs a Mac/hosted builder and has no scheduled work). The B4i project and the facade/page/picker stubs are kept only so the shared source compiles; treat every B4i branch as an unverified, compile-only stub.
 - [x] Implement B4A platform-specific native control rendering for the dialog and page.
 - [x] Port the facade (`B4XFlexibleDialog`), `PrefsDialog`, and `PrefsPage` cross-platform with `#If B4J`/`#If B4A` branches; retire `PrefsRenderer` (and its B4i stub). Verified compiling on both B4JBuilder 10.70 and B4ABuilder 14.20; the B4J demo also runs clean headlessly.
 - [x] Fix the B4J `PrefsDialog` showing crash (uninitialized content `Pane` in `ShowB4J`) found when running the ported demo; the dialog now opens and the B4J demo runs clean headlessly (`Restored 15 value(s)`).
@@ -96,10 +96,15 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Start a capability matrix in the README; keep extending it as platforms are verified.
 - [x] Collapse the B4XPages example's `AppHost` dispatcher and per-platform `PrefsHost` classes into the single shared `B4XMainPage` (B4J `Main` only initializes `B4XPagesManager` and shows the form; the page fetches the owner form with `B4XPages.GetNativeParent`).
 - [x] Ship the documented B4i `PrefsDirPicker` stub in the `.b4xlib` under `B4i/` and make the B4i project a self-consistent self-test harness.
+- [x] Clean up the B4A IDE warnings (compiles with none): guard B4J-only members with `#If`, annotate unused stub parameters with `'ignore`, and remove dead B4A writes. Verified by the B4A IDE compile (`Objects\B4XFlexibleDialog.json` has no `warnings` array).
+- [x] Theme the B4A overlay dialog from the active `PrefsTheme` (card, section/status labels, inputs and their borders, and the five footer buttons) and restyle primary/secondary buttons; widen the Reset button and add even 8dp gaps so labels such as "Set semula" are never truncated.
+- [x] Add a Malay dictionary to the B4A harness and fill in its missing UI/validation keys so the footer buttons localize.
+- [x] Consolidate `PrefsDirPicker` into a single guarded cross-platform source file at the module root; stage it under both `B4A/` and `B4i/` in the `.b4xlib` and update the B4A/B4i projects and the packaging script.
+- [x] Repackage and reinstall the `.b4xlib`, rebuild the B4A demo, and verify on the emulator: full button labels with even gaps, Language toggles to Malay, Theme toggles to dark (dialog), and the embedded page shows the same form sharing committed values.
 
 ## M7 — Extensibility and release — COMPLETE
 
-- [x] Evaluate XUI Views as replacement controls; defer adoption to the B4A/B4i port work (designer-oriented API, fragile class-instance event dispatch, dependency weight; see README).
+- [x] Evaluate XUI Views as replacement controls; defer adoption to later cross-platform port work (designer-oriented API, fragile class-instance event dispatch, dependency weight; see README).
 - [x] Spike third-party controls behind the custom-renderer lifecycle in the demo: a code-built XUI Views `B4XFloatTextField` and a MediaChooser-backed image picker with an XUI Views thumbnail, both re-themed live from `_Refresh`. The shipped renderers keep no MediaChooser or XUI Views dependency.
 
 - [x] Add the `custom` type to the schema, model (renderer name required), and controller (pass-through values, deep-cloned snapshots).
@@ -114,4 +119,4 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Fix the B4A `Show` overlay geometry and z-order (host the overlay via `SetDialogHost`, size cards from the owner/host, raise overlay elevation) after device testing showed the card behind the ActionBar and under elevated page buttons.
 - [x] Finalize public APIs and callback contracts against each target compiler; the facade, `PrefsDialog`, and `PrefsPage` compile on B4JBuilder 10.70 and B4ABuilder 14.20, and the API is documented in the README.
 - [x] Package a distributable `.b4xlib` and verify integration from a fresh project.
-- [x] Complete automated/repeatable tests, platform examples, and release documentation: the shared `PrefsSelfTest` now runs on B4J (29/29) via `tools/run-b4j-tests.ps1`; B4J and B4A examples ship (B4i deferred); the changelog is cut at 0.2.0 with build/test docs in the README.
+- [x] Complete automated/repeatable tests, platform examples, and release documentation: the shared `PrefsSelfTest` now runs on B4J (29/29) via `tools/run-b4j-tests.ps1`; B4J and B4A examples ship and are exercised on B4J and the Android emulator (B4i not planned); the changelog is cut at 0.2.0 with build/test docs in the README.
