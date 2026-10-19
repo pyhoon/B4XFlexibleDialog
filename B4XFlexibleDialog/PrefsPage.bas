@@ -497,14 +497,14 @@ Private Sub AddPreference(Pref As Map)
 			PathField.TextSize = 14
 			PathField.SingleLine = True
 			PathField.Text = "" & Controller.GetValue(Id)
-			Content.AddView(PathField, 16dip, RowTop, InnerWidth - 100dip, 52dip)
+			Content.AddView(PathField, 16dip, RowTop, InnerWidth - 130dip, 52dip)
 			Controls.Put(Id, PathField)
 			Dim BrowseButton As Button
 			BrowseButton.Initialize("pageBrowse")
 			BrowseButton.Tag = Id
 			BrowseButton.Text = Localization.Text("ui.browse")
 			BrowseButton.TextSize = 16
-			Content.AddView(BrowseButton, 16dip + InnerWidth - 90dip, RowTop, 90dip, 52dip)
+			Content.AddView(BrowseButton, 16dip + InnerWidth - 120dip, RowTop, 120dip, 52dip)
 			BrowseButtons.Put(Id, BrowseButton)
 			RowTop = RowTop + 60dip
 		Else If TypeName = "custom" Then

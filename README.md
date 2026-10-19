@@ -25,7 +25,7 @@ The modal dialog is capped at 600 DIP and scrolls its preference body when neede
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/package-b4xlib.ps1 -Version 0.2
 ```
 
-`Version` must be a valid decimal (for example `0.2`, not `0.2.0`).
+`Version` must be a valid decimal (for example `0.2`, not `0.2.0`). After writing `dist/`, the script copies the archive into the B4X IDE additional libraries folder (`C:\B4X\Additional\B4X` by default; override with `-B4XLibsDir`) so the installed copy the examples link against stays in sync. If that folder is missing the install is skipped with a warning; pass `-SkipInstall` to build `dist/` only.
 
 The archive contains the platform-independent modules at the root (`PrefsModel`, `PrefsController`, `PrefsLocalization`, `PrefsTheme`, `PrefsStore`, `PrefsFileResult`, `PrefsSelfTest`, `PrefsDialog`, `PrefsPage`, `PrefsFileProvider`, `B4XFlexibleDialog`), the B4A-specific modules under `B4A/` (`PrefsDirPicker`), the B4i-specific stub under `B4i/` (`PrefsDirPicker`), `Files/prefs.css`, and a `manifest.txt` declaring `B4J.DependsOn=Json, jXUI` and `B4A.DependsOn=Phone, XUI, JavaObject`. The dialog, page, file provider, and facade now ship as shared modules and branch per platform with `#If`; they avoid JavaFX types in their shared paths, and the public view API is `B4XView`-based (`Show`, `CreatePage(Container As B4XView)`) so the same source compiles on B4J and B4A alike.
 
@@ -173,6 +173,7 @@ Dim Json As String = Prefs.ExportValues ' Save committed values into the store a
 Dim Imported As Int = Prefs.ImportValues(Json) ' Parse JSON into the store, then apply matching values
 
 ' Presentations
+Prefs.SetDialogHost(Root) ' B4A only: overlay parent (e.g. the B4XPages root); no-op on B4J/B4i
 Prefs.Show ' Modal dialog: blocking on B4J, async overlay on B4A
 Prefs.CreatePage(MainForm.RootPane) ' Anchors a page in this caller-owned B4XView container
 Prefs.RefreshPage ' Rebuilds visible values from committed state
@@ -180,6 +181,8 @@ Prefs.DisposePage ' Removes only the library-owned page node
 ```
 
 Every name above is a public sub on the facade and is the finalized API for this release, compiled and verified against B4JBuilder 10.70 and B4ABuilder 14.20. `Owner` is the B4J `Form`, the B4A `Activity`, or the B4i `Page`; `EventTarget`/`EventName` select the callback module and `<prefix>_*` subs. Getters (`GetLanguage`, `IsDarkTheme`, `GetTheme`, `GetValues`, `GetStore`, `GetFileProvider`, `GetCustomRenderer`) are read-only accessors.
+
+`SetDialogHost(Host As B4XView)` is B4A-only (a no-op on B4J/B4i). It selects the view that owns the `Show` overlay; pass the B4XPages root or another full-page container so the overlay is added inside the page content rather than the raw Activity, which keeps the card below the ActionBar. When never called, `Show` falls back to `OwnerForm`. The overlay panel is raised with a large elevation so Material buttons in the host page cannot draw over it.
 
 `SetValue` validates IDs, types, choice membership, string constraints, and number bounds; failed sets do not modify values. `GetValues` returns a copied map and deep-clones list/map values. `ResetToDefaults` and `ResetPreference` operate on committed values for value preferences and are excluded from change events (no change event exists in this milestone). `custom` values pass controller validation untouched; the registered renderer validates them at Save.
 
@@ -201,7 +204,7 @@ The target must be a module (the app); class instances are not supported as the 
 
 Showing a dialog or page with an unregistered renderer name fails fast: Save is blocked with `No custom renderer registered for preference <id>`, and the message is logged. The demo registers a 1–5 star rating renderer (`Rating_*` subs in the demo Main) used by the `satisfaction` preference in both presentations. The sample paints its buttons from `Prefs.GetTheme` colors, so it follows light/dark switches including the in-dialog theme toggle.
 
-The cross-platform dialog and page implement the same custom lifecycle (create/read/validate/refresh/dispose with fail-fast on unregistered names) via `Facade.RegisterCustomRenderer`; the B4A demo registers the same 1–5 rating sample. On-device verification is pending.
+The cross-platform dialog and page implement the same custom lifecycle (create/read/validate/refresh/dispose with fail-fast on unregistered names) via `Facade.RegisterCustomRenderer`; the B4A demo registers the same 1–5 rating sample. The B4A rating renderer was verified on device: it rendered the stored 3 stars, tapping a star updated the row to 5, Save committed the value, and reopening the dialog recreated the renderer with 5 stars. This renderer's input cannot express an invalid value (taps map to 1–5), so its `_Validate` error path remains covered only by the B4J tests.
 
 ## Persistence (Milestone 4)
 
@@ -263,6 +266,8 @@ Package the distributable:
 ```powershell
 powershell -File tools\package-b4xlib.ps1 -Version 0.2
 ```
+
+This also installs the archive into `C:\B4X\Additional\B4X` (use `-SkipInstall` for `dist/` only), which is what the B4A example needs since it links the library as an installed `.b4xlib` rather than by source.
 
 ## Test checklist and results
 

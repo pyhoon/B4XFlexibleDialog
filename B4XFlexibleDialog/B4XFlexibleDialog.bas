@@ -24,9 +24,12 @@ Sub Class_Globals
 	Private CurrentTheme As PrefsTheme
 	Private ActivePage As PrefsPage
 	Private PageActive As Boolean
+	#If B4J
 	Private PageStylesheetAdded As Boolean
+	#End If
 	#If B4A
 	Private ActiveDialog As PrefsDialog
+	Private DialogHost As B4XView
 	#End If
 	Private FileProvider As PrefsFileProvider
 	Private CustomRenderers As Map
@@ -46,6 +49,16 @@ Public Sub Initialize (EventTarget As Object, EventName As String, Owner As Obje
 	CustomRenderers.Initialize
 	Ready = False
 	LastError = ""
+End Sub
+
+' B4A only: hosts the modal dialog overlay in a caller-owned view (for example a
+' B4XPages page root). Use this when the platform title bar is drawn as an
+' overlay on top of the Activity; otherwise the top of the dialog is hidden
+' behind it. Ignored on B4J and B4i.
+Public Sub SetDialogHost (Host As B4XView)
+	#If B4A
+	DialogHost = Host
+	#End If
 End Sub
 
 Public Sub SetFileProvider (Provider As PrefsFileProvider)
@@ -230,6 +243,9 @@ Public Sub Show
 	If PageActive Then ActivePage.RefreshValues
 	Dim Dialog As PrefsDialog
 	Dialog.Initialize(OwnerForm, Controller, Model, Localization, CurrentTheme, FileProvider, CustomRenderers, Callback, EventPrefix)
+	#If B4A
+	Dialog.SetOverlayHost(DialogHost)
+	#End If
 	#If B4J
 	Dim WasSaved As Boolean = Dialog.Show
 	CallSub2(Callback, EventPrefix & "_DialogClosed", WasSaved)

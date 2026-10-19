@@ -25,6 +25,9 @@ Sub Class_Globals
 	Private Form As ScrollView
 	Private TitleLabel As Label
 	Private FilePicker As ContentChooser
+	Private OverlayHost As B4XView
+	Private CardWidth As Int
+	Private CardHeight As Int
 	Private PendingFileId As String
 	Private PendingCopy As Boolean
 	Private PendingDirId As String
@@ -75,6 +78,16 @@ Public Sub Initialize (Owner As Object, ValueController As PrefsController, Defi
 	CustomRenderers = Renderers
 	Callback = Target
 	EventPrefix = TargetEvent
+End Sub
+
+' B4A only: hosts the overlay in a caller-owned view (for example a B4XPages
+' page root) instead of the raw Activity. This is required when the platform
+' title bar is drawn as an overlay on top of the Activity, otherwise the top of
+' the dialog is hidden behind it. Ignored on B4J and B4i.
+Public Sub SetOverlayHost (Host As B4XView)
+	#If B4A
+	OverlayHost = Host
+	#End If
 End Sub
 
 ' Shows the dialog. On B4J this blocks until the window closes and returns whether
@@ -200,23 +213,44 @@ Private Sub ShowB4A As Boolean
 	PendingDirId = ""
 	OverlayPanel.Initialize("")
 	OverlayPanel.Color = Colors.ARGB(150, 0, 0, 0)
-	OwnerForm.AddView(OverlayPanel, 0, 0, 100%x, 100%y)
+	' Buttons carry a Material elevation; raise the overlay above them so it is
+	' not painted underneath elevated siblings.
+	OverlayPanel.Elevation = 100
+	' %x/%y are not usable in a code-only class (no designer layout sets the
+	' module reference size), so derive the overlay from its host. Prefer the
+	' caller-supplied host (already inset below the title bar); fall back to the
+	' Activity when none was provided.
+	Dim ViewWidth As Int
+	Dim ViewHeight As Int
+	If OverlayHost.IsInitialized Then
+		ViewWidth = OverlayHost.Width
+		ViewHeight = OverlayHost.Height
+		OverlayHost.AddView(OverlayPanel, 0, 0, ViewWidth, ViewHeight)
+		Dim OverlayView As B4XView = OverlayPanel
+		OverlayView.BringToFront
+	Else
+		ViewWidth = OwnerForm.Width
+		ViewHeight = OwnerForm.Height
+		OwnerForm.AddView(OverlayPanel, 0, 0, ViewWidth, ViewHeight)
+	End If
+	Dim CardLeft As Int = 20dip
+	Dim CardTop As Int = 30dip
+	CardWidth = ViewWidth - 2 * CardLeft
+	CardHeight = ViewHeight - 2 * CardTop
 	Card.Initialize("")
-	OverlayPanel.AddView(Card, 0, 0, 100%x - 40dip, 100%y - 60dip)
-	Card.Left = 20dip
-	Card.Top = 30dip
+	OverlayPanel.AddView(Card, CardLeft, CardTop, CardWidth, CardHeight)
 	Card.Color = Colors.White
 	TitleLabel.Initialize("")
 	TitleLabel.Text = Localization.Text(Model.GetTitleKey)
 	TitleLabel.TextSize = 20
 	TitleLabel.TextColor = Colors.DarkGray
-	Card.AddView(TitleLabel, 16dip, 12dip, Card.Width - 32dip, 40dip)
+	Card.AddView(TitleLabel, 16dip, 12dip, CardWidth - 32dip, 40dip)
 	Dim ButtonHeight As Int = 52dip
 	Dim FormTop As Int = 60dip
 	Form.Initialize(100dip)
-	Card.AddView(Form, 0, FormTop, Card.Width, Card.Height - FormTop - ButtonHeight - 12dip)
+	Card.AddView(Form, 0, FormTop, CardWidth, CardHeight - FormTop - ButtonHeight - 12dip)
 	ContentPane = Form.Panel
-	Dim InnerWidth As Int = Card.Width - 32dip
+	Dim InnerWidth As Int = CardWidth - 32dip
 	For Each Section As Object In Model.GetSections
 		Dim SectionMap As Map = Section
 		Dim SectionTitle As Label
@@ -241,7 +275,7 @@ Private Sub ShowB4A As Boolean
 	Form.Panel.AddView(StatusLabel, 16dip, RowTop, InnerWidth, 30dip)
 	RowTop = RowTop + 38dip
 	Form.Panel.Height = RowTop
-	Dim ButtonTop As Int = Card.Height - ButtonHeight - 8dip
+	Dim ButtonTop As Int = CardHeight - ButtonHeight - 8dip
 	LanguageButton.Initialize("dlg")
 	LanguageButton.Tag = "language"
 	Card.AddView(LanguageButton, 12dip, ButtonTop, 96dip, ButtonHeight - 8dip)
@@ -250,13 +284,13 @@ Private Sub ShowB4A As Boolean
 	Card.AddView(ThemeButton, 112dip, ButtonTop, 84dip, ButtonHeight - 8dip)
 	ResetButton.Initialize("dlg")
 	ResetButton.Tag = "reset"
-	Card.AddView(ResetButton, Card.Width - 12dip - 96dip - 100dip - 100dip, ButtonTop, 96dip, ButtonHeight - 8dip)
+	Card.AddView(ResetButton, CardWidth - 12dip - 96dip - 100dip - 100dip, ButtonTop, 96dip, ButtonHeight - 8dip)
 	CancelButton.Initialize("dlg")
 	CancelButton.Tag = "cancel"
-	Card.AddView(CancelButton, Card.Width - 12dip - 96dip - 100dip, ButtonTop, 96dip, ButtonHeight - 8dip)
+	Card.AddView(CancelButton, CardWidth - 12dip - 96dip - 100dip, ButtonTop, 96dip, ButtonHeight - 8dip)
 	SaveButton.Initialize("dlg")
 	SaveButton.Tag = "save"
-	Card.AddView(SaveButton, Card.Width - 12dip - 96dip, ButtonTop, 96dip, ButtonHeight - 8dip)
+	Card.AddView(SaveButton, CardWidth - 12dip - 96dip, ButtonTop, 96dip, ButtonHeight - 8dip)
 	RefreshButtons
 	Return True
 End Sub
@@ -415,7 +449,7 @@ Private Sub AddPreference(Pref As Map)
 		End If
 	End If
 	#Else If B4A
-	Dim InnerWidth As Int = Card.Width - 32dip
+	Dim InnerWidth As Int = CardWidth - 32dip
 	If TypeName = "label" Then
 		Dim InfoKey As String = Pref.Get("titleKey")
 		If Pref.ContainsKey("descriptionKey") Then InfoKey = Pref.Get("descriptionKey")
@@ -559,14 +593,14 @@ Private Sub AddPreference(Pref As Map)
 			PathField.SingleLine = True
 			PathField.Enabled = False
 			PathField.Text = "" & Controller.GetValue(Id)
-			Form.Panel.AddView(PathField, 16dip, RowTop, InnerWidth - 100dip, 52dip)
+			Form.Panel.AddView(PathField, 16dip, RowTop, InnerWidth - 130dip, 52dip)
 			Controls.Put(Id, PathField)
 			Dim BrowseButton As Button
 			BrowseButton.Initialize("prefsbrowse")
 			BrowseButton.Tag = Id
 			BrowseButton.Text = Localization.Text("ui.browse")
 			BrowseButton.TextSize = 16
-			Form.Panel.AddView(BrowseButton, 16dip + InnerWidth - 90dip, RowTop, 90dip, 52dip)
+			Form.Panel.AddView(BrowseButton, 16dip + InnerWidth - 120dip, RowTop, 120dip, 52dip)
 			BrowseButtons.Put(Id, BrowseButton)
 			RowTop = RowTop + 60dip
 		Else If TypeName = "custom" Then
@@ -595,7 +629,7 @@ Private Sub AddCustomPreference (Pref As Map)
 		#Else If B4A
 		ErrorLabel.TextSize = 14
 		ErrorLabel.TextColor = Colors.Red
-		Dim InnerWidth As Int = Card.Width - 32dip
+		Dim InnerWidth As Int = CardWidth - 32dip
 		Form.Panel.AddView(ErrorLabel, 16dip, RowTop, InnerWidth, 52dip)
 		RowTop = RowTop + 60dip
 		#End If
@@ -623,7 +657,7 @@ Private Sub AddCustomPreference (Pref As Map)
 	Args.Put("parent", Form.Panel)
 	Args.Put("left", 16dip)
 	Args.Put("top", RowTop)
-	Args.Put("width", Card.Width - 32dip)
+	Args.Put("width", CardWidth - 32dip)
 	#End If
 	Args.Put("height", CustomHeight)
 	Args.Put("definition", Pref)

@@ -83,6 +83,7 @@ Private Sub Setup
 	SetupDone = True
 	LoadDictionaries
 	Facade.Initialize(Me, "Prefs", B4XPages.GetNativeParent(Me))
+	Facade.SetDialogHost(Root)
 	Facade.SetDictionary("en", En)
 	Facade.SetDictionary("ms", Ms)
 	Facade.SetLanguage("en")
@@ -345,7 +346,7 @@ Private Sub MediaImage_Create (Args As Map) As Object
 	PickButton.Initialize("MediaImagePick")
 	#End If
 	PickButton.Text = "Choose image..."
-	Parent.AddView(PickButton, Left + Size + 12dip, Top + Size / 2 - 20dip, Width - Size - 12dip, 40dip)
+	Parent.AddView(PickButton, Left + Size + 12dip, Top + Size / 2 - 20dip, Width - Size - 12dip, 48dip)
 
 	Dim Handle As Map
 	Handle.Initialize

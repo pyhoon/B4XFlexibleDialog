@@ -16,8 +16,15 @@
     Shared modules must not reference JavaFX types so they can be reused by the
     other ports.
 
+    After packaging, the .b4xlib is also copied into the B4X IDE additional
+    libraries folder (default C:\B4X\Additional\B4X) so the installed copy used
+    by the examples stays in sync. Pass -SkipInstall to only build dist/.
+
 .EXAMPLE
     powershell -File tools/package-b4xlib.ps1 -Version 0.2
+
+.EXAMPLE
+    powershell -File tools/package-b4xlib.ps1 -Version 0.2 -SkipInstall
 #>
 [CmdletBinding()]
 param(
@@ -27,7 +34,9 @@ param(
     [string]$B4iSourceDir,
     [string]$OutputDir,
     [string]$Version = '0.2',
-    [string]$LibraryName = 'B4XFlexibleDialog'
+    [string]$LibraryName = 'B4XFlexibleDialog',
+    [string]$B4XLibsDir = 'C:\B4X\Additional\B4X',
+    [switch]$SkipInstall
 )
 
 $ErrorActionPreference = 'Stop'
@@ -130,6 +139,24 @@ try {
     finally { $archive.Dispose() }
 
     Write-Host ("Created {0} ({1:N0} bytes)" -f $target, (Get-Item -LiteralPath $target).Length)
+
+    if ($SkipInstall) {
+        Write-Host 'Install step skipped (-SkipInstall)'
+    }
+    else {
+        if ([string]::IsNullOrWhiteSpace($B4XLibsDir)) {
+            $B4XLibsDir = Join-Path $env:USERPROFILE 'Documents\B4X\Additional\B4X'
+        }
+        if (Test-Path -LiteralPath $B4XLibsDir) {
+            $B4XLibsDir = (Resolve-Path -LiteralPath $B4XLibsDir).Path
+            $installed = Join-Path $B4XLibsDir ($LibraryName + '.b4xlib')
+            Copy-Item -LiteralPath $target -Destination $installed -Force
+            Write-Host ("Installed {0} ({1:N0} bytes)" -f $installed, (Get-Item -LiteralPath $installed).Length)
+        }
+        else {
+            Write-Warning ("B4X libraries folder not found, install skipped: {0}" -f $B4XLibsDir)
+        }
+    }
 }
 finally {
     if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }

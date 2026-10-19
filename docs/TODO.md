@@ -97,7 +97,7 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Collapse the B4XPages example's `AppHost` dispatcher and per-platform `PrefsHost` classes into the single shared `B4XMainPage` (B4J `Main` only initializes `B4XPagesManager` and shows the form; the page fetches the owner form with `B4XPages.GetNativeParent`).
 - [x] Ship the documented B4i `PrefsDirPicker` stub in the `.b4xlib` under `B4i/` and make the B4i project a self-consistent self-test harness.
 
-## M7 — Extensibility and release — IN PROGRESS
+## M7 — Extensibility and release — COMPLETE
 
 - [x] Evaluate XUI Views as replacement controls; defer adoption to the B4A/B4i port work (designer-oriented API, fragile class-instance event dispatch, dependency weight; see README).
 - [x] Spike third-party controls behind the custom-renderer lifecycle in the demo: a code-built XUI Views `B4XFloatTextField` and a MediaChooser-backed image picker with an XUI Views thumbnail, both re-themed live from `_Refresh`. The shipped renderers keep no MediaChooser or XUI Views dependency.
@@ -110,7 +110,8 @@ Status reflects the current B4J Milestone 1 implementation and the interactive c
 - [x] Verify the custom renderer GUI behavior (create, edit, invalid value, Save, Reset, language/theme refresh, dispose) in both presentations (reported passing).
 - [x] Port the custom lifecycle (create/read/validate/dispose, fail-fast registration) to the B4A renderer with a matching rating sample.
 - [x] Give the B4A demo the same two presentations as B4J: an inline hosted page plus a button-opened modal dialog overlay (sharing the controller, with its own renderer instance and Save/Cancel).
-- [ ] Verify the B4A custom renderer on a device (render, edit, invalid value, Save, dispose). Only remaining M7 item: run `examples/B4XPagesDemo/B4A`, open the dialog/page, and exercise the `satisfaction` rating renderer.
+- [x] Verify the B4A custom renderer on a device (render, edit, invalid value, Save, dispose). Verified on the Android emulator: the `satisfaction` rating renderer recreated at its stored 3 stars, a star tap updated it to 5, Save committed the value, and reopening recreated it showing 5. Invalid input is not expressible in this renderer (taps map to 1–5), so that path stays covered by the B4J tests.
+- [x] Fix the B4A `Show` overlay geometry and z-order (host the overlay via `SetDialogHost`, size cards from the owner/host, raise overlay elevation) after device testing showed the card behind the ActionBar and under elevated page buttons.
 - [x] Finalize public APIs and callback contracts against each target compiler; the facade, `PrefsDialog`, and `PrefsPage` compile on B4JBuilder 10.70 and B4ABuilder 14.20, and the API is documented in the README.
 - [x] Package a distributable `.b4xlib` and verify integration from a fresh project.
 - [x] Complete automated/repeatable tests, platform examples, and release documentation: the shared `PrefsSelfTest` now runs on B4J (29/29) via `tools/run-b4j-tests.ps1`; B4J and B4A examples ship (B4i deferred); the changelog is cut at 0.2.0 with build/test docs in the README.
